@@ -115,15 +115,18 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
       </div>
 
       <div
-        className="absolute w-6 h-6 bg-slate-900 border-4 border-white rounded-full shadow-xl z-10 animate-bounce"
+        className="absolute z-10 animate-bounce"
         style={{
           // คำนวณตำแหน่ง % บนหน้าจอ (Shift จากศูนย์กลาง 50%)
           left: `${50 + (x / maxRange) * 50}%`,
           top: `${50 - (y / maxRange) * 50}%`,
+          // ใช้ translate เพื่อให้จุดกึ่งกลางของ div อยู่ตรงพิกัดพอดี
           transform: "translate(-50%, -50%)",
         }}
       >
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+        <div className="w-6 h-6 rounded-full shadow-xl border-4 border-white/70 bg-slate-900/70 animate-pulse"></div>
+
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-sm animate-pulse">
           คุณอยู่นี่!
         </div>
       </div>

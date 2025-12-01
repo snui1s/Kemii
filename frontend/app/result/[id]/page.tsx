@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Flame, Wind, Mountain, Droplets, ArrowLeft } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import DiscGraph from "@/components/DiscGraph";
 import Link from "next/link";
 
@@ -40,7 +41,6 @@ interface ResultData {
 
 export default function ResultPage() {
   const params = useParams();
-  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
   // --- 2. กำหนด Type ให้ State (ใช้ ResultData | null) ---
@@ -110,22 +110,21 @@ export default function ResultPage() {
   const theme = getThemeColor(user.dominant_type);
   // ฟังก์ชันช่วยแปลงข้อความให้เป็น List สวยๆ (ฉบับกันเหนียว)
   // เปลี่ยนจาก (text: any) เป็น Union Type ที่ชัดเจน
-  const renderBulletList = (text: string | string[] | null | undefined) => {
+  const renderBulletList = (
+    text: string | string[] | null | undefined,
+    type: "normal" | "warning" = "normal"
+  ) => {
     // 1. ถ้าไม่มีค่า ให้จบเลย
     if (!text) return null;
 
     let lines: string[] = [];
 
-    // 2. ถ้าเป็น Array อยู่แล้ว (AI ส่งมาเป็นลิสต์)
+    // 2. จัดการข้อมูล (Array vs String)
     if (Array.isArray(text)) {
       lines = text;
-    }
-    // 3. ถ้าเป็น String (AI ส่งมาเป็นก้อนข้อความ)
-    else if (typeof text === "string") {
+    } else if (typeof text === "string") {
       lines = text.split("\n");
-    }
-    // 4. ถ้าหลุดมาเป็นอย่างอื่น (เช่น number) ให้ไม่แสดงผล
-    else {
+    } else {
       return null;
     }
 
@@ -133,16 +132,31 @@ export default function ResultPage() {
     lines = lines.filter((line) => line.trim() !== "");
 
     return (
-      <ul className="space-y-2 mt-2">
+      <ul className="space-y-3 mt-3">
         {lines.map((line, index) => {
-          // ลบขีด/จุด นำหน้าออกเหมือนเดิม
           const cleanText = line.replace(/^[-•*]\s*/, "").trim();
 
+          // เลือกสไตล์ตามประเภท (ปกติ vs แจ้งเตือน)
+          const isWarning = type === "warning";
+          const itemStyle = isWarning
+            ? "bg-red-50 border-red-100 text-red-800 hover:bg-red-100"
+            : "bg-slate-50 border-slate-100 text-slate-700 hover:bg-blue-50 hover:border-blue-200";
+
+          const Icon = isWarning ? AlertCircle : CheckCircle2;
+          const iconColor = isWarning ? "text-red-500" : "text-blue-500";
+
           return (
-            // ลบ flex/gap ออก เพราะไม่มีไอคอนนำหน้าแล้ว
-            <li key={index} className="text-slate-600 leading-relaxed">
-              {/* ลบ <span>●</span> ออกไปเลยครับ */}
-              {cleanText}
+            <li
+              key={index}
+              className={`p-3 rounded-lg border flex items-start gap-3 transition-colors duration-200 ${itemStyle}`}
+            >
+              {/* ไอคอนนำหน้า (ช่วยให้อ่านง่ายขึ้นเยอะ) */}
+              <Icon size={18} className={`mt-0.5 shrink-0 ${iconColor}`} />
+
+              {/* เนื้อหา */}
+              <span className="leading-relaxed text-sm font-medium">
+                {cleanText}
+              </span>
             </li>
           );
         })}
@@ -205,7 +219,7 @@ export default function ResultPage() {
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
               <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-                🍾 จุดเด่นที่เฉิดฉาย
+                🍾 จุดเด่นของคุณ
               </h3>
               <div className="text-slate-600 text-sm">
                 {renderBulletList(analysis.personality)}
@@ -219,9 +233,9 @@ export default function ResultPage() {
               <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
                 💼 สไตล์การทำงาน
               </h3>
-              <p className="text-slate-600 leading-relaxed whitespace-pre-line text-sm">
-                {analysis.work_style}
-              </p>
+              <div className="text-slate-700 text-sm">
+                {renderBulletList(analysis.work_style)}
+              </div>
             </div>
 
             {/* 📦 กล่องที่ 4: ด้านมืด (Red Alert) */}
@@ -231,7 +245,7 @@ export default function ResultPage() {
                 ⚠️ ด้านมืดที่ต้องระวัง
               </h3>
               <div className="relative z-10 text-red-800/80 text-sm">
-                {renderBulletList(analysis.weakness)}
+                {renderBulletList(analysis.weakness, "warning")}
               </div>
             </div>
           </div>
@@ -260,22 +274,22 @@ export default function ResultPage() {
           <div className="space-y-3 text-slate-700 font-bold">
             {[
               {
-                label: "🔥 Fire, Bull(D)",
+                label: "🔥 Fire, Bull (Dominance)",
                 score: user.scores.D,
                 color: "bg-red-500",
               },
               {
-                label: "💨 Wind, Eagle(I)",
+                label: "💨 Wind, Eagle (Influence)",
                 score: user.scores.I,
                 color: "bg-yellow-500",
               },
               {
-                label: "⛰️ Earth, Mouse (S)",
+                label: "⛰️ Earth, Mouse (Steadiness)",
                 score: user.scores.S,
                 color: "bg-green-500",
               },
               {
-                label: "💧 Water, Bear   (C)",
+                label: "💧 Water, Bear (Conscientiousness)",
                 score: user.scores.C,
                 color: "bg-blue-500",
               },

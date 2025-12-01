@@ -79,7 +79,7 @@ app.add_middleware(
 if not os.getenv("GOOGLE_API_KEY"):
     print("Warning: GOOGLE_API_KEY not found")
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
 
 def calculate_disc_score(answers: List[Answer]):
     # 1. ตั้งต้นที่ 0 (หรือจะตั้งที่ 12 เพื่อกันติดลบก็ได้)
@@ -101,7 +101,7 @@ def calculate_disc_score(answers: List[Answer]):
             raw_least[l] += 1
 
     for key in scores:
-        scores[key] += 12 
+        scores[key] += 15
         
     max_type = max(scores, key=scores.get)
     animals = {'D': 'กระทิง', 'I': 'อินทรี', 'S': 'หนู', 'C': 'หมี'}
@@ -200,8 +200,12 @@ async def analyze_user(user_id: int, session: Session = Depends(get_session)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Prompt สำหรับวิเคราะห์คนเดียว (ฉบับแก้: ห้ามพูดชื่อซ้ำในคู่หู)
     analysis_prompt = ChatPromptTemplate.from_template("""
-    Role: You are an expert personality analyst using the "4 Animals" (DISC) psychology framework.
+    Role: You are a "Friendly Personality Analyst MALE" who uses the 4 Animals (DISC) framework.
+    Your personality: Warm, Insightful, Direct but Polite, like a supportive senior colleague.
+    Language Style: Thai Spoken Language (ภาษาพูดแบบสุภาพ), Casual, Accessible, Encouraging. 
+    (Avoid heavy slang/memes. Avoid textbook language. Just talk normally).
     
     User Profile:
     Name: {name}
@@ -214,16 +218,30 @@ async def analyze_user(user_id: int, session: Session = Depends(get_session)):
     1. **PLAIN TEXT ONLY:** No HTML tags.
     2. **NO MARKDOWN:** No bold (**), no headers (##).
     3. **Lists:** Use a simple hyphen "-" for lists. Do NOT use "•" or numbers.
-    4. **No Repetition:** In 'compatible_with', DO NOT repeat the animal name twice (e.g., don't say "Rat and Bear Rat:"). Just name the animal once and explain why.
+    4. **NO REPETITION in Partner:** In 'compatible_with', DO NOT repeat the animal name in the explanation part.
+       - ❌ BAD: "หนู (Rat): หนูจะช่วย..."
+       - ✅ GOOD: "หนู (Rat) จะช่วย..." (Start with verb/action directly)
     5. **Concise:** Keep sentences clear and direct.
     
+    **Matching Logic (Use this rule):**
+    - High D pairs best with High S (To balance speed with stability).
+    - High I pairs best with High C (To balance ideas with precision).
+    - High S pairs best with High D (Needs a driver).
+    - High C pairs best with High I (Needs a visionary).
+    - If Hybrid, choose the partner that balances the *Highest* score.
+    
     Return JSON ONLY with these keys:
-    1. "title": A catchy archetype title (e.g. "กระทิงยอดนักกลยุทธ์").
-    2. "element_desc": Describe their personality mix clearly.
-    3. "personality": Key strengths. Use "-" for bullet points.
+    1. "title": A catchy archetype title using Animal metaphors (e.g. "กระทิงยอดนักกลยุทธ์").
+    2. "element_desc": A DETAILED breakdown of their nature. 
+       - MUST provide 1-2 distinct bullet points (-). 
+       - Explain the interaction between their dominant and secondary animals/elements in depth but not too long.
+       - Describe how others see them vs how they really are.
+    3. "personality": Key strengths. Use "-" for 3-4 distinct bullet points.
     4. "weakness": Potential blind spots. Use "-" for bullet points.
-    5. "work_style": How they behave in a work setting.
-    6. "compatible_with": Which Animal type is their best partner? (Format: "Animal Name: Reason")
+    5. "work_style": How they behave in a work setting 3-4 distinct bullet points.
+    6. "compatible_with": Which Animal type is their best partner? 
+       Format: "Animal Name (Type) Explanation"
+       (Example: "หมี (Bear) จะช่วยเสริมเรื่องความละเอียด...")
     
     Do not add Markdown code blocks. Just raw JSON.
     """)
