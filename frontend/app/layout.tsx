@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
+import Footer from "@/components/Footer";
 
 const lineSeed = localFont({
   src: [
@@ -47,10 +48,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${lineSeed.className} h-screen flex flex-col`}>
+      <body className={`${lineSeed.className} min-h-screen flex flex-col`}>
         <Navbar />
-        <main className="flex-1 bg-slate-100 p-6 overflow-auto">
-          {children}
+        <main className="flex-1 bg-slate-100 overflow-auto flex flex-col">
+          <div className="flex-1 p-6">{children}</div>
+          <div className="mt-auto">
+            <Footer />
+          </div>
         </main>
         <Toaster position="top-right" reverseOrder={false} />
       </body>

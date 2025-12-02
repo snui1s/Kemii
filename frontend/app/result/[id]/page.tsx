@@ -96,7 +96,7 @@ export default function ResultPage() {
 
   if (loading)
     return (
-      <div className="h-full flex flex-col items-center justify-center text-slate-500">
+      <div className="flex flex-col items-center justify-center p-12 space-y-8 animate-fade-in">
         <div className="animate-spin text-4xl mb-4">🔮</div>
         <div className="text-xl font-semibold">กำลังวิเคราะห์ข้อมูล...</div>
       </div>
@@ -300,7 +300,7 @@ export default function ResultPage() {
                   <div
                     className={`h-2.5 rounded-full ${stat.color}`}
                     style={{
-                      width: `${Math.min((stat.score / 24) * 100, 100)}%`,
+                      width: `${Math.min((stat.score / 30) * 100, 100)}%`,
                     }}
                   ></div>
                 </div>

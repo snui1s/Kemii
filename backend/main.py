@@ -1,5 +1,6 @@
 import json
 import os
+import math
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 
@@ -85,7 +86,9 @@ app.add_middleware(
 if not os.getenv("GOOGLE_API_KEY"):
     print("Warning: GOOGLE_API_KEY not found")
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
+creative_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
+
+logic_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
 
 def calculate_disc_score(answers: List[Answer]):
     # 1. ตั้งต้นที่ 0 (หรือจะตั้งที่ 12 เพื่อกันติดลบก็ได้)
@@ -166,38 +169,79 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     session.commit()
     return {"message": "User deleted successfully"}
 
+# ... (Imports เดิม)
+
+# 4. จับคู่ 1-on-1 (AI Match) - ฉบับอัปเกรด JSON & Score
 @app.post("/match-ai")
 async def match_users_ai(req: MatchRequest, session: Session = Depends(get_session)):
-    # ดึง User 2 คนด้วย SQLModel
     u1 = session.get(User, req.user1_id)
     u2 = session.get(User, req.user2_id)
     
     if not u1 or not u2:
         raise HTTPException(status_code=404, detail="Users not found")
         
-    # Prompt จับคู่
-    match_prompt = ChatPromptTemplate.from_template("""
-    Role: You are "ZooLogic AI", a team compatibility expert.
-    Analyze: {name1} ({type1}) vs {name2} ({type2})
-    Scores 1: D={d1}, I={i1}, S={s1}, C={c1}
-    Scores 2: D={d2}, I={i2}, S={s2}, C={c2}
+    diff_d = abs(u1.score_d - u2.score_d)
+    diff_i = abs(u1.score_i - u2.score_i)
+    diff_s = abs(u1.score_s - u2.score_s)
+    diff_c = abs(u1.score_c - u2.score_c)
     
-    Output in Thai (Fun & Insightful):
-    1. Metaphor: Describe them as a duo (e.g. Driver & Navigator).
-    2. Dynamic: How they work together.
-    3. Warning: Potential conflict.
-    4. Advice: 1 tip for each.
+    total_diff = diff_d + diff_i + diff_s + diff_c
+
+    calculated_score = min(100, int((total_diff / 60) * 100)) 
+    
+    match_prompt = ChatPromptTemplate.from_template("""
+    Role: You are "4Elements Master", an expert in team chemistry.
+    
+    Analyze the synergy between:
+    1. {name1} ({type1}) -> Scores: D={d1}, I={i1}, S={s1}, C={c1}
+    2. {name2} ({type2}) -> Scores: D={d2}, I={i2}, S={s2}, C={c2}
+    
+    **PRE-CALCULATED SYNERGY SCORE:** {score}%
+    (Note: This score is calculated based on mathematical compatibility logic. You MUST use this number in the JSON output).
+
+    **CRITICAL INSTRUCTION:**
+    Generate an analysis that justifies this score ({score}%).
+    - If Score < 50: Explain the friction/challenges politely.
+    - If Score > 80: Praise their perfect balance.
+    
+    **OUTPUT JSON FORMAT ONLY:**
+    {{
+      "synergy_score": {score}, 
+      "synergy_name": "Creative Thai Pair Name (e.g. คู่กัดขิงก็รา, หยินหยางสมบูรณ์แบบ)",
+      "element_visual": "Fire & Wind / Water & Earth",
+      "analysis": "2-3 sentences in Thai matching the score of {score}%.",
+      "pro_tip": "One actionable advice (Thai)."
+    }}
+    
+    Do not use Markdown. Just raw JSON.
     """)
     
-    chain = match_prompt | llm | StrOutputParser()
-    analysis = await chain.ainvoke({
-        "name1": u1.name, "type1": u1.animal, "d1": u1.score_d, "i1": u1.score_i, "s1": u1.score_s, "c1": u1.score_c,
-        "name2": u2.name, "type2": u2.animal, "d2": u2.score_d, "i2": u2.score_i, "s2": u2.score_s, "c2": u2.score_c
-    })
+    chain = match_prompt | logic_llm | StrOutputParser()
+    
+    try:
+        raw_result = await chain.ainvoke({
+            "name1": u1.name, "type1": u1.animal, "d1": u1.score_d, "i1": u1.score_i, "s1": u1.score_s, "c1": u1.score_c,
+            "name2": u2.name, "type2": u2.animal, "d2": u2.score_d, "i2": u2.score_i, "s2": u2.score_s, "c2": u2.score_c,
+            "score": calculated_score
+        })
+        
+        cleaned_json = raw_result.replace("```json", "").replace("```", "").strip()
+        analysis_json = json.loads(cleaned_json)
+        
+    except Exception as e:
+        analysis_json = {
+            "synergy_score": calculated_score,
+            "synergy_name": "การจับคู่แห่งโชคชะตา",
+            "element_visual": "Unknown",
+            "analysis": "ขออภัย AI ประมวลผลผิดพลาด แต่คะแนนคำนวณได้ตามนี้ครับ",
+            "pro_tip": "ลองใหม่อีกครั้งนะครับ",
+            "error_raw": str(e)
+        }
     
     return {
-        "user1": u1.name, "user2": u2.name,
-        "ai_analysis": analysis
+        "user1": u1,
+        "user2": u2,
+        "ai_analysis": analysis_json
     }
     
 @app.get("/users/{user_id}/analysis")
@@ -252,7 +296,7 @@ async def analyze_user(user_id: int, session: Session = Depends(get_session)):
     Do not add Markdown code blocks. Just raw JSON.
     """)
 
-    chain = analysis_prompt | llm | StrOutputParser()
+    chain = analysis_prompt | creative_llm | StrOutputParser()
     
     # ส่งคะแนนไปให้ AI
     raw_result = await chain.ainvoke({
@@ -289,21 +333,33 @@ async def auto_group_teams(req: GroupingRequest, session: Session = Depends(get_
     users = session.exec(select(User)).all()
     
     total_people = len(users)
+    if total_people == 0:
+        raise HTTPException(status_code=400, detail="ยังไม่มีพนักงานในระบบเลยครับ เพิ่มคนก่อนนะ!")
+    
     if total_people < req.num_teams:
         raise HTTPException(status_code=400, detail=f"คนไม่พอครับ! มีแค่ {total_people} คน แต่จะแบ่ง {req.num_teams} ทีม")
-
-    # 2. แปลงข้อมูลเป็น Text เพื่อส่ง AI
+    
+    if total_people / req.num_teams < 2:
+         raise HTTPException(
+            status_code=400, 
+            detail=f"จำนวนทีมเยอะเกินไปครับ! เฉลี่ยแล้วเหลือทีมละไม่ถึง 2 คน"
+        )
+    
+    min_per_team = math.floor(total_people / req.num_teams)
+    max_per_team = math.ceil(total_people / req.num_teams)
+    
+    if min_per_team == max_per_team:
+        size_rule = f"Exactly {min_per_team} members per team."
+    else:
+        size_rule = f"Between {min_per_team} to {max_per_team} members per team."
+        
     roster_text = ""
     for u in users:
         # ส่งไปทั้งชื่อและคะแนน เพื่อให้ AI เกลี่ยพลังถูก
         roster_text += f"- {u.name} (Type: {u.animal}, D={u.score_d}, I={u.score_i}, S={u.score_s}, C={u.score_c})\n"
 
-    # 3. Prompt สั่ง AI (จูนเรื่อง Balance)
-   # Prompt สั่ง AI (จูนเรื่อง Role สั้น + ชมทุกคน)
-    # Prompt สั่ง AI (จูน Role ให้พอดีคำ + เกลี่ยทีมให้เนียน)
-    # Prompt สั่ง AI (บังคับโครงสร้าง Member ให้มี animal ชัดเจน)
     grouping_prompt = ChatPromptTemplate.from_template("""
-    Role: You are "ZooLogic Strategist", an expert in building balanced high-performance teams.
+    Role: You are an expert in building balanced high-performance teams.
     
     Task: Divide these {total_people} people into {num_teams} teams.
     
@@ -314,10 +370,21 @@ async def auto_group_teams(req: GroupingRequest, session: Session = Depends(get_
     1. **Distribute Scarce Roles:** Spread rare animals (e.g. Rats) across teams.
     2. **Balance is King:** Mix Drivers (D), Influencers (I), Supporters (S), Analysts (C).
     3. **Everyone Assigned:** Every single person MUST be in a team.
+    4. **STRICT TEAM SIZE:** {size_rule} (Do NOT dump leftovers in the last team!).
     
-    **OUTPUT RULES:**
-    1. **Role:** Descriptive Thai Role (3-5 words).
-    2. **Animal:** You MUST map the animal type back to the member object correctly based on the roster.
+    **CRITICAL OUTPUT RULES:**
+    1. **Role (Job Class):** - MUST be a **Short Thai Title** (Max 2 words). 
+       - NO Nicknames in role. NO brackets. NO English.
+       - Example : "ผู้นำเชิงกลยุทธ์", "ผู้ประสานงาน", "ผู้นำ"
+
+    2. **Strength:** Mention **EVERY MEMBER BY NAME**. Explain specifically what each person contributes.
+
+    3. **Management Tip (Weakness Field):** - **NEVER SAY** "This team lacks X" or "Should add Y". (You built this team, so don't complain about it!)
+       - **INSTEAD, FOCUS ON** "How to manage this specific combination".
+       - Example: "ทีมนี้พลังงานสูงมาก หัวหน้าทีมควรเน้นกำหนดเป้าหมายให้ชัด แล้วปล่อยให้พวกเขาลุยเอง ไม่ควรจู้จี้จุกจิก"
+       - Example: "ทีมนี้เน้นความละเอียดรอบคอบ แต่อาจตัดสินใจช้า หัวหน้าทีมควรกำหนด Deadline ให้ชัดเจนเพื่อกระตุ้นความเร็ว"
+       
+    4. **Animal:** You MUST map the animal type back to the member object correctly based on the roster.
     
     **REQUIRED JSON STRUCTURE:**
     {{
@@ -340,13 +407,14 @@ async def auto_group_teams(req: GroupingRequest, session: Session = Depends(get_
     Return ONLY valid JSON. Do not use Markdown.
     """)
     
-    chain = grouping_prompt | llm | StrOutputParser()
+    chain = grouping_prompt | creative_llm | StrOutputParser()
     
     try:
         raw_result = await chain.ainvoke({
             "total_people": total_people,
             "num_teams": req.num_teams,
-            "roster": roster_text
+            "roster": roster_text,
+            "size_rule": size_rule
         })
         
         cleaned_json = raw_result.replace("```json", "").replace("```", "").strip()

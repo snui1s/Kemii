@@ -1,4 +1,4 @@
-"use client"; // 👈 สำคัญ: ต้องใส่บรรทัดนี้เพราะมี useState/useEffect
+"use client";
 import { useState, useEffect } from "react";
 import { Flame, Droplets, Wind, Mountain } from "lucide-react";
 
@@ -17,7 +17,7 @@ export default function ElementalLoader() {
         let jump = 0;
 
         if (oldValue < 30) {
-          jump = Math.random() * 2 + 1; // +1 ถึง +4%
+          jump = Math.random() * 1.5 + 1; // +1 ถึง +4%
         } else if (oldValue < 60) {
           jump = Math.random() * 3.5; // +0 ถึง +1.5%
         }

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { Check, X, Info, Play } from "lucide-react";
 import toast from "react-hot-toast";
 
 const questions = [
@@ -160,13 +160,14 @@ const questions = [
 
 const fullQuestions = [...questions].map((q, i) => ({
   ...q,
-  id: i + 1, // run id ใหม่ 1-12
+  id: i + 1, // run id ใหม่ 1-15
 }));
 
 export default function AssessmentPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
 
   const [answers, setAnswers] = useState<
     Record<number, { most: string | null; least: string | null }>
@@ -226,10 +227,14 @@ export default function AssessmentPage() {
         "http://localhost:8000/submit-assessment",
         payload
       );
+      const newUser = res.data;
+      localStorage.setItem("myUserId", newUser.id.toString());
+      localStorage.setItem("myName", newUser.name);
+      localStorage.setItem("myAnimal", newUser.animal);
+      localStorage.setItem("myScores", JSON.stringify(newUser.scores));
+      window.dispatchEvent(new Event("user-updated"));
       toast.success("บันทึกสำเร็จ! ยินดีต้อนรับคุณ" + name);
-      const newUserId = res.data.id;
-
-      router.push(`/result/${newUserId}`);
+      router.push(`/result/${newUser.id}`);
     } catch (err) {
       console.error(err);
       toast.error("อุ๊ย ระบบมีปัญหา ลองใหม่อีกทีนะครับ");
@@ -239,6 +244,125 @@ export default function AssessmentPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
+      {/* --- ✨ ส่วนที่เพิ่ม: Tutorial Modal --- */}
+      {showGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+            {/* Header */}
+            <div className="bg-slate-50 p-6 border-b border-slate-100 text-center">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Info size={28} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800">
+                วิธีการทำแบบประเมิน
+              </h2>
+              <p className="text-slate-500 text-sm mt-1">
+                อ่านสักนิด เพื่อผลลัพธ์ที่แม่นยำ!
+              </p>
+            </div>
+
+            {/* Content: อธิบายวิธีเลือก */}
+            <div className="p-6 space-y-6">
+              {/* กฎข้อ 1 */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0 border border-green-200">
+                  <Check size={20} strokeWidth={3} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-700">
+                    1. ตรงกับคุณมากที่สุด
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    ในแต่ละข้อ ให้เลือก 1 ตัวเลือกที่เป็นตัวตนของคุณมากที่สุด
+                    (ช่องสีเขียว)
+                  </p>
+                </div>
+              </div>
+
+              {/* กฎข้อ 2 */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 border border-red-200">
+                  <X size={20} strokeWidth={3} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-700">
+                    2. ตรงกับคุณน้อยที่สุด
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    และเลือกอีก 1 ตัวเลือก ที่ไม่ใช่ตัวคุณ
+                    หรือเป็นตัวคุณน้อยที่สุด (ช่องสีแดง)
+                  </p>
+                </div>
+              </div>
+
+              {/* ตัวอย่างภาพจำลอง (Visual Aid) */}
+              {/* --- ✨ Visual Aid (ฉบับ Interactive) --- */}
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                <p className="text-xs text-slate-500 mb-3 uppercase font-bold tracking-wider text-center">
+                  ตัวอย่างการตอบคำถาม
+                </p>
+
+                <div className="space-y-3">
+                  {/* แถวที่ 1: จำลองว่าเลือก "มากที่สุด" */}
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm relative overflow-hidden group hover:border-green-300 transition">
+                    <div className="absolute inset-y-0 left-0 w-1 bg-green-500 rounded-r-full"></div>
+                    <span className="text-sm text-slate-700 font-medium pl-2">
+                      เป็นคนชอบเข้าสังคม
+                    </span>
+                    <div className="flex gap-2 relative z-10">
+                      {/* ปุ่มเขียว (Active) */}
+                      <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-200 scale-110 transition-transform">
+                        <Check size={20} strokeWidth={3} />
+                      </div>
+                      {/* ปุ่มแดง (Inactive) */}
+                      <div className="w-10 h-10 rounded-full border-2 border-slate-200 text-slate-300 flex items-center justify-center opacity-50">
+                        <X size={20} strokeWidth={3} />
+                      </div>
+                    </div>
+                    {/* Tooltip จำลอง */}
+                    <div className="absolute -top-2 right-14 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      มากที่สุด
+                    </div>
+                  </div>
+
+                  {/* แถวที่ 2: จำลองว่าเลือก "น้อยที่สุด" */}
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm relative overflow-hidden group hover:border-red-300 transition">
+                    <div className="absolute inset-y-0 left-0 w-1 bg-red-500 rounded-r-full"></div>
+                    <span className="text-sm text-slate-700 font-medium pl-2">
+                      ชอบทำงานคนเดียวเงียบๆ
+                    </span>
+                    <div className="flex gap-2 relative z-10">
+                      {/* ปุ่มเขียว (Inactive) */}
+                      <div className="w-10 h-10 rounded-full border-2 border-slate-200 text-slate-300 flex items-center justify-center opacity-50">
+                        <Check size={20} strokeWidth={3} />
+                      </div>
+                      {/* ปุ่มแดง (Active) */}
+                      <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-200 scale-110 transition-transform">
+                        <X size={20} strokeWidth={3} />
+                      </div>
+                    </div>
+                    {/* Tooltip จำลอง */}
+                    <div className="absolute -top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      น้อยที่สุด
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer: ปุ่มเริ่ม */}
+            <div className="p-6 pt-0">
+              <button
+                onClick={() => setShowGuide(false)}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-slate-200 transition transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              >
+                เข้าใจแล้ว! เริ่มทำเลย <Play size={20} fill="currentColor" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- ส่วนแบบประเมิน --- */}
       <h1 className="text-3xl font-bold text-center mb-2 text-slate-800">
         แบบประเมิน 4Elements
       </h1>

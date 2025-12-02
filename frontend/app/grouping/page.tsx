@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { Users, Wand2, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
@@ -23,6 +23,17 @@ export default function GroupingPage() {
   const [numTeams, setNumTeams] = useState(2); // ค่าเริ่มต้น 2 ทีม
   const [result, setResult] = useState<{ teams: Team[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  useEffect(() => {
+    axios.get("http://localhost:8000/users").then((res) => {
+      setTotalUsers(res.data.length);
+    });
+  }, []);
+
+  const MIN_MEMBERS_PER_TEAM = 2;
+  const maxTeams =
+    totalUsers > 0 ? Math.floor(totalUsers / MIN_MEMBERS_PER_TEAM) : 2;
 
   const handleGroup = async () => {
     setLoading(true);
@@ -45,6 +56,12 @@ export default function GroupingPage() {
       setLoading(false);
     }
   };
+  if (loading)
+    return (
+      <div className="py-10 min-h-[400px] flex items-center justify-center">
+        <ElementalLoader />
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4">
@@ -77,10 +94,25 @@ export default function GroupingPage() {
             <div className="text-5xl font-black text-blue-600 w-20">
               {numTeams}
             </div>
-
             <button
-              onClick={() => setNumTeams((n) => n + 1)}
-              className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 text-2xl font-bold text-slate-600 transition"
+              // 4. ใส่ Logic ป้องกันที่ปุ่มบวก
+              onClick={() => {
+                if (numTeams < maxTeams) {
+                  setNumTeams((n) => n + 1);
+                } else {
+                  toast.error(
+                    `คนไม่พอครับ! สูงสุดได้แค่ ${maxTeams} ทีม (ทีมละ ${MIN_MEMBERS_PER_TEAM} คน)`
+                  );
+                }
+              }}
+              disabled={numTeams >= maxTeams}
+              className={`w-12 h-12 rounded-full text-2xl font-bold transition
+                ${
+                  numTeams >= maxTeams
+                    ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                }
+              `}
             >
               +
             </button>
@@ -100,76 +132,110 @@ export default function GroupingPage() {
             )}
           </button>
         </div>
-        {loading && (
-          <div className="py-10">
-            <ElementalLoader />
-          </div>
-        )}
+
         {!loading && result && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
-            {result.teams.map((team, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl border-2 border-slate-100 overflow-hidden hover:shadow-lg transition duration-300 flex flex-col"
-              >
-                {/* Header ทีม */}
+          <div className="flex flex-col gap-8 animate-fade-in-up pb-20">
+            {result.teams.map((team, index) => {
+              const themeColor =
+                index % 4 === 0
+                  ? "bg-red-600"
+                  : index % 4 === 1
+                  ? "bg-blue-600"
+                  : index % 4 === 2
+                  ? "bg-green-600"
+                  : "bg-yellow-600";
+
+              const lightTheme =
+                index % 4 === 0
+                  ? "bg-red-50 text-red-800 border-red-100"
+                  : index % 4 === 1
+                  ? "bg-blue-50 text-blue-800 border-blue-100"
+                  : index % 4 === 2
+                  ? "bg-green-50 text-green-800 border-green-100"
+                  : "bg-yellow-50 text-yellow-800 border-yellow-100";
+              return (
                 <div
-                  className={`p-4 text-center text-white ${
-                    index % 3 === 0
-                      ? "bg-red-500"
-                      : index % 3 === 1
-                      ? "bg-blue-500"
-                      : "bg-green-500"
-                  }`}
+                  key={index}
+                  className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden hover:shadow-xl transition duration-300"
                 >
-                  <h3 className="text-xl font-bold shadow-text">
-                    {team.team_name}
-                  </h3>
-                  <p className="text-white/80 text-sm">
-                    {team.members.length} สมาชิก
-                  </p>
-                </div>
-
-                {/* รายชื่อสมาชิก */}
-                <div className="p-6 flex-1">
-                  <ul className="space-y-3">
-                    {team.members.map((member, i) => (
-                      <li
-                        key={i}
-                        className="flex justify-between items-center p-2 rounded bg-slate-50"
-                      >
-                        <span className="font-semibold text-slate-700">
-                          {member.name} ({member.animal})
-                        </span>
-                        <span className="text-xs px-2 py-1 bg-white border rounded-full text-slate-500">
-                          {member.role}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* วิเคราะห์จุดแข็ง/อ่อน */}
-                <div className="p-4 bg-slate-50 border-t border-slate-100 text-sm space-y-2 ">
-                  <div className="flex gap-2">
-                    <Sparkles
-                      size={16}
-                      className="text-yellow-500 shrink-0 mt-0.5"
-                    />
-                    <span className="text-slate-600 ml-2">{team.strength}</span>
+                  {/* --- Header (แถบยาวด้านบน) --- */}
+                  <div
+                    className={`${themeColor} p-4 text-white flex justify-between items-center px-6`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 p-2 rounded-lg">
+                        <Users size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold">{team.team_name}</h3>
+                        <p className="text-white/80 text-sm">
+                          Unit {index + 1}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-white/20 px-4 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                      {team.members.length} สมาชิก
+                    </div>
                   </div>
-                  <div className="flex gap-2 items-start">
-                    <span className="text-lg shrink-0">💡</span>
-                    <div>
-                      <span className="font-bold text-slate-700">
-                        เคล็ดลับการบริหาร:{" "}
-                      </span>
-                      <span className="text-slate-600">{team.weakness}</span>
+
+                  {/* --- Body (แบ่งซ้าย-ขวา) --- */}
+                  <div className="flex flex-col lg:flex-row">
+                    {/* ฝั่งซ้าย: รายชื่อสมาชิก (กินพื้นที่ 60-70%) */}
+                    <div className="p-6 lg:w-[45%] border-b lg:border-b-0 lg:border-r border-slate-100">
+                      <h4 className="text-slate-500 font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <Users size={16} /> Roster / รายชื่อ
+                      </h4>
+
+                      {/* Grid ย่อยสำหรับรายชื่อ (2 คอลัมน์) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {team.members.map((member, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition"
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-700">
+                                {member.name}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                ({member.animal})
+                              </span>
+                            </div>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full border bg-white text-slate-500`}
+                            >
+                              {member.role}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ฝั่งขวา: วิเคราะห์ (กินพื้นที่ 30-40%) */}
+                    <div className="p-6 lg:w-[55%] flex flex-col gap-4 bg-slate-50/50">
+                      {/* จุดแข็ง */}
+                      <div className="text-slate-700 text-sm leading-relaxed bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                        <h4 className="text-slate-500 font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                          <Sparkles size={16} className="text-yellow-500" />{" "}
+                          Strength
+                        </h4>
+                        <p>{team.strength}</p>
+                      </div>
+
+                      {/* คำแนะนำ (Management Tip) */}
+                      <div className={`p-4 rounded-xl border ${lightTheme}`}>
+                        <h4 className="font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                          💡 Management Tip
+                        </h4>
+                        <p className="text-sm leading-relaxed opacity-90">
+                          {team.weakness}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
