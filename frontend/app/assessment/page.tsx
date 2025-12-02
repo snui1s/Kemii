@@ -226,7 +226,7 @@ export default function AssessmentPage() {
         "http://localhost:8000/submit-assessment",
         payload
       );
-      toast.success("บันทึกสำเร็จ! ยินดีต้อนรับสู่ทีม");
+      toast.success("บันทึกสำเร็จ! ยินดีต้อนรับคุณ" + name);
       const newUserId = res.data.id;
 
       router.push(`/result/${newUserId}`);
@@ -276,12 +276,14 @@ export default function AssessmentPage() {
 
               {/* Header ตาราง */}
               <div className="grid grid-cols-12 gap-2 text-sm text-gray-400 mb-2 px-2">
-                <div className="col-span-8">เลือกทั้งมากสุดและน้อยสุด</div>
+                <div className="col-span-8">
+                  เลือกความน่าจะทำมากสุดและน้อยสุด
+                </div>
                 <div className="col-span-2 text-center text-green-600 font-bold">
-                  มากสุด
+                  มากที่สุด
                 </div>
                 <div className="col-span-2 text-center text-red-500 font-bold">
-                  น้อยสุด
+                  น้อยที่สุด
                 </div>
               </div>
 

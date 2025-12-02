@@ -59,6 +59,12 @@ class UserResult(BaseModel):
 class MatchRequest(BaseModel):
     user1_id: int
     user2_id: int
+    
+class GroupingRequest(BaseModel):
+    num_teams: int
+    
+class UserNameUpdate(BaseModel):
+    name: str
 
 # --- App Setup ---
 @asynccontextmanager
@@ -277,69 +283,99 @@ async def analyze_user(user_id: int, session: Session = Depends(get_session)):
         "analysis": analysis_json
     }
 
-# 5. วิเคราะห์ภาพรวมทั้งทีม (Team Analysis)
-@app.get("/analyze-team")
-async def analyze_team_structure(session: Session = Depends(get_session)):
+@app.post("/auto-group-teams")
+async def auto_group_teams(req: GroupingRequest, session: Session = Depends(get_session)):
+    # 1. ดึงข้อมูลทุกคนในบริษัท
     users = session.exec(select(User)).all()
     
-    if not users:
-        return {"analysis": "ยังไม่มีสมาชิกในทีมครับ เพิ่มคนเข้ามาก่อนนะ!"}
+    total_people = len(users)
+    if total_people < req.num_teams:
+        raise HTTPException(status_code=400, detail=f"คนไม่พอครับ! มีแค่ {total_people} คน แต่จะแบ่ง {req.num_teams} ทีม")
 
-    # เตรียม Data ส่งให้ AI
-    type_counts = {"D": 0, "I": 0, "S": 0, "C": 0}
-    members_list = []
-    
+    # 2. แปลงข้อมูลเป็น Text เพื่อส่ง AI
+    roster_text = ""
     for u in users:
-        type_counts[u.dominant_type] += 1
-        members_list.append(f"- {u.name}: {u.dominant_type} ({u.animal})")
+        # ส่งไปทั้งชื่อและคะแนน เพื่อให้ AI เกลี่ยพลังถูก
+        roster_text += f"- {u.name} (Type: {u.animal}, D={u.score_d}, I={u.score_i}, S={u.score_s}, C={u.score_c})\n"
+
+    # 3. Prompt สั่ง AI (จูนเรื่อง Balance)
+   # Prompt สั่ง AI (จูนเรื่อง Role สั้น + ชมทุกคน)
+    # Prompt สั่ง AI (จูน Role ให้พอดีคำ + เกลี่ยทีมให้เนียน)
+    # Prompt สั่ง AI (บังคับโครงสร้าง Member ให้มี animal ชัดเจน)
+    grouping_prompt = ChatPromptTemplate.from_template("""
+    Role: You are "ZooLogic Strategist", an expert in building balanced high-performance teams.
     
-    team_prompt = ChatPromptTemplate.from_template("""
-    Role: You are an expert "HR & Organizational Consultant". You analyze team dynamics using DISC theory in a professional business context.
+    Task: Divide these {total_people} people into {num_teams} teams.
     
-    Context: I am building a project team. Here is the current roster:
-    {team_list}
+    Current Roster:
+    {roster}
     
-    Stats:
-    - High D (Driver/Commander): {cnt_d} -> Focus on Results, Speed, Action.
-    - High I (Influencer/Promoter): {cnt_i} -> Focus on Ideas, Communication, Morale.
-    - High S (Supporter/Stabilizer): {cnt_s} -> Focus on Support, Harmony, Consistency.
-    - High C (Analyst/Compliance): {cnt_c} -> Focus on Accuracy, Logic, Process.
+    **STRATEGY RULES:**
+    1. **Distribute Scarce Roles:** Spread rare animals (e.g. Rats) across teams.
+    2. **Balance is King:** Mix Drivers (D), Influencers (I), Supporters (S), Analysts (C).
+    3. **Everyone Assigned:** Every single person MUST be in a team.
     
-    Task: Analyze this team structure in THAI language (Professional & Insightful).
+    **OUTPUT RULES:**
+    1. **Role:** Descriptive Thai Role (3-5 words).
+    2. **Animal:** You MUST map the animal type back to the member object correctly based on the roster.
     
-    IMPORTANT: Return the result ONLY as a valid JSON object with the following keys:
-    1. "title": A professional summary title (e.g. "High-Speed Execution Team", "Creative Innovation Hub").
-    2. "formation": Analyze the "Work Distribution". Who leads? Who supports? Is it top-heavy? (Mention specific names).
-    3. "key_players": Highlight 1-2 key members who hold the team together.
-    4. "game_plan": "Team Work Style". How will they likely work? (e.g. Agile, Waterfall, Chaos, Fast-paced).
-    5. "weakness": "Operational Risks". What problems will likely happen? (e.g. Burnout, Missed deadlines, Conflict).
-    6. "transfer_market": "Recruitment Needs". Which role/personality is missing to balance the workflow?
+    **REQUIRED JSON STRUCTURE:**
+    {{
+      "teams": [
+        {{
+          "team_name": "Thai Team Name",
+          "members": [
+             {{
+                "name": "Exact Name from Roster",
+                "animal": "Animal Type (e.g. กระทิง, อินทรี)",
+                "role": "Thai Role Description"
+             }}
+          ],
+          "strength": "Team strength analysis (mentioning names)",
+          "weakness": "Management advice"
+        }}
+      ]
+    }}
     
-    Do not add Markdown formatting (like ** or ###) inside the JSON values. Keep it clean text.
+    Return ONLY valid JSON. Do not use Markdown.
     """)
     
-    chain = team_prompt | llm | StrOutputParser()
-    raw_analysis = await chain.ainvoke({
-        "team_list": "\n".join(members_list),
-        "cnt_d": type_counts['D'],
-        "cnt_i": type_counts['I'],
-        "cnt_s": type_counts['S'],
-        "cnt_c": type_counts['C']
-    })
+    chain = grouping_prompt | llm | StrOutputParser()
     
     try:
-        cleaned_json = raw_analysis.replace("```json", "").replace("```", "").strip()
-        analysis_json = json.loads(cleaned_json)
+        raw_result = await chain.ainvoke({
+            "total_people": total_people,
+            "num_teams": req.num_teams,
+            "roster": roster_text
+        })
+        
+        cleaned_json = raw_result.replace("```json", "").replace("```", "").strip()
+        result_json = json.loads(cleaned_json)
+        
+        return result_json
+
     except Exception as e:
-        analysis_json = {
-            "error": "AI response format error",
-            "raw_text": raw_analysis
-        }
+        print(f"AI Error: {e}")
+        raise HTTPException(status_code=500, detail="AI processing error")
+    
+@app.patch("/users/{user_id}/name", response_model=UserResult)
+def update_user_name(user_id: int, update_data: UserNameUpdate, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.name = update_data.name
+    
+    session.add(user)
+    session.commit()
+    session.refresh(user)
     
     return {
-        "total_members": len(users),
-        "distribution": type_counts,
-        "ai_analysis": analysis_json
+        "id": user.id,
+        "name": user.name,
+        "dominant_type": user.dominant_type,
+        "animal": user.animal,
+        "scores": {"D": user.score_d, "I": user.score_i, "S": user.score_s, "C": user.score_c}
     }
 
 if __name__ == "__main__":

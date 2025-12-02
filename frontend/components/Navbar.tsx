@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, ClipboardList, BrainCircuit } from "lucide-react";
+import { Handshake, Users, ClipboardList } from "lucide-react";
 
 export default function Navbar() {
   return (
@@ -23,11 +23,11 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/analysis"
+            href="/grouping"
             className="flex items-center gap-1 hover:text-green-400 transition"
           >
-            <BrainCircuit size={18} />
-            <span>AI วิเคราะห์</span>
+            <Handshake size={18} />
+            <span>จัดทีม</span>
           </Link>
         </div>
       </div>

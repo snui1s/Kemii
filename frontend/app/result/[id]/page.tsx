@@ -7,9 +7,6 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 import DiscGraph from "@/components/DiscGraph";
 import Link from "next/link";
 
-// --- 1. ประกาศ Type ให้ครบถ้วน (ไม่ใช้ any) ---
-
-// Type ของคะแนน
 interface Scores {
   D: number;
   I: number;
