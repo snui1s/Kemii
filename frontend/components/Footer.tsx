@@ -3,9 +3,9 @@ import { Code, Heart } from "lucide-react";
 export default function Footer() {
   return (
     <footer className="bg-slate-100 text-slate-500 py-8 border-t border-slate-200 mt-auto">
-      <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center md:text-left">
         {/* 1. Copyright: เหลือแค่ชื่อโปรเจกต์ */}
-        <div className="text-sm font-medium text-center md:text-left flex items-center gap-2">
+        <div className="text-sm font-medium flex items-center justify-center md:justify-start gap-2 md:justify-self-start">
           <span>© {new Date().getFullYear()}</span>
           <span className="text-slate-700 font-bold">4Elements</span>
           <span className="text-slate-400">|</span>
@@ -13,7 +13,7 @@ export default function Footer() {
         </div>
 
         {/* 2. Credits: ใส่ชื่อคุณคนเดียว */}
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center justify-center gap-2 text-sm font-medium md:justify-self-center">
           <span>Built with</span>
           <Heart
             size={16}
@@ -31,7 +31,7 @@ export default function Footer() {
         </div>
 
         {/* 3. GitHub Link: โชว์ไอคอนพร้อมชื่อ */}
-        <div className="flex gap-4">
+        <div className="flex justify-center md:justify-end md:justify-self-end animate-fade-in">
           <a
             href="https://github.com/snailsqz/4Elements" // 🔗 ใส่ลิ้งก์ GitHub คุณตรงนี้
             target="_blank"

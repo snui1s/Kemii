@@ -17,7 +17,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
-DB_NAME = "zoologic.db"
+DB_NAME = "elements.db"
 sqlite_url = f"sqlite:///{DB_NAME}"
 connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, echo=False, connect_args=connect_args)
@@ -31,7 +31,7 @@ def get_session():
         yield session
 
 class User(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = {"extend_existing": True} 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     dominant_type: str
@@ -40,6 +40,7 @@ class User(SQLModel, table=True):
     score_i: int
     score_s: int
     score_c: int
+    team_name: Optional[str] = Field(default=None)
 
 class Answer(BaseModel):
     question_id: int
@@ -66,6 +67,16 @@ class GroupingRequest(BaseModel):
     
 class UserNameUpdate(BaseModel):
     name: str
+    
+class TeamBuilderRequest(BaseModel):
+    leader_id: int
+    member_count: int
+    strategy: str  # "Balanced", "Aggressive", "Creative", "Supportive"
+
+# Model รับค่าตอนกดยืนยันสร้างทีม (Save)
+class ConfirmTeamRequest(BaseModel):
+    team_name: str
+    member_ids: List[int]
 
 # --- App Setup ---
 @asynccontextmanager
@@ -445,6 +456,104 @@ def update_user_name(user_id: int, update_data: UserNameUpdate, session: Session
         "animal": user.animal,
         "scores": {"D": user.score_d, "I": user.score_i, "S": user.score_s, "C": user.score_c}
     }
+    
+@app.get("/users/available")
+def get_available_users(session: Session = Depends(get_session)):
+    # เลือกคนที่มี team_name เป็น None
+    users = session.exec(select(User).where(User.team_name == None)).all()
+    return users
+
+# 2. ให้ AI แนะนำลูกน้อง (Recommend)
+@app.post("/recommend-team-members")
+async def recommend_team_members(req: TeamBuilderRequest, session: Session = Depends(get_session)):
+    # ดึงหัวหน้า
+    leader = session.get(User, req.leader_id)
+    if not leader: raise HTTPException(status_code=404, detail="Leader not found")
+    
+    # ดึงคนที่ว่างอยู่ (ไม่รวมหัวหน้า)
+    candidates = session.exec(select(User).where(User.team_name == None, User.id != req.leader_id)).all()
+    
+    if len(candidates) < req.member_count:
+        raise HTTPException(status_code=400, detail=f"คนว่างไม่พอครับ! ต้องการ {req.member_count} แต่เหลือแค่ {len(candidates)}")
+
+    # เตรียมข้อมูลส่ง AI
+    roster_text = ""
+    for u in candidates:
+        roster_text += f"- [ID: {u.id}] {u.name} ({u.animal}, {u.dominant_type})\n"
+
+    # Prompt สั่ง AI หาคนตามกลยุทธ์
+    builder_prompt = ChatPromptTemplate.from_template("""
+    Role: You are an expert HR Specialist.
+    Task: Select exactly {count} members from the "Candidates" list to join the "Leader".
+    
+    Leader: {leader_name} ({leader_animal})
+    Strategy: {strategy}
+    
+    Strategy Guide:
+    - **Balanced (สมดุล):** Mix D, I, S, C to cover all bases.
+    - **Aggressive (สายลุย):** Focus on High D and High I (Speed & Result).
+    - **Creative (สายไอเดีย):** Focus on High I and High C (Innovation & Detail).
+    - **Supportive (สายซัพ):** Focus on High S and High C (Stability & Process).
+    
+    Candidates:
+    {roster}
+    
+    **OUTPUT JSON:**
+    {{
+      "selected_ids": [1, 5, ...], (List of IDs only)
+      "reason": "Why this team works well with this strategy (Thai).",
+      "suggested_team_name": "Creative Team Name"
+    }}
+    """)
+
+    chain = builder_prompt | creative_llm | StrOutputParser()
+    
+    raw = await chain.ainvoke({
+        "count": req.member_count,
+        "leader_name": leader.name,
+        "leader_animal": leader.animal,
+        "strategy": req.strategy,
+        "roster": roster_text
+    })
+    
+    try:
+        res_json = json.loads(raw.replace("```json", "").replace("```", "").strip())
+        
+        # แปลง IDs กลับเป็น Object User เพื่อส่งให้ Frontend โชว์
+        selected_members = []
+        for uid in res_json['selected_ids']:
+            u = next((c for c in candidates if c.id == uid), None)
+            if u: selected_members.append(u)
+            
+        return {
+            "leader": leader,
+            "members": selected_members,
+            "reason": res_json['reason'],
+            "team_name": res_json['suggested_team_name']
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# 3. บันทึกทีมจริง (Update DB)
+@app.post("/confirm-team")
+def confirm_team(req: ConfirmTeamRequest, session: Session = Depends(get_session)):
+    for uid in req.member_ids:
+        user = session.get(User, uid)
+        if user:
+            user.team_name = req.team_name
+            session.add(user)
+    session.commit()
+    return {"message": "Team saved successfully!"}
+
+# 4. ล้างทีมทั้งหมด (Reset - เอาไว้เทสต์)
+@app.post("/reset-teams")
+def reset_teams(session: Session = Depends(get_session)):
+    users = session.exec(select(User)).all()
+    for user in users:
+        user.team_name = None
+        session.add(user)
+    session.commit()
+    return {"message": "All users are now free!"}
 
 if __name__ == "__main__":
     import uvicorn

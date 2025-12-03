@@ -319,10 +319,6 @@ export default function AssessmentPage() {
                         <X size={20} strokeWidth={3} />
                       </div>
                     </div>
-                    {/* Tooltip จำลอง */}
-                    <div className="absolute -top-2 right-14 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      มากที่สุด
-                    </div>
                   </div>
 
                   {/* แถวที่ 2: จำลองว่าเลือก "น้อยที่สุด" */}
@@ -340,10 +336,6 @@ export default function AssessmentPage() {
                       <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-200 scale-110 transition-transform">
                         <X size={20} strokeWidth={3} />
                       </div>
-                    </div>
-                    {/* Tooltip จำลอง */}
-                    <div className="absolute -top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      น้อยที่สุด
                     </div>
                   </div>
                 </div>

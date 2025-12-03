@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Users, ClipboardList, LogOut, Shuffle } from "lucide-react";
+import { Users, ClipboardList, LogOut, Shuffle, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Navbar() {
@@ -102,7 +102,7 @@ export default function Navbar() {
         {/* Logo ซ้ายมือ */}
         <Link
           href="/"
-          className="text-xl font-bold flex items-center gap-2 text-slate-800 hover:text-green-300 transition"
+          className="text-xl font-bold flex items-center gap-2 text-slate-800 hover:text-green-500 transition"
         >
           <Users size={28} />
           <span className="hidden sm:inline">4Elements</span>
@@ -112,15 +112,23 @@ export default function Navbar() {
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/"
-            className="flex items-center gap-1 hover:text-green-400 transition text-sm sm:text-base"
+            className="flex items-center gap-1 hover:text-green-500 transition text-sm sm:text-base"
           >
             <Users size={18} />
             <span className="hidden sm:inline">ทีม</span>
           </Link>
 
           <Link
+            href="/build-team"
+            className="flex items-center gap-1 hover:text-green-500 transition text-sm sm:text-base"
+          >
+            <UserPlus size={18} />
+            <span className="hidden sm:inline">สร้างทีม</span>
+          </Link>
+
+          <Link
             href="/grouping"
-            className="flex items-center gap-1 hover:text-green-400 transition text-sm sm:text-base"
+            className="flex items-center gap-1 hover:text-green-500 transition text-sm sm:text-base"
           >
             <Shuffle size={18} />
             <span className="hidden sm:inline">จัดทีมด้วย AI</span>

@@ -6,6 +6,7 @@ import { Flame, Wind, Mountain, Droplets, ArrowLeft } from "lucide-react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import DiscGraph from "@/components/DiscGraph";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface Scores {
   D: number;
@@ -46,21 +47,36 @@ export default function ResultPage() {
 
   // ดึงข้อมูลเมื่อเข้ามาหน้านี้
   useEffect(() => {
+    let isCancelled = false; // 1. สร้างธงเช็คสถานะ
+
     const fetchAnalysis = async () => {
       try {
         const res = await axios.get(
           `http://localhost:8000/users/${params.id}/analysis`
         );
-        setData(res.data);
+
+        // 2. เช็คธงก่อนเซ็ตค่า
+        if (!isCancelled) {
+          setData(res.data);
+        }
       } catch (err) {
-        console.error(err);
-        alert("ไม่พบข้อมูลสมาชิกท่านนี้");
+        if (!isCancelled) {
+          console.error(err);
+          toast.error("ไม่พบข้อมูลสมาชิกท่านนี้");
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
     if (params.id) fetchAnalysis();
+
+    // 3. ฟังก์ชัน Cleanup: จะทำงานเมื่อ Component ถูกโหลดซ้ำ
+    return () => {
+      isCancelled = true; // ยกเลิกของเก่าทิ้งไป
+    };
   }, [params.id]);
 
   // ฟังก์ชันเลือกสีธีมตามธาตุหลัก
@@ -98,7 +114,9 @@ export default function ResultPage() {
     return (
       <div className="flex flex-col items-center justify-center p-12 space-y-8 animate-fade-in">
         <div className="animate-spin text-4xl mb-4">🔮</div>
-        <div className="text-xl font-semibold">กำลังวิเคราะห์ข้อมูล...</div>
+        <div className="text-xl font-semibold text-slate-900">
+          กำลังวิเคราะห์ข้อมูล...
+        </div>
       </div>
     );
   if (!data) return null;
@@ -162,7 +180,7 @@ export default function ResultPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 py-10 px-4">
+    <div className="min-h-screen bg-slate-100 py-6 px-4">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/"
