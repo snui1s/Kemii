@@ -5,7 +5,7 @@ import time
 
 # ⚠️⚠️ แก้บรรทัดนี้: ใส่ URL ของ Render ที่คุณได้มา ⚠️⚠️
 # ตัวอย่าง: API_URL = "https://4elements-api.onrender.com/submit-assessment"
-API_URL = "https://4-elements.vercel.app/submit-assessment" 
+API_URL = "https://fourelements-api.onrender.com/submit-assessment" 
 
 # --- PART 1: ฟังก์ชันช่วยสร้างคำตอบ (Randomizer Logic) ---
 def generate_answers(weight):

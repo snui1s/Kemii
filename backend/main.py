@@ -106,6 +106,7 @@ creative_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
 logic_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
 
 @app.get("/")
+@app.head("/")
 def read_root():
     return {"status": "I am awake!", "service": "4Elements API"}
 
