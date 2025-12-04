@@ -105,6 +105,10 @@ creative_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
 
 logic_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
 
+@app.get("/")
+def read_root():
+    return {"status": "I am awake!", "service": "4Elements API"}
+
 def calculate_disc_score(answers: List[Answer]):
     # 1. ตั้งต้นที่ 0 (หรือจะตั้งที่ 12 เพื่อกันติดลบก็ได้)
     scores = {'D': 0, 'I': 0, 'S': 0, 'C': 0}

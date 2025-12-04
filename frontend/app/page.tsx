@@ -96,7 +96,6 @@ export default function Home() {
 
     window.addEventListener("user-updated", checkLoginStatus);
 
-    // Cleanup
     return () => {
       window.removeEventListener("user-updated", checkLoginStatus);
     };
