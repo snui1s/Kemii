@@ -37,6 +37,7 @@ interface SynergyData {
   user2: UserBase;
   ai_analysis: AIAnalysis;
 }
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function SynergyModal({
   myId,
@@ -51,7 +52,7 @@ export default function SynergyModal({
 
     const fetchSynergy = async () => {
       try {
-        const res = await axios.post("http://localhost:8000/match-ai", {
+        const res = await axios.post(`${API_URL}/match-ai`, {
           user1_id: myId,
           user2_id: partnerId,
         });

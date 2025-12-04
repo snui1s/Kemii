@@ -18,6 +18,7 @@ interface Team {
   strength: string;
   weakness: string;
 }
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function GroupingPage() {
   const [numTeams, setNumTeams] = useState(2); // ค่าเริ่มต้น 2 ทีม
@@ -26,7 +27,7 @@ export default function GroupingPage() {
   const [totalUsers, setTotalUsers] = useState(0);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/users").then((res) => {
+    axios.get(`${API_URL}/users`).then((res) => {
       setTotalUsers(res.data.length);
     });
   }, []);
@@ -40,7 +41,7 @@ export default function GroupingPage() {
     setResult(null);
     try {
       // ยิง API ไปหลังบ้าน
-      const res = await axios.post("http://localhost:8000/auto-group-teams", {
+      const res = await axios.post(`${API_URL}/auto-group-teams`, {
         num_teams: numTeams,
       });
       setResult(res.data);

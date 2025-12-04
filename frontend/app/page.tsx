@@ -13,7 +13,7 @@ interface User {
   animal: string;
   dominant_type: string;
 }
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
@@ -79,7 +79,7 @@ export default function Home() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/users");
+        const res = await axios.get(`${API_URL}/users`);
         setUsers(res.data);
       } catch (err) {
         console.error("Error fetching users:", err);

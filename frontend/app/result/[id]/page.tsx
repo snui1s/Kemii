@@ -2,10 +2,12 @@ import ResultClient from "@/components/ResultClient";
 import { notFound } from "next/navigation";
 
 // ฟังก์ชันดึงข้อมูล (เหมือนเดิม)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 async function getResultData(id: string) {
   if (!id || id === "undefined" || id === "null") return null;
   try {
-    const res = await fetch(`http://127.0.0.1:8000/users/${id}/analysis`, {
+    const res = await fetch(`${API_URL}/users/${id}/analysis`, {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return null;

@@ -164,6 +164,8 @@ const fullQuestions = [...questions].map((q, i) => ({
   id: i + 1, // run id ใหม่ 1-15
 }));
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function AssessmentPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -224,10 +226,7 @@ export default function AssessmentPage() {
     };
 
     try {
-      const res = await axios.post(
-        "http://localhost:8000/submit-assessment",
-        payload
-      );
+      const res = await axios.post(`${API_URL}/submit-assessment`, payload);
       const newUser = res.data;
       localStorage.setItem("myUserId", newUser.id.toString());
       localStorage.setItem("myName", newUser.name);

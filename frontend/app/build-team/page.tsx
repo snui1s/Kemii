@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios"; // นำเข้า AxiosError เพื่อ Type-safe catch
 import { Users, UserPlus, Save, RefreshCcw, Crown } from "lucide-react";
 import toast from "react-hot-toast";
@@ -29,7 +29,7 @@ interface TeamResult {
 interface ApiErrorResponse {
   detail: string;
 }
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function BuildTeamPage() {
   // Data State
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
@@ -44,21 +44,19 @@ export default function BuildTeamPage() {
   const [loading, setLoading] = useState(false);
 
   // 1. ดึงคนว่างงาน
-  const fetchAvailable = async () => {
+  const fetchAvailable = useCallback(async () => {
     try {
-      const res = await axios.get<User[]>(
-        "http://localhost:8000/users/available"
-      );
+      const res = await axios.get<User[]>(`${API_URL}/users/available`);
       setAvailableUsers(res.data);
     } catch (err) {
       console.error(err);
       toast.error("ดึงข้อมูลไม่สำเร็จ");
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAvailable();
-  }, []);
+  }, [fetchAvailable]);
 
   // 2. สั่ง AI หาคน
   const handleRecommend = async () => {
@@ -71,7 +69,7 @@ export default function BuildTeamPage() {
 
     try {
       const res = await axios.post<TeamResult>(
-        "http://localhost:8000/recommend-team-members",
+        `${API_URL}/recommend-team-members`,
         {
           leader_id: Number(selectedLeaderId),
           member_count: memberCount,
@@ -96,7 +94,7 @@ export default function BuildTeamPage() {
     try {
       const memberIds = aiResult.members.map((m) => m.id);
 
-      await axios.post("http://localhost:8000/confirm-team", {
+      await axios.post(`${API_URL}/confirm-team`, {
         team_name: aiResult.team_name,
         member_ids: [aiResult.leader.id, ...memberIds],
       });
@@ -117,7 +115,7 @@ export default function BuildTeamPage() {
   const handleReset = async () => {
     if (confirm("ล้างทีมทั้งหมด? ทุกคนจะกลับมาว่างงานนะ")) {
       try {
-        await axios.post("http://localhost:8000/reset-teams");
+        await axios.post(`${API_URL}/reset-teams`);
         fetchAvailable();
         toast.success("ล้างกระดานเรียบร้อย!");
       } catch (err) {
