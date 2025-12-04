@@ -17,10 +17,13 @@ from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
-DB_NAME = "elements.db"
-sqlite_url = f"sqlite:///{DB_NAME}"
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, echo=False, connect_args=connect_args)
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///elements.db")
+connect_args = {}
+if "sqlite" in DATABASE_URL:
+    connect_args = {"check_same_thread": False} # SQLite ต้องใช้ตัวนี้
+
+# สร้าง Engine
+engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
