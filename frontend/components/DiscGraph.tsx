@@ -22,86 +22,92 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMounted(true);
-    }, 0); // 0ms ก็เพียงพอให้หลุดจาก Render loop แล้วครับ
+    }, 0);
 
-    return () => clearTimeout(timer); // Cleanup (กันเหนียว)
+    return () => clearTimeout(timer);
   }, []);
 
   const x = scores.D + scores.I - (scores.S + scores.C);
-
-  // Y: บน (D+S) - ล่าง (I+C) *สูตรนี้อิงตามรูปที่คุณส่งมา
   const y = scores.D + scores.S - (scores.I + scores.C);
-
   const data = [{ x, y }];
-
-  // กำหนดขอบเขตสูงสุดของกราฟ (เพื่อให้จุดอยู่ตรงกลางสวยๆ)
   const maxRange = 25;
 
   if (!isMounted) {
     return (
-      <div className="w-full h-[400px] bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400">
+      <div className="w-full h-[400px] bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400">
         Loading Graph...
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-[400px] bg-white rounded-xl shadow-inner border border-slate-200 overflow-hidden font-sans">
+    // ✅ ปรับ Container เป็น Dark Mode
+    <div className="relative w-full h-[400px] bg-white dark:bg-slate-900 rounded-xl shadow-inner border border-slate-200 dark:border-slate-800 overflow-hidden font-sans transition-colors">
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
         {/* ซ้ายบน (หนู - S) */}
-        <div className="bg-green-50/50 flex flex-col items-center justify-center p-4 border-r border-b border-slate-100 text-center">
+        <div className="bg-green-50/50 dark:bg-green-900/10 flex flex-col items-center justify-center p-4 border-r border-b border-slate-100 dark:border-slate-800 text-center transition-colors">
           <span className="text-4xl mb-2">🐁</span>
-          <h3 className="font-bold text-green-700">Steadiness</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="font-bold text-green-700 dark:text-green-400">
+            Steadiness
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             ชอบทำงานเป็นทีม, ความสงบ, ช่วยเหลือ
           </p>
         </div>
 
         {/* ขวาบน (กระทิง - D) */}
-        <div className="bg-red-50/50 flex flex-col items-center justify-center p-4 border-b border-slate-100 text-center">
+        <div className="bg-red-50/50 dark:bg-red-900/10 flex flex-col items-center justify-center p-4 border-b border-slate-100 dark:border-slate-800 text-center transition-colors">
           <span className="text-4xl mb-2">🐂</span>
-          <h3 className="font-bold text-red-700">Dominance</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="font-bold text-red-700 dark:text-red-400">
+            Dominance
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             ชอบทำงานท้าทาย, ตัดสินใจเร็ว, ชอบควบคุม
           </p>
         </div>
 
         {/* ซ้ายล่าง (หมี - C) */}
-        <div className="bg-blue-50/50 flex flex-col items-center justify-center p-4 border-r border-slate-100 text-center">
+        <div className="bg-blue-50/50 dark:bg-blue-900/10 flex flex-col items-center justify-center p-4 border-r border-slate-100 dark:border-slate-800 text-center transition-colors">
           <span className="text-4xl mb-2">🐻</span>
-          <h3 className="font-bold text-blue-700">Conscientiousness</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="font-bold text-blue-700 dark:text-blue-400">
+            Conscientiousness
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             ชอบวิเคราะห์, ชอบความถูกต้อง, ชอบวางแผน
           </p>
         </div>
 
         {/* ขวาล่าง (อินทรี - I) */}
-        <div className="bg-yellow-50/50 flex flex-col items-center justify-center p-4 text-center">
+        <div className="bg-yellow-50/50 dark:bg-yellow-900/10 flex flex-col items-center justify-center p-4 text-center transition-colors">
           <span className="text-4xl mb-2">🦅</span>
-          <h3 className="font-bold text-yellow-700">Influence</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="font-bold text-yellow-700 dark:text-yellow-400">
+            Influence
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             ชอบพูด, ชอบโน้มน้าว, สร้างแรงบันดาลใจ
           </p>
         </div>
       </div>
+
       {/* --- LAYER 2: ป้ายแกน (Axis Labels) --- */}
       <div className="absolute inset-0 pointer-events-none">
         {/* แกนตั้ง */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold bg-white px-2 rounded shadow text-slate-600">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold bg-white dark:bg-slate-800 px-2 rounded shadow text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
           Group Centric
         </div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs font-bold bg-white px-2 rounded shadow text-slate-600">
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs font-bold bg-white dark:bg-slate-800 px-2 rounded shadow text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
           Self Centric
         </div>
 
         {/* แกนนอน */}
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold bg-white px-2 rounded shadow -rotate-90 text-slate-600">
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold bg-white dark:bg-slate-800 px-2 rounded shadow -rotate-90 text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
           Introvert
         </div>
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold bg-white px-2 rounded shadow rotate-90 text-slate-600">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold bg-white dark:bg-slate-800 px-2 rounded shadow rotate-90 text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
           Extrovert
         </div>
       </div>
+
       <ResponsiveContainer
         width="100%"
         height="100%"
@@ -122,9 +128,20 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
             hide
             domain={[-maxRange, maxRange]}
           />
-          <Tooltip cursor={{ strokeDasharray: "3 3" }} content={() => null} />{" "}
-          <ReferenceLine x={0} stroke="#94a3b8" strokeDasharray="3 3" />
-          <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+          <Tooltip cursor={{ strokeDasharray: "3 3" }} content={() => null} />
+          {/* ปรับสีเส้น Grid ให้จางลงในโหมดมืด */}
+          <ReferenceLine
+            x={0}
+            stroke="#94a3b8"
+            strokeOpacity={0.5}
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={0}
+            stroke="#94a3b8"
+            strokeOpacity={0.5}
+            strokeDasharray="3 3"
+          />
           <Scatter name="You" data={data} fill="#0f172a" opacity={0}>
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} />
@@ -132,21 +149,20 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
+
       <div
         className="absolute z-10 flex flex-col items-center justify-center"
         style={{
-          // คำนวณตำแหน่ง
           left: `${50 + (x / maxRange) * 50}%`,
           top: `${50 - (y / maxRange) * 50}%`,
-          // จัดกึ่งกลางจุดให้ตรงเป๊ะ
           transform: "translate(-50%, -50%)",
         }}
       >
-        {/* 1. วงแหวนเรดาร์ (Ping): ขยายออกแล้วจางหายไป (ดึงสายตาแต่ไม่รก) */}
-        <div className="absolute w-8 h-8 bg-slate-400 rounded-full animate-ping opacity-75"></div>
+        {/* 1. Ping: ปรับสีให้เข้ากับธีม */}
+        <div className="absolute w-8 h-8 bg-slate-400 dark:bg-white rounded-full animate-ping opacity-75 dark:opacity-30"></div>
 
-        {/* 2. จุดหลัก (Core): อยู่นิ่งๆ สีเข้มชัดเจน */}
-        <div className="relative w-4 h-4 bg-slate-900 border-2 border-white rounded-full shadow-md"></div>
+        {/* 2. จุดหลัก: สลับสีขาว/ดำ ให้เด่นชัดในแต่ละโหมด */}
+        <div className="relative w-4 h-4 bg-slate-900 dark:bg-white border-2 border-white dark:border-slate-900 rounded-full shadow-md"></div>
       </div>
     </div>
   );
