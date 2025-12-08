@@ -1,15 +1,6 @@
 "use client";
 import { useState, useEffect, CSSProperties } from "react";
-import {
-  User,
-  Flame,
-  Droplets,
-  Wind,
-  Mountain,
-  Leaf,
-  Zap,
-  Droplet,
-} from "lucide-react";
+import { User, Flame, Wind, Mountain, Leaf, Zap, Droplet } from "lucide-react";
 
 interface UserCardProps {
   name: string;
@@ -31,30 +22,27 @@ export default function UserCard({ name, animal, type }: UserCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
 
-  // 1. สร้างเม็ดฝนเตรียมไว้เลย "ตั้งแต่โหลดเสร็จ" (Pre-calculate)
-  // ไม่ต้องรอ Hover แล้วค่อยสร้าง จะได้ไม่หน่วง
+  // 1. Logic เดิม: Pre-calculate particles
   useEffect(() => {
     const timer = setTimeout(() => {
       const generatedParticles = Array.from({ length: 15 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         top: Math.random() * 100,
-        // ปรับ Delay ให้น้อยลง (0-100ms) เพื่อให้มาไวๆ
         delay: Math.random() * 100,
         duration: Math.random() * 1000 + 800,
         size: Math.random() * 10 + 10,
         rotation: Math.random() * 360,
       }));
-
       setParticles(generatedParticles);
-    }, 0); // 0ms คือรอให้ React ทำงานหลักเสร็จก่อน แล้วค่อยทำอันนี้ทันที
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
-    return () => clearTimeout(timer); // ล้าง timer ถ้า component ถูกทำลาย
-  }, []); // ทำครั้งเดียวตอนหน้าเว็บโหลด
-
-  const handleMouseEnter = () => setIsHovered(true); // แค่เปลี่ยนสถานะ (เร็วปรี๊ด)
+  const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
 
+  // Logic เดิม: Config ของธาตุ
   const getElementConfig = (t: string) => {
     switch (t) {
       case "D":
@@ -68,7 +56,7 @@ export default function UserCard({ name, animal, type }: UserCardProps) {
         return {
           color: "#eab308",
           mainIcon: <Wind className={isHovered ? "animate-pulse" : ""} />,
-          particleIcon: <Wind style={{}} />, // กลับด้านลม
+          particleIcon: <Wind style={{}} />,
           animationName: "slide-right",
         };
       case "S":
@@ -96,61 +84,31 @@ export default function UserCard({ name, animal, type }: UserCardProps) {
   };
 
   const config = getElementConfig(type);
-
-  const getElementColor = (t: string) => {
-    switch (t) {
-      case "D":
-        return "#ef4444";
-      case "I":
-        return "#eab308";
-      case "S":
-        return "#22c55e";
-      case "C":
-        return "#3b82f6";
-      default:
-        return "#94a3b8";
-    }
-  };
-
-  const getIcon = (t: string) => {
-    switch (t) {
-      case "D":
-        return <Flame className={isHovered ? "animate-bounce" : ""} />;
-      case "I":
-        return <Wind className={isHovered ? "animate-pulse" : ""} />;
-      case "S":
-        return <Mountain className={isHovered ? "animate-bounce" : ""} />;
-      case "C":
-        return <Droplets className={isHovered ? "animate-pulse" : ""} />;
-      default:
-        return <User />;
-    }
-  };
-
-  const themeColor = getElementColor(type);
+  const themeColor = config.color;
 
   return (
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      className={`
+        relative overflow-hidden rounded-2xl p-5 cursor-pointer transition-all duration-300
+        bg-white dark:bg-slate-800 
+        border-2 border-slate-200 dark:border-slate-700
+        shadow-sm dark:shadow-none
+      `}
       style={{
-        cursor: "pointer",
-        transition: "all 0.3s ease-out",
-        backgroundColor: "white",
-        borderRadius: "16px",
-        padding: "20px",
-        border: isHovered ? `2px solid ${themeColor}` : "2px solid #e2e8f0",
+        borderLeftColor: themeColor,
+        borderLeftWidth: isHovered ? "2px" : "6px",
+
+        borderTopColor: isHovered ? themeColor : undefined,
+        borderRightColor: isHovered ? themeColor : undefined,
+        borderBottomColor: isHovered ? themeColor : undefined,
+
         transform: isHovered
           ? "translateY(-5px) scale(1.02)"
           : "translateY(0) scale(1)",
-        boxShadow: isHovered
-          ? `0 10px 25px -5px ${themeColor}40`
-          : "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-        borderLeft: isHovered
-          ? `2px solid ${themeColor}`
-          : `6px solid ${themeColor}`,
+        boxShadow: isHovered ? `0 10px 25px -5px ${themeColor}40` : undefined, // ให้ ClassName จัดการเงาปกติ
       }}
-      className="relative overflow-hidden"
     >
       <style jsx>{`
         @keyframes rise-up {
@@ -207,8 +165,7 @@ export default function UserCard({ name, animal, type }: UserCardProps) {
         }
       `}</style>
 
-      {/* Render Particles ตลอดเวลา แต่ซ่อนด้วย Opacity หรือ isHovered */}
-      {/* ใช้ isHovered && ... เหมือนเดิมได้ แต่เพราะเราคำนวณไว้แล้ว มันจะเร็วกว่ามาก */}
+      {/* Particles Logic (เหมือนเดิมเป๊ะ) */}
       {isHovered &&
         particles.map((p) => {
           let startStyle: CSSProperties = {
@@ -247,15 +204,16 @@ export default function UserCard({ name, animal, type }: UserCardProps) {
         <div>
           <h3
             style={{
-              color: isHovered ? themeColor : "#1e293b",
+              color: isHovered ? themeColor : undefined, // ถ้าไม่ Hover ให้ใช้สีจาก Class
               transition: "color 0.2s",
             }}
-            className="font-bold text-lg"
+            // ✅ เพิ่ม dark:text-slate-100
+            className="font-bold text-lg text-slate-800 dark:text-slate-100"
           >
             {name}
           </h3>
 
-          <p className="text-sm text-slate-500 mt-1 flex items-center gap-2">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
             {animal}
             <span
               style={{
@@ -281,7 +239,7 @@ export default function UserCard({ name, animal, type }: UserCardProps) {
             boxShadow: isHovered ? `0 0 15px ${themeColor}40` : "none",
           }}
         >
-          {getIcon(type)}
+          {config.mainIcon}
         </div>
       </div>
 
