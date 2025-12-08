@@ -65,34 +65,35 @@ export default function GroupingPage() {
     );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4">
+    // ✅ Main Container Dark Mode
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800 py-10 px-4 transition-colors">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center justify-center gap-3">
-            <Users className="text-blue-600" size={32} />
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-center justify-center gap-3">
+            <Users className="text-blue-600 dark:text-blue-400" size={32} />
             Auto Team Builder
           </h1>
-          <p className="text-slate-500 mt-2">
+          <p className="text-slate-500 dark:text-slate-400 mt-2">
             ให้ AI ช่วยเกลี่ยพลังธาตุ จัดทีมให้สมดุลที่สุด
           </p>
         </div>
 
         {/* Control Panel (กล่องเลือกจำนวน) */}
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-xl mx-auto text-center mb-12">
-          <label className="block text-lg font-medium text-slate-700 mb-4">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-xl mx-auto text-center mb-12 transition-colors">
+          <label className="block text-lg font-medium text-slate-700 dark:text-slate-300 mb-4">
             ต้องการแบ่งกี่ทีม?
           </label>
 
           <div className="flex items-center justify-center gap-6 mb-8">
             <button
               onClick={() => setNumTeams((n) => Math.max(2, n - 1))}
-              className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 text-2xl font-bold text-slate-600 transition"
+              className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-2xl font-bold text-slate-600 dark:text-slate-300 transition"
             >
               -
             </button>
 
-            <div className="text-5xl font-black text-blue-600 w-20">
+            <div className="text-5xl font-black text-blue-600 dark:text-blue-400 w-20">
               {numTeams}
             </div>
             <button
@@ -110,8 +111,8 @@ export default function GroupingPage() {
               className={`w-12 h-12 rounded-full text-2xl font-bold transition
                 ${
                   numTeams >= maxTeams
-                    ? "bg-slate-100 text-slate-300 cursor-not-allowed"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                    : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
                 }
               `}
             >
@@ -122,7 +123,7 @@ export default function GroupingPage() {
           <button
             onClick={handleGroup}
             disabled={loading}
-            className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-70 disabled:scale-100 flex items-center justify-center gap-2"
+            className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-70 disabled:scale-100 flex items-center justify-center gap-2 dark:shadow-indigo-900/20"
           >
             {loading ? (
               <span className="opacity-50">Loading ...</span>
@@ -148,16 +149,17 @@ export default function GroupingPage() {
 
               const lightTheme =
                 index % 4 === 0
-                  ? "bg-red-50 text-red-800 border-red-100"
+                  ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border-red-100 dark:border-red-800/30"
                   : index % 4 === 1
-                  ? "bg-blue-50 text-blue-800 border-blue-100"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border-blue-100 dark:border-blue-800/30"
                   : index % 4 === 2
-                  ? "bg-green-50 text-green-800 border-green-100"
-                  : "bg-yellow-50 text-yellow-800 border-yellow-100";
+                  ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-100 dark:border-green-800/30"
+                  : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border-yellow-100 dark:border-yellow-800/30";
+
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden hover:shadow-xl transition duration-300"
+                  className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl transition duration-300"
                 >
                   {/* --- Header (แถบยาวด้านบน) --- */}
                   <div
@@ -182,8 +184,8 @@ export default function GroupingPage() {
                   {/* --- Body (แบ่งซ้าย-ขวา) --- */}
                   <div className="flex flex-col lg:flex-row">
                     {/* ฝั่งซ้าย: รายชื่อสมาชิก (กินพื้นที่ 60-70%) */}
-                    <div className="p-6 lg:w-[45%] border-b lg:border-b-0 lg:border-r border-slate-100">
-                      <h4 className="text-slate-500 font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                    <div className="p-6 lg:w-[45%] border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800">
+                      <h4 className="text-slate-500 dark:text-slate-400 font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
                         <Users size={16} /> Roster / รายชื่อ
                       </h4>
 
@@ -192,18 +194,18 @@ export default function GroupingPage() {
                         {team.members.map((member, i) => (
                           <div
                             key={i}
-                            className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition"
+                            className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500/50 transition"
                           >
                             <div className="flex flex-col">
-                              <span className="font-bold text-slate-700">
+                              <span className="font-bold text-slate-700 dark:text-slate-200">
                                 {member.name}
                               </span>
-                              <span className="text-xs text-slate-400">
+                              <span className="text-xs text-slate-400 dark:text-slate-500">
                                 ({member.animal})
                               </span>
                             </div>
                             <span
-                              className={`text-xs px-2 py-1 rounded-full border bg-white text-slate-500`}
+                              className={`text-xs px-2 py-1 rounded-full border bg-white dark:bg-slate-700 dark:border-slate-600 text-slate-500 dark:text-slate-300`}
                             >
                               {member.role}
                             </span>
@@ -213,10 +215,10 @@ export default function GroupingPage() {
                     </div>
 
                     {/* ฝั่งขวา: วิเคราะห์ (กินพื้นที่ 30-40%) */}
-                    <div className="p-6 lg:w-[55%] flex flex-col gap-4 bg-slate-50/50">
+                    <div className="p-6 lg:w-[55%] flex flex-col gap-4 bg-slate-50/50 dark:bg-slate-800/30">
                       {/* จุดแข็ง */}
-                      <div className="text-slate-700 text-sm leading-relaxed bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                        <h4 className="text-slate-500 font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                      <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <h4 className="text-slate-500 dark:text-slate-400 font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
                           <Sparkles size={16} className="text-yellow-500" />{" "}
                           Strength
                         </h4>

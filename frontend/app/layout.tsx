@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import Footer from "@/components/Footer";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const lineSeed = localFont({
   src: [
@@ -37,8 +38,8 @@ const lineSeed = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "4Elements Team",
-  description: "Team management app using DISC personality test",
+  title: "Kemii",
+  description: "Team Chemistry",
 };
 
 export default function RootLayout({
@@ -47,16 +48,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${lineSeed.className} min-h-screen flex flex-col`}>
-        <Navbar />
-        <main className="flex-1 bg-slate-100 overflow-auto flex flex-col">
-          <div className="flex-1 p-6">{children}</div>
-          <div className="mt-auto">
-            <Footer />
-          </div>
-        </main>
-        <Toaster position="top-right" reverseOrder={false} />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Navbar />
+          <main className="flex-1 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 overflow-auto flex flex-col">
+            <div className="flex-1 p-6">{children}</div>
+            <div className="mt-auto">
+              <Footer />
+            </div>
+          </main>
+          <Toaster position="top-right" reverseOrder={false} />
+        </ThemeProvider>
       </body>
     </html>
   );
