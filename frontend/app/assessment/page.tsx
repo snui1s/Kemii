@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, X, Info, Play } from "lucide-react";
 import toast from "react-hot-toast";
 import ElementalLoader from "@/components/ElementalLoader";
+import { Analytics } from "@vercel/analytics/next";
 
 const questions = [
   {
@@ -457,7 +458,7 @@ export default function AssessmentPage() {
           );
         })}
       </div>
-
+      <Analytics />
       {/* ปุ่มส่ง */}
       <div className="mt-10 bottom-4">
         <button

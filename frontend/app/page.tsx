@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import UserCard from "@/components/UserCard";
-import SynergyModal from "@/components/SynergyModal"; // 1. นำเข้า
+import SynergyModal from "@/components/SynergyModal";
 import InfoModal from "@/components/InfoModal";
 import toast from "react-hot-toast";
 import { Users, HelpCircle } from "lucide-react";
+import { Analytics } from "@vercel/analytics/next";
 
 interface User {
   id: number;
@@ -303,6 +304,7 @@ export default function Home() {
           className="group-hover:scale-110 transition-transform"
         />
       </button>
+      <Analytics />
     </div>
   );
 }
