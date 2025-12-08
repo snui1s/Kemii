@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 const lineSeed = localFont({
   src: [
     {
-      path: "./fonts/LINESeedSansTH_Th.ttf", // แก้เป็นนามสกุลจริงของคุณ
+      path: "./fonts/LINESeedSansTH_Th.ttf",
       weight: "100",
       style: "normal",
     },
@@ -34,7 +34,7 @@ const lineSeed = localFont({
       style: "normal",
     },
   ],
-  variable: "--font-line-seed", // ชื่อตัวแปร CSS
+  variable: "--font-line-seed",
 });
 
 export const metadata: Metadata = {
@@ -58,7 +58,34 @@ export default function RootLayout({
               <Footer />
             </div>
           </main>
-          <Toaster position="top-right" reverseOrder={false} />
+          <Toaster
+            position="top-center"
+            reverseOrder={false}
+            toastOptions={{
+              // ใช้ ! นำหน้าเพื่อบังคับทับ style เดิมของ library
+              className:
+                "!bg-white dark:!bg-slate-800 " +
+                "!text-slate-900 dark:!text-slate-100 " +
+                "!border !border-slate-100 dark:!border-slate-700 " +
+                "!shadow-xl dark:!shadow-slate-900/50 " +
+                "!rounded-xl",
+
+              duration: 4000,
+
+              success: {
+                iconTheme: {
+                  primary: "#10b981",
+                  secondary: "white",
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "white",
+                },
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
