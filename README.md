@@ -1,6 +1,6 @@
-# Kemii
+# Kemii (Chemistry)
 
-Kemii is an AI-powered team management and personality assessment platform designed to optimize team dynamics using the DISC behavioral model. It leverages Google Gemini AI to analyze individual traits, assess compatibility between team members, and automatically generate balanced team structures.
+Kemii is an AI-powered team management and personality assessment platform designed to optimize team dynamics using the DISC behavioral model. It leverages Google Gemini AI to analyze individual traits, assess compatibility between team members, and automatically generate balanced team structures. 
 
 ## Features
 
@@ -45,11 +45,9 @@ Kemii is an AI-powered team management and personality assessment platform desig
     venv\Scripts\activate
     # macOS/Linux:
     source venv/bin/activate
-    Install dependencies:
 3. Install dependencies:
     ```bash
     pip install -r requirements.txt
-    Create a .env file in the backend directory:
 4. Create a .env file in the backend directory:
    ```bash
    GOOGLE_API_KEY=your_gemini_api_key
@@ -67,11 +65,8 @@ Kemii is an AI-powered team management and personality assessment platform desig
 2. Install dependencies:
    ```bash
    npm install
-3. Create a .env.local file in the frontend directory:
-   ```bash
-   NEXT_PUBLIC_API_URL=http://localhost:8000
   
-4. Run the development server:
+3. Run the development server:
    ```bash
    npm run dev
   The application will be available at http://localhost:3000.
