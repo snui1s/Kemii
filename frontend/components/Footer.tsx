@@ -1,7 +1,7 @@
 import { Code, Heart } from "lucide-react";
 
 export default function Footer() {
-  const APP_VERSION = "v1.1";
+  const APP_VERSION = "v1.2";
 
   return (
     <footer
