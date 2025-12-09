@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ResultClient from "@/components/ResultClient";
 import { notFound } from "next/navigation";
 import toast from "react-hot-toast";
+import ElementalLoader from "@/components/ElementalLoader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -54,11 +55,8 @@ export default function ResultPage() {
 
   if (loading || !isAuthorized) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-500">กำลังตรวจสอบข้อมูล...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 transition-colors">
+        <ElementalLoader />
       </div>
     );
   }
