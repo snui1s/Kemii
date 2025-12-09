@@ -151,7 +151,6 @@ export default function ResultClient({ data }: { data: ResultData }) {
   }
 
   return (
-    // ✅ Main Container Dark Mode
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 py-10 px-4 transition-colors">
       <div className="max-w-3xl mx-auto">
         <button
@@ -172,7 +171,7 @@ export default function ResultClient({ data }: { data: ResultData }) {
             <h1 className="text-3xl font-bold mb-2">{analysis.title}</h1>
 
             <div className="mt-4 px-4 py-1 bg-white/50 dark:bg-slate-900/30 rounded-full text-sm font-semibold inline-block backdrop-blur-sm">
-              ธาตุหลัก: {user.animal} ({user.dominant_type})
+              สัตว์ประจำตัว: {user.animal} ({user.dominant_type})
             </div>
           </div>
         </div>
