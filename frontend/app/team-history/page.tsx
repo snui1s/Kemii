@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   History,
   RefreshCcw,

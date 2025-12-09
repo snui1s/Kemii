@@ -8,9 +8,8 @@ import {
   LogOut,
   Shuffle,
   UserPlus,
-  Orbit,
   Lock,
-  HelpCircle, // ✅ เพิ่มไอคอนกุญแจ
+  HelpCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ThemeToggle } from "./ThemeToggle";
@@ -130,18 +129,48 @@ export default function Navbar() {
     <>
       <nav className="bg-slate-100 dark:bg-slate-900 backdrop-blur-md text-slate-600 dark:text-slate-300 p-4 sticky top-0 z-50 shadow-sm border-b border-slate-200/50 dark:border-slate-800 transition-colors duration-300">
         <div className="container mx-auto flex justify-between items-center">
-          {/* Logo Section */}
           <Link
             href="/"
             className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white hover:text-green-500 dark:hover:text-green-400 transition"
           >
-            <Orbit size={28} className="text-indigo-600 dark:text-indigo-400" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 32 32"
+              fill="none"
+              className="w-8 h-8"
+            >
+              <circle cx="16" cy="16" r="16" fill="#0f172a" />
+
+              <path
+                d="M16 28c6.627 0 12-5.373 12-12S22.627 4 16 4 4 9.373 4 16s5.373 12 12 12z"
+                stroke="#6366f1"
+                strokeWidth="2"
+                strokeOpacity="0.5"
+              />
+
+              <circle cx="16" cy="16" r="6" fill="url(#grad1)" />
+              <circle cx="26" cy="16" r="2" fill="#22c55e" />
+              <circle cx="8" cy="22" r="1.5" fill="#eab308" />
+
+              <defs>
+                <linearGradient
+                  id="grad1"
+                  x1="10"
+                  y1="10"
+                  x2="22"
+                  y2="22"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#3b82f6" />
+                  <stop offset="1" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
+            </svg>
+
             <span className="hidden sm:inline font-banana">Kemii</span>
           </Link>
 
-          {/* Right Section */}
           <div className="flex items-center gap-3 sm:gap-6">
-            {/* ✅ Menu Links (ใส่ Logic ล็อกกุญแจ) */}
             <div className="flex items-center gap-4 sm:gap-6">
               {/* 1. ประวัติทีม */}
               <Link
