@@ -19,12 +19,13 @@ Kemii is an AI-powered team management and personality assessment platform desig
 - **Visualization**: Recharts
 - **UI Components**: Lucide React, React Hot Toast
 - **HTTP Client**: Axios
+- **Deployment**: Vercel
 
 ### Backend
 - **Framework**: FastAPI
 - **Database**: SQLModel (SQLite for Dev / PostgreSQL for Prod)
 - **AI Integration**: LangChain, Google Gemini API
-- **Deployment**: Render (Backend), Vercel (Frontend)
+- **Deployment**: Render (Backend)
 
 ## Getting Started
 
