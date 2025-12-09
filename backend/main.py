@@ -1,94 +1,42 @@
-import json
+from datetime import datetime
 import os
+import json
 import math
-from typing import List, Dict, Optional
+
+from typing import List, Dict, Optional, Any 
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from contextlib import asynccontextmanager
+from sqlmodel import Session, select
 
-from sqlmodel import SQLModel, Field, Session, create_engine, select
+from database import create_db_and_tables, get_session
+from models import User, TeamLog
+from schemas import (
+    Answer,UserSubmission, UserResult, MatchRequest, GroupingRequest, 
+    UserNameUpdate, TeamBuilderRequest, ConfirmTeamRequest
+)
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
+from slowapi import Limiter, _rate_limit_exceeded_handler # type: ignore
+from slowapi.util import get_remote_address # type: ignore
+from slowapi.errors import RateLimitExceeded # type: ignore
+
 load_dotenv()
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///elements.db")
-connect_args = {}
-if "sqlite" in DATABASE_URL:
-    connect_args = {"check_same_thread": False} # SQLite ต้องใช้ตัวนี้
-
-# สร้าง Engine
-engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-# Dependency เพื่อส่ง Session ให้แต่ละ Endpoint
-def get_session():
-    with Session(engine) as session:
-        yield session
-
-class User(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True} 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    dominant_type: str
-    animal: str
-    score_d: int
-    score_i: int
-    score_s: int
-    score_c: int
-    team_name: Optional[str] = Field(default=None)
-    analysis_result: Optional[str] = Field(default=None)
-
-class Answer(BaseModel):
-    question_id: int
-    most_value: str
-    least_value: str     
-
-class UserSubmission(BaseModel):
-    name: str
-    answers: List[Answer]
-
-class UserResult(BaseModel):
-    id: int
-    name: str
-    dominant_type: str
-    animal: str
-    scores: Dict[str, int]
-
-class MatchRequest(BaseModel):
-    user1_id: int
-    user2_id: int
-    
-class GroupingRequest(BaseModel):
-    num_teams: int
-    
-class UserNameUpdate(BaseModel):
-    name: str
-    
-class TeamBuilderRequest(BaseModel):
-    leader_id: int
-    member_count: int
-    strategy: str  # "Balanced", "Aggressive", "Creative", "Supportive"
-
-# Model รับค่าตอนกดยืนยันสร้างทีม (Save)
-class ConfirmTeamRequest(BaseModel):
-    team_name: str
-    member_ids: List[int]
-
-# --- App Setup ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
     
 app = FastAPI(lifespan=lifespan)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -104,6 +52,26 @@ if not os.getenv("GOOGLE_API_KEY"):
 creative_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
 
 logic_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+
+def check_and_release_users(session: Session):
+    busy_users = session.exec(
+        select(User).where(User.is_available == False, User.active_project_end_date != None)
+    ).all()
+    
+    now = datetime.now()
+    updated_count = 0
+    
+    for user in busy_users:
+        if now > user.active_project_end_date:
+            user.is_available = True
+            user.team_name = None
+            user.active_project_end_date = None
+            session.add(user)
+            updated_count += 1
+            
+    if updated_count > 0:
+        session.commit()
+        print("⏰ Auto-released {updated_count} users because projects ended.")
 
 @app.get("/")
 @app.head("/")
@@ -154,14 +122,16 @@ def submit_assessment(submission: UserSubmission, session: Session = Depends(get
     
     session.add(user_db)
     session.commit()
-    session.refresh(user_db) # รีเฟรชเพื่อเอา ID ที่เพิ่งสร้างกลับมา
+    session.refresh(user_db) 
     
     return {
         "id": user_db.id,
         "name": user_db.name,
         "dominant_type": user_db.dominant_type,
         "animal": user_db.animal,
-        "scores": raw_scores
+        "scores": raw_scores,
+        "team_name": user_db.team_name,
+        "is_available": user_db.is_available
     }
 
 @app.get("/users", response_model=List[UserResult])
@@ -169,13 +139,15 @@ def get_users(session: Session = Depends(get_session)):
     users = session.exec(select(User)).all()
     
     results = []
-    for u in users:
+    for user in users:
         results.append({
-            "id": u.id,
-            "name": u.name,
-            "dominant_type": u.dominant_type,
-            "animal": u.animal,
-            "scores": {"D": u.score_d, "I": u.score_i, "S": u.score_s, "C": u.score_c}
+            "id": user.id,
+            "name": user.name,
+            "dominant_type": user.dominant_type,
+            "animal": user.animal,
+            "scores": {"D": user.score_d, "I": user.score_i, "S": user.score_s, "C": user.score_c},
+            "team_name": user.team_name,
+            "is_available": user.is_available
         })
     return results
 
@@ -191,9 +163,10 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
 
 # ... (Imports เดิม)
 
-# 4. จับคู่ 1-on-1 (AI Match) - ฉบับอัปเกรด JSON & Score
+
 @app.post("/match-ai")
-async def match_users_ai(req: MatchRequest, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")
+async def match_users_ai(request: Request, req: MatchRequest, session: Session = Depends(get_session)):
     u1 = session.get(User, req.user1_id)
     u2 = session.get(User, req.user2_id)
     
@@ -379,7 +352,8 @@ async def analyze_user(user_id: int, session: Session = Depends(get_session)):
     }
 
 @app.post("/auto-group-teams")
-async def auto_group_teams(req: GroupingRequest, session: Session = Depends(get_session)):
+@limiter.limit("5/minute")
+async def auto_group_teams(request: Request, req: GroupingRequest, session: Session = Depends(get_session)):
     # 1. ดึงข้อมูลทุกคนในบริษัท
     users = session.exec(select(User)).all()
     
@@ -494,23 +468,57 @@ def update_user_name(user_id: int, update_data: UserNameUpdate, session: Session
         "name": user.name,
         "dominant_type": user.dominant_type,
         "animal": user.animal,
-        "scores": {"D": user.score_d, "I": user.score_i, "S": user.score_s, "C": user.score_c}
+        "scores": {"D": user.score_d, "I": user.score_i, "S": user.score_s, "C": user.score_c},
+        "team_name": user.team_name,
+        "is_available": user.is_available
     }
+    
+
+
+@app.get("/users/roster")
+def get_user_roster(session: Session = Depends(get_session)):
+    check_and_release_users(session)
+    users = session.exec(select(User).order_by(User.is_available.desc(), User.name)).all()
+    return users
+
     
 @app.get("/users/available")
 def get_available_users(session: Session = Depends(get_session)):
-    # เลือกคนที่มี team_name เป็น None
-    users = session.exec(select(User).where(User.team_name == None)).all()
+    check_and_release_users(session)
+    users = session.exec(select(User).where(User.is_available == True)).all()
     return users
 
+@app.get("/users/{user_id}")
+def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
+    # ค้นหา User ตาม ID
+    user = session.get(User, user_id)
+    
+    if not user:
+        # ถ้าหาไม่เจอ ให้ส่ง 404 กลับไป
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return user
 # 2. ให้ AI แนะนำลูกน้อง (Recommend)
 @app.post("/recommend-team-members")
-async def recommend_team_members(req: TeamBuilderRequest, session: Session = Depends(get_session)):
+@limiter.limit("20/minute")
+async def recommend_team_members(request: Request, req: TeamBuilderRequest, session: Session = Depends(get_session)):
     # ดึงหัวหน้า
     leader = session.get(User, req.leader_id)
     if not leader: raise HTTPException(status_code=404, detail="Leader not found")
     
     # ดึงคนที่ว่างอยู่ (ไม่รวมหัวหน้า)
+    leader_dict = {
+        "id": leader.id,
+        "name": leader.name,
+        "animal": leader.animal,
+        "dominant_type": leader.dominant_type,
+        "scores": { # แถม scores ให้ด้วย
+            "D": leader.score_d,
+            "I": leader.score_i,
+            "S": leader.score_s,
+            "C": leader.score_c
+        }
+    }
     candidates = session.exec(select(User).where(User.team_name == None, User.id != req.leader_id)).all()
     
     if len(candidates) < req.member_count:
@@ -538,10 +546,18 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
     Candidates:
     {roster}
     
+    **CRITICAL OUTPUT RULES:**
+    1. **JSON ONLY:** Return strictly valid JSON.
+    2. **"reason" Field Format:**
+       - Write in **PLAIN THAI TEXT** only.
+       - ❌ DO NOT use Markdown (No bold `**`, No italics `*`, No headers `#`).
+       - ❌ DO NOT use bullet points (`-` or `•`) or numbered lists.
+       - Write as a single, smooth paragraph.
+    
     **OUTPUT JSON:**
     {{
-      "selected_ids": [1, 5, ...], (List of IDs only)
-      "reason": "Why this team works well with this strategy (Thai).",
+      "selected_ids": [1, 5, ...], 
+      "reason": "เขียนเหตุผลเป็นภาษาไทยแบบย่อหน้าเดียว ไม่ต้องมี bullet point ไม่ต้องทำตัวหนา",
       "suggested_team_name": "Creative Team Name"
     }}
     """)
@@ -559,33 +575,184 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
     try:
         res_json = json.loads(raw.replace("```json", "").replace("```", "").strip())
         
-        # แปลง IDs กลับเป็น Object User เพื่อส่งให้ Frontend โชว์
         selected_members = []
+        members_snapshot_data = [] # เก็บไว้ลง Log
+
         for uid in res_json['selected_ids']:
             u = next((c for c in candidates if c.id == uid), None)
-            if u: selected_members.append(u)
+            if u: 
+                user_dict = {
+                    "id": u.id,
+                    "name": u.name,
+                    "animal": u.animal,
+                    "dominant_type": u.dominant_type,
+                    "scores": { # แถม scores ให้ด้วยเลย Frontend จะได้กราฟขึ้น
+                        "D": u.score_d,
+                        "I": u.score_i,
+                        "S": u.score_s,
+                        "C": u.score_c
+                    }
+                }
+                selected_members.append(user_dict)
+                
+                members_snapshot_data.append({
+                    "id": u.id,
+                    "name": u.name,
+                    "animal": u.animal,
+                    "dominant_type": u.dominant_type
+                })
             
+        # 7. สร้าง TeamLog
+        new_log = TeamLog(
+            leader_id=leader.id,
+            team_name=res_json['suggested_team_name'],
+            strategy=req.strategy,
+            reason=res_json['reason'],
+            members_snapshot=members_snapshot_data,
+            status="generated"
+        )
+        session.add(new_log)
+        session.commit()
+        session.refresh(new_log)
+
+        # 8. ส่งกลับ Frontend
         return {
-            "leader": leader,
+            "leader": leader_dict,
             "members": selected_members,
             "reason": res_json['reason'],
-            "team_name": res_json['suggested_team_name']
+            "team_name": res_json['suggested_team_name'],
+            "log_id": new_log.id
         }
+        
     except Exception as e:
+        print(f"Error: {e}")
         return {"error": str(e)}
 
 # 3. บันทึกทีมจริง (Update DB)
 @app.post("/confirm-team")
 def confirm_team(req: ConfirmTeamRequest, session: Session = Depends(get_session)):
-    for uid in req.member_ids:
-        user = session.get(User, uid)
-        if user:
-            user.team_name = req.team_name
-            session.add(user)
-    session.commit()
-    return {"message": "Team saved successfully!"}
+    # 1. หา Log
+    log_entry = session.get(TeamLog, req.log_id)
+    if not log_entry:
+        raise HTTPException(status_code=404, detail="Log not found")
+        
+    log_entry.status = "confirmed"
+    log_entry.project_start_date = req.start_date # ✅ บันทึกวันเริ่ม
+    log_entry.project_end_date = req.end_date     # ✅ บันทึกวันจบ
+    session.add(log_entry)
+    
+    def update_user_status(uid: int):
+        u = session.get(User, uid)
+        if u:
+            u.team_name = log_entry.team_name
+            u.is_available = False
+            u.active_project_end_date = req.end_date
+            session.add(u)
 
-# 4. ล้างทีมทั้งหมด (Reset - เอาไว้เทสต์)
+    update_user_status(log_entry.leader_id)
+    for m in log_entry.members_snapshot:
+        update_user_status(m['id'])
+            
+    session.commit()
+    return {"message": "Team confirmed, dates set, and users are now busy!"}
+
+@app.get("/team-logs")
+def get_team_logs(leader_id: Optional[int] = None, session: Session = Depends(get_session)):
+    # เรียงจากใหม่ไปเก่า
+    statement = select(TeamLog).order_by(TeamLog.created_at.desc())
+    
+    if leader_id:
+        statement = statement.where(TeamLog.leader_id == leader_id)
+        
+    logs = session.exec(statement).all()
+
+    results = []
+    for log in logs:
+        leader = session.get(User, log.leader_id)
+        # แปลง Log เป็น Dict
+        log_dict = log.model_dump() # หรือ .dict() ถ้าใช้ pydantic รุ่นเก่า
+        # เพิ่มข้อมูลหัวหน้า
+        log_dict["leader_name"] = leader.name if leader else "Unknown"
+        log_dict["leader_animal"] = leader.animal if leader else "?"
+        
+        results.append(log_dict)
+        
+    return results
+
+# --- backend/main.py ---
+
+@app.post("/team-logs/{log_id}/disband")
+def disband_team(log_id: int, session: Session = Depends(get_session)):
+    # 1. หา Log
+    log = session.get(TeamLog, log_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+        
+    if log.status != "confirmed":
+        return {"message": "Team is not active, cannot disband."}
+
+    log.status = "disbanded"
+    log.project_start_date = None
+    log.project_end_date = None 
+    session.add(log)
+
+    def free_user(uid: int):
+        u = session.get(User, uid)
+        if u and u.team_name == log.team_name:
+            u.team_name = None
+            u.is_available = True       
+            u.active_project_end_date = None 
+            session.add(u)
+
+    # ปลดหัวหน้า
+    free_user(log.leader_id)
+    # ปลดลูกน้อง
+    for m in log.members_snapshot:
+        free_user(m['id'])
+            
+    session.commit()
+    return {"message": "Team disbanded successfully"}
+
+@app.delete("/team-logs/{log_id}")
+def delete_team_log(log_id: int, session: Session = Depends(get_session)):
+    log = session.get(TeamLog, log_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+    
+    leader = session.get(User, log.leader_id)
+    if leader and leader.team_name == log.team_name:
+        leader.team_name = None
+        leader.is_available = True
+        leader.active_project_end_date = None
+        session.add(leader)
+        
+    for m in log.members_snapshot:
+        member = session.get(User, m['id'])
+        if member and member.team_name == log.team_name:
+            member.team_name = None
+            member.is_available = True
+            member.active_project_end_date = None
+            session.add(member)
+    
+    session.delete(log)
+    session.commit()
+    
+    return {"message": "Deleted log and freed users successfully"}
+
+@app.delete("/team-logs")
+def clear_all_logs(session: Session = Depends(get_session)):
+    logs = session.exec(select(TeamLog)).all()
+    users = session.exec(select(User)).all()
+    for log in logs:
+        session.delete(log)
+    for user in users:
+        user.team_name = None
+        user.is_available = True
+        user.active_project_end_date = None
+        session.add(user)
+    session.commit()
+    return {"message": "All history cleared"}
+
 @app.post("/reset-teams")
 def reset_teams(session: Session = Depends(get_session)):
     users = session.exec(select(User)).all()

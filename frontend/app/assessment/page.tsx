@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
@@ -179,20 +179,50 @@ const fullQuestions = [...questions].map((q, i) => ({
 }));
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const DRAFT_KEY = "assessment_draft_answers";
 
 export default function AssessmentPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // 1 = อธิบายศัพท์ (Mapping), 2 = วิธีทำข้อสอบ
   const [tutorialStep, setTutorialStep] = useState(1);
 
   const [answers, setAnswers] = useState<
     Record<number, { most: string | null; least: string | null }>
-  >({});
+  >(() => {
+    // เช็คก่อนว่ารันบน Browser ไหม (กัน Server Error ใน Next.js)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error("Failed to load draft", e);
+        }
+      }
+    }
+    return {}; // ค่าเริ่มต้นถ้าไม่มี Draft
+  });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 0);
+
+    return () => clearTimeout(timer); // Cleanup (กันเหนียว)
+  }, []);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800">
+        <ElementalLoader />
+      </div>
+    );
+  }
   const handleSelect = (
     questionId: number,
     value: string,
@@ -209,10 +239,12 @@ export default function AssessmentPage() {
     }
 
     updatedAnswer[type] = value;
-    setAnswers({
+    const newAnswers = {
       ...answers,
       [questionId]: updatedAnswer,
-    });
+    };
+    setAnswers(newAnswers);
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(newAnswers));
   };
 
   const handleSubmit = async () => {
@@ -248,6 +280,7 @@ export default function AssessmentPage() {
       localStorage.setItem("myAnimal", newUser.animal);
       localStorage.setItem("myScores", JSON.stringify(newUser.scores));
       window.dispatchEvent(new Event("user-updated"));
+      localStorage.removeItem(DRAFT_KEY);
       toast.success("บันทึกสำเร็จ! ยินดีต้อนรับคุณ" + name);
       router.push(`/result/${newUser.id}`);
     } catch (err) {

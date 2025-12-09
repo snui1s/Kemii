@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import UserCard from "@/components/UserCard";
 import SynergyModal from "@/components/SynergyModal";
-import InfoModal from "@/components/InfoModal";
 import toast from "react-hot-toast";
-import { Users, HelpCircle } from "lucide-react";
+import { Users } from "lucide-react";
 import { Analytics } from "@vercel/analytics/next";
 
 interface User {
@@ -25,8 +24,6 @@ export default function Home() {
   const [myId, setMyId] = useState<number | null>(null);
   const [myAnimal, setMyAnimal] = useState<string | null>(null);
   const [myName, setMyName] = useState<string | null>(null);
-  const [showInfo, setShowInfo] = useState(false);
-  const [buttonBottom, setButtonBottom] = useState(24);
 
   const checkLoginStatus = () => {
     const storedId = localStorage.getItem("myUserId");
@@ -46,30 +43,6 @@ export default function Home() {
       }
     }
   };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const footer = document.getElementById("site-footer");
-      if (!footer) return;
-      const footerRect = footer.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-
-      if (footerRect.top < windowHeight) {
-        const overlap = windowHeight - footerRect.top;
-        setButtonBottom(24 + overlap + 10);
-      } else {
-        setButtonBottom(24);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-    };
-  }, []);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -267,8 +240,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- Rest of the Content --- */}
-      {showInfo && <InfoModal onClose={() => setShowInfo(false)} />}
       {loading ? (
         <div className="text-center p-10 text-zinc-900 dark:text-zinc-200 text-3xl animate-pulse">
           Loading...
@@ -302,17 +273,6 @@ export default function Home() {
         </div>
       )}
 
-      <button
-        onClick={() => setShowInfo(true)}
-        style={{ bottom: `${buttonBottom}px` }}
-        className="fixed right-6 z-40 bg-white dark:bg-slate-800 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-3 rounded-full shadow-lg border border-slate-200 hover:border-blue-200 hover:shadow-xl transition-all duration-75 group"
-        title="เกี่ยวกับระบบ"
-      >
-        <HelpCircle
-          size={28}
-          className="group-hover:scale-110 transition-transform"
-        />
-      </button>
       <Analytics />
     </div>
   );

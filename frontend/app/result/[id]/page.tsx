@@ -1,37 +1,72 @@
+"use client"; // 👈 สำคัญ: ต้องเป็น Client Component เพื่อเช็ค LocalStorage
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import ResultClient from "@/components/ResultClient";
 import { notFound } from "next/navigation";
+import toast from "react-hot-toast";
 
-// ฟังก์ชันดึงข้อมูล (เหมือนเดิม)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-async function getResultData(id: string) {
-  if (!id || id === "undefined" || id === "null") return null;
-  try {
-    const res = await fetch(`${API_URL}/users/${id}/analysis`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching result data:", error);
-    return null;
+export default function ResultPage() {
+  const params = useParams(); // ใช้ hook แทน props ใน client component
+  const router = useRouter();
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    // ฟังก์ชันสำหรับเช็คสิทธิ์และดึงข้อมูล
+    const fetchData = async () => {
+      const id = params?.id as string;
+      const myId = localStorage.getItem("myUserId");
+
+      if (!myId || myId !== id) {
+        toast.error("ไม่สามารถดูข้อมูลของคนอื่นได้ครับ", {
+          id: "security-guard", // กัน toast ซ้อน
+          duration: 4000,
+        });
+        router.replace("/"); // ดีดกลับหน้าแรกทันที
+        return;
+      }
+      setIsAuthorized(true);
+
+      try {
+        const res = await fetch(`${API_URL}/users/${id}/analysis`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch");
+        }
+        const jsonData = await res.json();
+        setData(jsonData);
+      } catch (error) {
+        console.error("Error:", error);
+        // ถ้าหาไม่เจอจริงๆ อาจจะ redirect หรือโชว์ error state
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params?.id) {
+      fetchData();
+    }
+  }, [params?.id, router]);
+
+  if (loading || !isAuthorized) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-slate-500">กำลังตรวจสอบข้อมูล...</p>
+        </div>
+      </div>
+    );
   }
-}
-
-// 👇 แก้ตรงนี้: params เป็น Promise<{ id: string }>
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default async function ResultPage({ params }: PageProps) {
-  // 👇 ต้อง await params ก่อน ถึงจะดึง id ออกมาได้
-  const { id } = await params;
-
-  const data = await getResultData(id);
 
   if (!data) {
-    notFound();
+    return notFound();
   }
 
+  // ส่งข้อมูลที่ Fetch มาได้ ไปให้ ResultClient แสดงผลตามเดิม
   return <ResultClient data={data} />;
 }

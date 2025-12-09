@@ -10,6 +10,7 @@ import {
   Zap,
   CheckCircle2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface SynergyModalProps {
   myId: number;
@@ -62,6 +63,9 @@ export default function SynergyModal({
           setLoading(false);
         }
       } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 429) {
+          toast.error("ใจเย็นๆ น้าาา 🧊 พักหายใจสัก 1 นาทีแล้วลองใหม่ครับ");
+        }
         if (!isCancelled) {
           console.error(error);
           setLoading(false);

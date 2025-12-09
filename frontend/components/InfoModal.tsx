@@ -38,28 +38,27 @@ export default function InfoModal({ onClose }: InfoModalProps) {
             {/* 🔥 ไฟ */}
             <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-800/50">
               <span className="font-bold text-red-600 dark:text-red-400">
-                🔥 ไฟ (D):
+                🔥กระทิง (D):
               </span>{" "}
               มุ่งมั่น, รวดเร็ว
             </div>
             {/* 💨 ลม */}
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded border border-yellow-100 dark:border-yellow-800/50">
               <span className="font-bold text-yellow-600 dark:text-yellow-400">
-                💨 ลม (I):
+                💨อินทรี (I):
               </span>{" "}
               สร้างสรรค์, ช่างเจรจา
             </div>
             {/* ⛰️ ดิน */}
             <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-100 dark:border-green-800/50">
               <span className="font-bold text-green-600 dark:text-green-400">
-                ⛰️ ดิน (S):
+                ⛰️หนู (S):
               </span>{" "}
               มั่นคง, ใส่ใจคน
             </div>
-            {/* 💧 น้ำ */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-100 dark:border-blue-800/50">
               <span className="font-bold text-blue-600 dark:text-blue-400">
-                💧 น้ำ (C):
+                💧หมี (C):
               </span>{" "}
               ละเอียด, มีหลักการ
             </div>
