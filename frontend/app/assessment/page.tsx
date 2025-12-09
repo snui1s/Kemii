@@ -292,7 +292,7 @@ export default function AssessmentPage() {
 
   if (isSubmitting) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800">
         <ElementalLoader />
       </div>
     );
