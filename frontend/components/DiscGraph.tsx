@@ -151,18 +151,16 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
       </ResponsiveContainer>
 
       <div
-        className="absolute z-10 flex flex-col items-center justify-center"
+        className="absolute z-10 flex flex-col items-center justify-center w-6 h-6"
         style={{
           left: `${50 + (x / maxRange) * 50}%`,
           top: `${50 - (y / maxRange) * 50}%`,
           transform: "translate(-50%, -50%)",
         }}
       >
-        {/* 1. Ping: ปรับสีให้เข้ากับธีม */}
-        <div className="absolute w-8 h-8 bg-slate-400 dark:bg-white rounded-full animate-ping opacity-75 dark:opacity-30"></div>
+        <div className="absolute inline-flex h-full w-full rounded-full bg-slate-400 dark:bg-white opacity-75 animate-ping"></div>
 
-        {/* 2. จุดหลัก: สลับสีขาว/ดำ ให้เด่นชัดในแต่ละโหมด */}
-        <div className="relative w-4 h-4 bg-slate-900 dark:bg-white border-2 border-white dark:border-slate-900 rounded-full shadow-md"></div>
+        <div className="relative inline-flex w-6 h-6 rounded-full shadow-xl border-4 border-white/70 dark:border-slate-900/70 bg-slate-900/70 dark:bg-white/70 animate-pulse backdrop-blur-[2px]"></div>
       </div>
     </div>
   );
