@@ -354,7 +354,7 @@ export default function TeamHistoryPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 transition-colors">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-800 p-6 transition-colors">
         <div className="max-w-4xl mx-auto">
           {/* Header Area */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
