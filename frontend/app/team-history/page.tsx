@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import {
   History,
   RefreshCcw,
@@ -13,7 +13,8 @@ import {
   Trash2,
   Filter,
   CalendarRange,
-  PowerOff, // ✅ 1. เพิ่มไอคอน PowerOff
+  PowerOff,
+  PlayCircle,
 } from "lucide-react";
 import Link from "next/link";
 import ElementalLoader from "@/components/ElementalLoader";
@@ -64,7 +65,111 @@ export default function TeamHistoryPage() {
     fetchLogs();
   }, []);
 
-  // ✅ 2. เพิ่มฟังก์ชัน Disband (ยุบทีม)
+  // ✅ 2. ฟังก์ชัน Revive (ยืนยันทีมเก่า)
+  const handleRevive = (id: number, teamName: string) => {
+    // กำหนดค่า Default วันที่ (วันนี้ - อีก 30 วัน)
+    const today = new Date().toISOString().split("T")[0];
+    const nextMonth = new Date();
+    nextMonth.setDate(nextMonth.getDate() + 30);
+    const nextMonthStr = nextMonth.toISOString().split("T")[0];
+
+    // ตัวแปรเก็บค่าชั่วคราว (ใช้ใน Toast)
+    let tempStart = today;
+    let tempEnd = nextMonthStr;
+
+    toast.dismiss("revive-toast");
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 min-w-[280px]">
+          <div className="text-center">
+            <strong className="text-green-600 text-lg flex items-center justify-center gap-2">
+              <PlayCircle size={20} /> ใช้งานทีม {teamName}?
+            </strong>
+            <p className="text-xs text-slate-500 mt-1">
+              กำหนดวันเริ่ม-จบงานใหม่
+            </p>
+          </div>
+
+          {/* Date Inputs ใน Toast */}
+          <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                Start Date
+              </label>
+              <input
+                type="date"
+                defaultValue={tempStart}
+                onChange={(e) => (tempStart = e.target.value)}
+                className="w-full p-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                End Date
+              </label>
+              <input
+                type="date"
+                defaultValue={tempEnd}
+                onChange={(e) => (tempEnd = e.target.value)}
+                className="w-full p-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                // ยิง API
+                const toastId = toast.loading("กำลังตรวจสอบคิวงาน...");
+                try {
+                  await axios.post(`${API_URL}/team-logs/${id}/revive`, {
+                    start_date: tempStart,
+                    end_date: tempEnd,
+                  });
+                  toast.success("ยืนยันทีมเรียบร้อย! ลุยงานได้เลย", {
+                    id: toastId,
+                  });
+                  fetchLogs(); // โหลดข้อมูลใหม่
+                } catch (error) {
+                  // Handle Error กรณีคนไม่ว่าง
+                  if (
+                    axios.isAxiosError(error) &&
+                    error.response?.status === 409
+                  ) {
+                    toast.error(error.response.data.detail, {
+                      id: toastId,
+                      duration: 5000,
+                    });
+                  } else {
+                    toast.error("เกิดข้อผิดพลาดในการยืนยันทีม", {
+                      id: toastId,
+                    });
+                  }
+                }
+              }}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-bold shadow-md transition-colors"
+            >
+              ยืนยัน
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium transition-colors"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        id: "revive-toast",
+        duration: Infinity, // ให้ค้างไว้จนกว่าจะกดปุ่ม
+        className:
+          "!bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl",
+      }
+    );
+  };
+
   const handleDisband = (id: number, teamName: string) => {
     toast.dismiss("disband-toast");
     toast(
@@ -72,7 +177,7 @@ export default function TeamHistoryPage() {
         <div className="flex flex-col gap-2 items-center min-w-[220px]">
           <strong className="text-orange-600">ยุบทีม {teamName}?</strong>
           <span className="text-xs text-slate-500 text-center">
-            สมาชิกทุกคนจะกลับมา ว่าง <br /> แต่ประวัติทีมจะยังเก็บไว้นะ
+            สมาชิกทุกคนจะกลับมาว่าง <br /> แต่ประวัติทีมจะยังเก็บไว้นะ
           </span>
           <div className="flex gap-2 mt-2">
             <button
@@ -103,11 +208,15 @@ export default function TeamHistoryPage() {
           </div>
         </div>
       ),
-      { id: "disband-toast", duration: 5000 }
+      {
+        id: "disband-toast",
+        duration: 5000,
+        className:
+          "!bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl",
+      }
     );
   };
 
-  // ฟังก์ชันลบ
   const handleDelete = (id: number) => {
     toast.dismiss("delete-toast");
     toast(
@@ -145,13 +254,8 @@ export default function TeamHistoryPage() {
       {
         id: "delete-toast",
         duration: 4000,
-        position: "top-center",
-        style: {
-          background: "#fff",
-          color: "#333",
-          border: "1px solid #e2e8f0",
-          padding: "16px",
-        },
+        className:
+          "!bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl",
       }
     );
   };
@@ -196,7 +300,8 @@ export default function TeamHistoryPage() {
       {
         id: "clear-all-toast",
         duration: 5000,
-        position: "top-center",
+        className:
+          "!bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl",
       }
     );
   };
@@ -322,6 +427,7 @@ export default function TeamHistoryPage() {
               {filteredLogs.map((log) => {
                 const isConfirmed = log.status === "confirmed";
                 const isDisbanded = log.status === "disbanded";
+                const isGenerated = log.status === "generated";
 
                 let cardClass =
                   "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 opacity-80 hover:opacity-100";
@@ -349,7 +455,7 @@ export default function TeamHistoryPage() {
                           <XCircle size={14} /> เลิกใช้งานแล้ว
                         </span>
                       )}
-                      {log.status === "generated" && (
+                      {isGenerated && (
                         <span className="flex items-center gap-1 px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-full border border-slate-300 dark:border-slate-700">
                           <Clock size={14} /> Generated
                         </span>
@@ -461,8 +567,20 @@ export default function TeamHistoryPage() {
                         </div>
                       )}
 
-                      {/* ✅ 3. ปุ่ม Actions (Disband & Delete) */}
+                      {/* ✅ 3. ปุ่ม Actions */}
                       <div className="flex gap-2">
+                        {/* 1. ปุ่ม Revive/Confirm (โชว์เฉพาะถ้ายังไม่ confirm) */}
+                        {!isConfirmed && (
+                          <button
+                            onClick={() => handleRevive(log.id, log.team_name)}
+                            className="p-2 text-green-600 hover:text-white hover:bg-green-500 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-lg transition-all shadow-sm"
+                            title="ยืนยันทีมนี้ (ใช้งาน)"
+                          >
+                            <PlayCircle size={18} />
+                          </button>
+                        )}
+
+                        {/* 2. ปุ่ม Disband (โชว์เฉพาะถ้า confirmed) */}
                         {isConfirmed && (
                           <button
                             onClick={() => handleDisband(log.id, log.team_name)}
@@ -473,6 +591,7 @@ export default function TeamHistoryPage() {
                           </button>
                         )}
 
+                        {/* 3. ปุ่ม Delete */}
                         <button
                           onClick={() => handleDelete(log.id)}
                           className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"

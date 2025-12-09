@@ -40,3 +40,7 @@ class ConfirmTeamRequest(BaseModel):
     log_id: int
     start_date: Optional[datetime] = None 
     end_date: Optional[datetime] = None
+    
+class ReviveRequest(BaseModel):
+    start_date: datetime
+    end_date: datetime

@@ -15,7 +15,7 @@ from database import create_db_and_tables, get_session
 from models import User, TeamLog
 from schemas import (
     Answer,UserSubmission, UserResult, MatchRequest, GroupingRequest, 
-    UserNameUpdate, TeamBuilderRequest, ConfirmTeamRequest
+    UserNameUpdate, TeamBuilderRequest, ConfirmTeamRequest, ReviveRequest
 )
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -752,6 +752,57 @@ def clear_all_logs(session: Session = Depends(get_session)):
         session.add(user)
     session.commit()
     return {"message": "All history cleared"}
+
+@app.post("/team-logs/{log_id}/revive")
+def revive_team(log_id: int, req: ReviveRequest, session: Session = Depends(get_session)):
+    # 1. หา Log
+    log = session.get(TeamLog, log_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+    
+    # 2. เช็คว่าสมาชิกในทีมนี้ มีใครติดงานอยู่ไหม? (Conflict Check)
+    busy_people = []
+    
+    # เช็คหัวหน้า
+    leader = session.get(User, log.leader_id)
+    if leader and not leader.is_available:
+        busy_people.append(f"{leader.name} (หัวหน้า)")
+        
+    # เช็คลูกน้อง
+    for m in log.members_snapshot:
+        member = session.get(User, m['id'])
+        if member and not member.is_available:
+            busy_people.append(member.name)
+            
+    # ❌ ถ้ามีคนไม่ว่าง ให้ Error กลับไปเลย
+    if busy_people:
+        raise HTTPException(
+            status_code=409, # 409 Conflict
+            detail=f"ไม่สามารถใช้ทีมนี้ได้ เนื่องจาก: {', '.join(busy_people)} ติดภารกิจอยู่"
+        )
+
+    # ✅ 3. ถ้าว่างทุกคน -> ลุย! (อัปเดต Log)
+    log.status = "confirmed"
+    log.project_start_date = req.start_date
+    log.project_end_date = req.end_date
+    session.add(log)
+    
+    # ✅ 4. อัปเดตคน (ล็อกตัว)
+    def lock_user(uid: int):
+        u = session.get(User, uid)
+        if u:
+            u.team_name = log.team_name
+            u.is_available = False
+            u.active_project_end_date = req.end_date
+            session.add(u)
+            
+    lock_user(log.leader_id)
+    for m in log.members_snapshot:
+        lock_user(m['id'])
+        
+    session.commit()
+    return {"message": f"Revived team {log.team_name} successfully!"}
+
 
 @app.post("/reset-teams")
 def reset_teams(session: Session = Depends(get_session)):
