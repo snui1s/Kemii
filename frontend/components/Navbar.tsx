@@ -80,6 +80,7 @@ export default function Navbar() {
                 localStorage.removeItem("myName");
                 localStorage.removeItem("myAnimal");
                 localStorage.removeItem("myScores");
+                localStorage.removeItem("myToken");
                 setMyData(null);
                 window.dispatchEvent(new Event("user-updated"));
                 toast.success("บ๊ายบาย! ไว้เจอกันใหม่ครับ 👋");
