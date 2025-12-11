@@ -42,48 +42,48 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
 
   return (
     // ✅ ปรับ Container เป็น Dark Mode
-    <div className="relative w-full h-[400px] bg-white dark:bg-slate-900 rounded-xl shadow-inner border border-slate-200 dark:border-slate-800 overflow-hidden font-sans transition-colors">
+    <div className="relative w-full h-[300px] sm:h-[400px] bg-white dark:bg-slate-900 rounded-xl shadow-inner border border-slate-200 dark:border-slate-800 overflow-hidden font-sans transition-colors">
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
         {/* ซ้ายบน (หนู - S) */}
-        <div className="bg-green-50/50 dark:bg-green-900/10 flex flex-col items-center justify-center p-4 border-r border-b border-slate-100 dark:border-slate-800 text-center transition-colors">
-          <span className="text-4xl mb-2">🐁</span>
-          <h3 className="font-bold text-green-700 dark:text-green-400">
+        <div className="bg-green-50/50 dark:bg-green-900/10 flex flex-col items-center justify-center p-2 sm:p-4 border-r border-b border-slate-100 dark:border-slate-800 text-center transition-colors">
+          <span className="text-2xl sm:text-4xl mb-1 sm:mb-2">🐁</span>
+          <h3 className="font-bold text-sm sm:text-base text-green-700 dark:text-green-400">
             Steadiness
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
             ชอบทำงานเป็นทีม, ความสงบ, ช่วยเหลือ
           </p>
         </div>
 
         {/* ขวาบน (กระทิง - D) */}
-        <div className="bg-red-50/50 dark:bg-red-900/10 flex flex-col items-center justify-center p-4 border-b border-slate-100 dark:border-slate-800 text-center transition-colors">
-          <span className="text-4xl mb-2">🐂</span>
-          <h3 className="font-bold text-red-700 dark:text-red-400">
+        <div className="bg-red-50/50 dark:bg-red-900/10 flex flex-col items-center justify-center p-2 sm:p-4 border-b border-slate-100 dark:border-slate-800 text-center transition-colors">
+          <span className="text-2xl sm:text-4xl mb-1 sm:mb-2">🐂</span>
+          <h3 className="font-bold text-sm sm:text-base text-red-700 dark:text-red-400">
             Dominance
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
             ชอบทำงานท้าทาย, ตัดสินใจเร็ว, ชอบควบคุม
           </p>
         </div>
 
         {/* ซ้ายล่าง (หมี - C) */}
-        <div className="bg-blue-50/50 dark:bg-blue-900/10 flex flex-col items-center justify-center p-4 border-r border-slate-100 dark:border-slate-800 text-center transition-colors">
-          <span className="text-4xl mb-2">🐻</span>
-          <h3 className="font-bold text-blue-700 dark:text-blue-400">
+        <div className="bg-blue-50/50 dark:bg-blue-900/10 flex flex-col items-center justify-center p-2 sm:p-4 border-r border-slate-100 dark:border-slate-800 text-center transition-colors">
+          <span className="text-2xl sm:text-4xl mb-1 sm:mb-2">🐻</span>
+          <h3 className="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-400">
             Conscientiousness
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
             ชอบวิเคราะห์, ชอบความถูกต้อง, ชอบวางแผน
           </p>
         </div>
 
         {/* ขวาล่าง (อินทรี - I) */}
-        <div className="bg-yellow-50/50 dark:bg-yellow-900/10 flex flex-col items-center justify-center p-4 text-center transition-colors">
-          <span className="text-4xl mb-2">🦅</span>
-          <h3 className="font-bold text-yellow-700 dark:text-yellow-400">
+        <div className="bg-yellow-50/50 dark:bg-yellow-900/10 flex flex-col items-center justify-center p-2 sm:p-4 text-center transition-colors">
+          <span className="text-2xl sm:text-4xl mb-1 sm:mb-2">🦅</span>
+          <h3 className="font-bold text-sm sm:text-base text-yellow-700 dark:text-yellow-400">
             Influence
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
             ชอบพูด, ชอบโน้มน้าว, สร้างแรงบันดาลใจ
           </p>
         </div>

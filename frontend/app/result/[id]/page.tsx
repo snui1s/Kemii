@@ -22,6 +22,14 @@ export default function ResultPage() {
     const fetchData = async () => {
       const id = params?.id as string;
       const myId = localStorage.getItem("myUserId");
+      const token = localStorage.getItem("myToken");
+
+      if (!token) {
+        toast.error("ไม่พบข้อมูลยืนยันตัวตน");
+        router.push("/");
+        return;
+      }
+      setLoading(true);
 
       if (!myId || myId !== id) {
         toast.error("ไม่สามารถดูข้อมูลของคนอื่นได้ครับ", {
@@ -34,13 +42,18 @@ export default function ResultPage() {
       setIsAuthorized(true);
 
       try {
-        const res = await fetch(`${API_URL}/users/${id}/analysis`);
+        const res = await fetch(`${API_URL}/users/${id}/analysis`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!res.ok) {
           throw new Error("Failed to fetch");
         }
         const jsonData = await res.json();
         setData(jsonData);
       } catch (error) {
+        if (error == "403") toast.error("ดูของคนอื่นไม่ได้นะจ้ะ");
         console.error("Error:", error);
         // ถ้าหาไม่เจอจริงๆ อาจจะ redirect หรือโชว์ error state
       } finally {

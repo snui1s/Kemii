@@ -121,10 +121,10 @@ export default function UserCard({
 
   return (
     <div
-      className="relative w-full h-[140px] cursor-pointer group perspective"
+      className="relative w-full h-[120px] sm:h-[140px] cursor-pointer group perspective"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick} // ✅ 4. ใช้ handleClick ตัวใหม่
+      onClick={handleClick}
       style={{ perspective: "1000px" }}
     >
       <div
@@ -140,7 +140,7 @@ export default function UserCard({
         <div
           className={`
             absolute inset-0 w-full h-full backface-hidden
-            overflow-hidden rounded-2xl p-5 
+            overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 
             bg-white dark:bg-slate-800 
             border-2 border-slate-200 dark:border-slate-700
             shadow-sm dark:shadow-none
@@ -198,11 +198,11 @@ export default function UserCard({
             <div className="overflow-hidden pr-2">
               <h3
                 style={{ color: isHovered ? themeColor : undefined }}
-                className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate"
+                className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 truncate"
               >
                 {name}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 truncate">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 flex items-center gap-2 truncate">
                 <span className="truncate">{animal}</span>
               </p>
 
@@ -214,17 +214,17 @@ export default function UserCard({
 
             <div className="shrink-0 flex items-center gap-2">
               <div
+                className="p-2 sm:p-3 rounded-full transition-all duration-300"
                 style={{
                   backgroundColor: isHovered
                     ? `${themeColor}40`
                     : `${themeColor}20`,
                   color: themeColor,
-                  transition: "all 0.3s",
-                  padding: "12px",
-                  borderRadius: "50%",
                 }}
               >
-                {config.mainIcon}
+                <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+                  {config.mainIcon}
+                </div>
               </div>
             </div>
           </div>

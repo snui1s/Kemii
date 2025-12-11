@@ -20,6 +20,7 @@ class UserResult(BaseModel):
     scores: Dict[str, int]
     team_name: Optional[str]
     is_available: bool
+    access_token: Optional[str] = None
 
 class MatchRequest(BaseModel):
     user1_id: int

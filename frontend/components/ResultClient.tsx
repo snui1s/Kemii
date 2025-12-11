@@ -151,18 +151,18 @@ export default function ResultClient({ data }: { data: ResultData }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 py-10 px-4 transition-colors">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 py-6 sm:py-10 px-4 transition-colors">
       <div className="max-w-3xl mx-auto">
         <button
           onClick={() => router.push("/")}
-          className="flex items-center text-slate-500 dark:text-slate-400 mb-6 hover:text-slate-900 dark:hover:text-white transition-colors duration-300"
+          className="flex  cursor-pointer items-center text-slate-500 dark:text-slate-400 mb-6 hover:text-green-400 dark:hover:text-green-400 transition-colors duration-300 text-sm"
         >
-          <ArrowLeft size={20} className="mr-2" /> กลับหน้าหลัก
+          <ArrowLeft size={18} className="mr-2" /> กลับหน้าหลัก
         </button>
 
         {/* Header Card */}
         <div
-          className={`relative p-8 rounded-2xl shadow-lg border-2 mb-6 text-center ${theme} overflow-hidden`}
+          className={`relative p-5 sm:p-8 rounded-2xl shadow-lg border-2 mb-6 text-center ${theme} overflow-hidden`}
         >
           <div className="relative z-10 flex flex-col items-center">
             <div className="p-4 bg-white dark:bg-slate-800 rounded-full shadow-md mb-4 border border-slate-100 dark:border-slate-700">
