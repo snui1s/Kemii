@@ -275,12 +275,17 @@ export default function AssessmentPage() {
     try {
       const res = await axios.post(`${API_URL}/submit-assessment`, payload);
       const newUser = res.data;
-      localStorage.setItem("myUserId", newUser.id.toString());
-      localStorage.setItem("myName", newUser.name);
-      localStorage.setItem("myAnimal", newUser.animal);
-      localStorage.setItem("myScores", JSON.stringify(newUser.scores));
-      window.dispatchEvent(new Event("user-updated"));
-      localStorage.removeItem(DRAFT_KEY);
+      const receivedToken = res.data.access_token;
+      console.log(res.data.access_token);
+      if (receivedToken) {
+        localStorage.setItem("myToken", receivedToken);
+        localStorage.setItem("myUserId", newUser.id.toString());
+        localStorage.setItem("myName", newUser.name);
+        localStorage.setItem("myAnimal", newUser.animal);
+        localStorage.setItem("myScores", JSON.stringify(newUser.scores));
+        window.dispatchEvent(new Event("user-updated"));
+        localStorage.removeItem(DRAFT_KEY);
+      }
       toast.success("บันทึกสำเร็จ! ยินดีต้อนรับคุณ" + name);
       router.push(`/result/${newUser.id}`);
     } catch (err) {
@@ -289,14 +294,6 @@ export default function AssessmentPage() {
       setIsSubmitting(false);
     }
   };
-
-  if (isSubmitting) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800">
-        <ElementalLoader />
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
@@ -579,7 +576,7 @@ export default function AssessmentPage() {
           return (
             <div
               key={q.id}
-              className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors"
+              className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors"
             >
               <h3 className="font-semibold text-lg mb-4 text-slate-800 dark:text-slate-100">
                 <span className="text-blue-600 dark:text-blue-400 mr-2">
@@ -588,10 +585,22 @@ export default function AssessmentPage() {
                 {q.text}
               </h3>
 
-              <div className="grid grid-cols-12 gap-2 text-sm text-gray-400 dark:text-gray-500 mb-2 px-2">
-                <div className="col-span-8">
-                  เลือกความน่าจะทำมากสุดและน้อยสุด
+              {/* Mobile Guide (Show only on small screens) */}
+              <div className="flex sm:hidden items-center justify-between text-xs text-gray-400 dark:text-gray-500 mb-3 px-2">
+                <span>เลือกคำตอบที่...</span>
+                <div className="flex gap-4">
+                  <span className="text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+                    <Check size={14} /> มากสุด
+                  </span>
+                  <span className="text-red-500 dark:text-red-400 font-bold flex items-center gap-1">
+                    <X size={14} /> น้อยสุด
+                  </span>
                 </div>
+              </div>
+
+              {/* Desktop Headers (Hidden on Mobile) */}
+              <div className="hidden sm:grid grid-cols-12 gap-2 text-sm text-gray-400 dark:text-gray-500 mb-2 px-2">
+                <div className="col-span-8">เลือกคำตอบที่ตรงกับคุณ ...</div>
                 <div className="col-span-2 text-center text-green-600 dark:text-green-400 font-bold">
                   มากที่สุด
                 </div>
@@ -600,44 +609,48 @@ export default function AssessmentPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3 sm:space-y-2">
                 {q.options.map((opt) => (
                   <div
                     key={opt.value}
-                    className="grid grid-cols-12 gap-2 items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors"
+                    className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:items-center p-3 sm:p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800/50 sm:border-transparent sm:hover:border-slate-100 dark:sm:hover:border-slate-700 transition-colors"
                   >
-                    <div className="col-span-8 text-slate-700 dark:text-slate-300">
+                    <div className="sm:col-span-8 text-slate-700 dark:text-slate-300 font-medium sm:font-normal">
                       {opt.label}
                     </div>
 
-                    <div className="col-span-2 flex justify-center">
-                      <button
-                        onClick={() => handleSelect(q.id, opt.value, "most")}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
+                    <div className="flex sm:contents justify-end gap-3 mt-2 sm:mt-0">
+                      <div className="sm:col-span-2 flex justify-center">
+                        <button
+                          onClick={() => handleSelect(q.id, opt.value, "most")}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
                           ${
                             ans.most === opt.value
                               ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/30 scale-105"
                               : "border-gray-200 dark:border-slate-700 text-gray-300 dark:text-slate-600 hover:border-green-300 dark:hover:border-green-700"
                           }
                         `}
-                      >
-                        <Check size={20} />
-                      </button>
-                    </div>
+                          aria-label="เป็นจริงมากที่สุด"
+                        >
+                          <Check size={20} />
+                        </button>
+                      </div>
 
-                    <div className="col-span-2 flex justify-center">
-                      <button
-                        onClick={() => handleSelect(q.id, opt.value, "least")}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
+                      <div className="sm:col-span-2 flex justify-center">
+                        <button
+                          onClick={() => handleSelect(q.id, opt.value, "least")}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
                           ${
                             ans.least === opt.value
                               ? "bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30 scale-105"
                               : "border-gray-200 dark:border-slate-700 text-gray-300 dark:text-slate-600 hover:border-red-300 dark:hover:border-red-700"
                           }
                         `}
-                      >
-                        <X size={20} />
-                      </button>
+                          aria-label="เป็นจริงน้อยที่สุด"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

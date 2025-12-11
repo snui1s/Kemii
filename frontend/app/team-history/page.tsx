@@ -357,58 +357,63 @@ export default function TeamHistoryPage() {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-800 p-6 transition-colors">
         <div className="max-w-4xl mx-auto">
           {/* Header Area */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-            <div>
-              <Link
-                href="/build-team"
-                className="text-sm text-slate-500 hover:text-blue-500 flex items-center gap-1 mb-2"
-              >
-                <ArrowLeft size={16} /> กลับหน้าจัดทีม
-              </Link>
-              <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <History className="text-blue-600" /> ประวัติการจัดทีม (Logs)
-              </h1>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="appearance-none pl-9 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          <div className="flex flex-col gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <Link
+                  href="/build-team"
+                  className="text-sm text-slate-500 hover:text-blue-500 flex items-center gap-1 mb-2"
                 >
-                  <option value="all">แสดงทั้งหมด</option>
-                  <option value="confirmed">
-                    ✅ ทีมที่เลือกจริง (Confirmed)
-                  </option>
-                  <option value="generated">🤖 ทีมจาก AI (Generated)</option>
-                  <option value="disbanded">
-                    ❌ ทีมที่ยุบแล้ว (Disbanded)
-                  </option>
-                </select>
-                <Filter
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                />
+                  <ArrowLeft size={16} /> กลับหน้าจัดทีม
+                </Link>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <History className="text-blue-600" /> ประวัติการจัดทีม
+                </h1>
               </div>
 
-              <button
-                onClick={fetchLogs}
-                className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
-                title="รีเฟรชข้อมูล"
-              >
-                <RefreshCcw size={20} />
-              </button>
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-none">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full appearance-none pl-9 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    <option value="all">แสดงทั้งหมด</option>
+                    <option value="confirmed">
+                      ✅ ทีมที่เลือกจริง (Confirmed)
+                    </option>
+                    <option value="generated">🤖 ทีมจาก AI (Generated)</option>
+                    <option value="disbanded">
+                      ❌ ทีมที่ยุบแล้ว (Disbanded)
+                    </option>
+                  </select>
+                  <Filter
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                  />
+                </div>
 
-              {logs.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  className="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800 transition-colors"
-                  title="ล้างทั้งหมด"
-                >
-                  <Trash2 size={20} />
-                </button>
-              )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={fetchLogs}
+                    className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
+                    title="รีเฟรชข้อมูล"
+                  >
+                    <RefreshCcw size={20} />
+                  </button>
+
+                  {logs.length > 0 && (
+                    <button
+                      onClick={handleClearAll}
+                      className="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800 transition-colors"
+                      title="ล้างทั้งหมด"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -463,9 +468,9 @@ export default function TeamHistoryPage() {
                     </div>
 
                     {/* 1. ชื่อทีม & เวลา */}
-                    <div className="mb-6 pr-32">
+                    <div className="mb-6">
                       <h3
-                        className={`text-2xl font-black mb-1 ${
+                        className={`text-2xl font-black mb-1 break-words ${
                           isDisbanded
                             ? "text-red-800 dark:text-red-300 line-through decoration-2 decoration-red-400"
                             : "text-slate-800 dark:text-white"
@@ -473,18 +478,17 @@ export default function TeamHistoryPage() {
                       >
                         {log.team_name}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-medium">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-slate-500 dark:text-slate-400">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-medium whitespace-nowrap">
                           แผน: {log.strategy}
                         </span>
-                        <span>•</span>
-                        <span>
-                          สร้าง:{" "}
+                        <span className="hidden sm:inline">•</span>
+                        <span className="whitespace-nowrap">
                           {new Date(log.created_at).toLocaleString("th-TH")}
                         </span>
 
                         {log.project_start_date && log.project_end_date && (
-                          <span className="flex items-center gap-1 ml-2 text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800">
+                          <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800 whitespace-nowrap mt-1 sm:mt-0">
                             <CalendarRange size={14} />
                             {formatDate(log.project_start_date)} -{" "}
                             {formatDate(log.project_end_date)}
@@ -551,7 +555,7 @@ export default function TeamHistoryPage() {
                     </div>
 
                     {/* Reason & Actions */}
-                    <div className="mt-4 flex justify-between items-end">
+                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                       {!isDisbanded ? (
                         <details className="group">
                           <summary className="text-xs font-bold text-blue-500 cursor-pointer hover:underline flex items-center gap-1 w-fit select-none">
@@ -568,12 +572,12 @@ export default function TeamHistoryPage() {
                       )}
 
                       {/* ✅ 3. ปุ่ม Actions */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
                         {/* 1. ปุ่ม Revive/Confirm (โชว์เฉพาะถ้ายังไม่ confirm) */}
                         {!isConfirmed && (
                           <button
                             onClick={() => handleRevive(log.id, log.team_name)}
-                            className="p-2 text-green-600 hover:text-white hover:bg-green-500 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-lg transition-all shadow-sm"
+                            className="flex-1 sm:flex-none p-2 text-green-600 hover:text-white hover:bg-green-500 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-lg transition-all shadow-sm flex justify-center"
                             title="ยืนยันทีมนี้ (ใช้งาน)"
                           >
                             <PlayCircle size={18} />
@@ -584,7 +588,7 @@ export default function TeamHistoryPage() {
                         {isConfirmed && (
                           <button
                             onClick={() => handleDisband(log.id, log.team_name)}
-                            className="p-2 text-orange-400 hover:text-white hover:bg-orange-500 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-lg transition-all shadow-sm"
+                            className="flex-1 sm:flex-none p-2 text-orange-400 hover:text-white hover:bg-orange-500 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-lg transition-all shadow-sm flex justify-center"
                             title="ยุบทีม (คืนค่าสมาชิก)"
                           >
                             <PowerOff size={18} />
@@ -594,7 +598,7 @@ export default function TeamHistoryPage() {
                         {/* 3. ปุ่ม Delete */}
                         <button
                           onClick={() => handleDelete(log.id)}
-                          className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className="flex-1 sm:flex-none p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex justify-center"
                           title="ลบรายการนี้"
                         >
                           <Trash2 size={18} />

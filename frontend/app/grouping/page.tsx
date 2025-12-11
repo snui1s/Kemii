@@ -84,7 +84,7 @@ export default function GroupingPage() {
           </div>
 
           {/* Control Panel (กล่องเลือกจำนวน) */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-xl mx-auto text-center mb-12 transition-colors">
+          <div className="bg-white dark:bg-slate-900 p-4 sm:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-xl mx-auto text-center mb-12 transition-colors">
             <label className="block text-lg font-medium text-slate-700 dark:text-slate-300 mb-4">
               ต้องการแบ่งกี่ทีม?
             </label>
@@ -140,7 +140,7 @@ export default function GroupingPage() {
           </div>
 
           {!loading && result && (
-            <div className="flex flex-col gap-8 animate-fade-in-up pb-20">
+            <div className="flex flex-col gap-6 sm:gap-8 animate-fade-in-up pb-20">
               {result.teams.map((team, index) => {
                 const themeColor =
                   index % 4 === 0
@@ -190,7 +190,7 @@ export default function GroupingPage() {
                     {/* --- Body (แบ่งซ้าย-ขวา) --- */}
                     <div className="flex flex-col lg:flex-row">
                       {/* ฝั่งซ้าย: รายชื่อสมาชิก (กินพื้นที่ 60-70%) */}
-                      <div className="p-6 lg:w-[45%] border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800">
+                      <div className="p-4 sm:p-6 lg:w-[45%] border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800">
                         <h4 className="text-slate-500 dark:text-slate-400 font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
                           <Users size={16} /> Roster / รายชื่อ
                         </h4>
@@ -221,7 +221,7 @@ export default function GroupingPage() {
                       </div>
 
                       {/* ฝั่งขวา: วิเคราะห์ (กินพื้นที่ 30-40%) */}
-                      <div className="p-6 lg:w-[55%] flex flex-col gap-4 bg-slate-50/50 dark:bg-slate-800/30">
+                      <div className="p-4 sm:p-6 lg:w-[55%] flex flex-col gap-4 bg-slate-50/50 dark:bg-slate-800/30">
                         {/* จุดแข็ง */}
                         <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                           <h4 className="text-slate-500 dark:text-slate-400 font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
