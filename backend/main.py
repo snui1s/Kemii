@@ -138,7 +138,7 @@ def submit_assessment(submission: UserSubmission, session: Session = Depends(get
 
 @app.get("/users", response_model=List[UserResult])
 def get_users(session: Session = Depends(get_session)):
-    users = session.exec(select(User)).all()
+    users = session.exec(select(User).order_by(User.id)).all()
     
     results = []
     for user in users:

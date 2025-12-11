@@ -136,6 +136,7 @@ export default function ResultClient({ data }: { data: ResultData }) {
         toast.error("แอบดูผลลัพธ์ของคนอื่นไม่ได้นะจ๊ะ 😜", {
           icon: "🔒",
           duration: 4000,
+          id: "assessment-error",
         });
         router.push("/");
       } else {

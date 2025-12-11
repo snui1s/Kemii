@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import {
   X,
   Flame,
@@ -45,40 +46,40 @@ export default function SynergyModal({
   partnerId,
   onClose,
 }: SynergyModalProps) {
-  const [data, setData] = useState<SynergyData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // ✅ ใช้ TanStack Query
+  const {
+    data,
+    isLoading: loading,
+    error,
+  } = useQuery<SynergyData>({
+    queryKey: ["synergy", myId, partnerId],
+    queryFn: async () => {
+      const res = await axios.post(`${API_URL}/match-ai`, {
+        user1_id: myId,
+        user2_id: partnerId,
+      });
+      return res.data;
+    },
+    enabled: !!myId && !!partnerId,
+    retry: false,
+  });
 
+  // ❌ Handle Error (Rate Limit)
   useEffect(() => {
-    let isCancelled = false;
-
-    const fetchSynergy = async () => {
-      try {
-        const res = await axios.post(`${API_URL}/match-ai`, {
-          user1_id: myId,
-          user2_id: partnerId,
+    if (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        toast.error("ใจเย็นๆ น้าาา 🧊 พักหายใจสัก 1 นาทีแล้วลองใหม่ครับ", {
+          id: "rate-limit-error",
         });
-
-        if (!isCancelled) {
-          setData(res.data);
-          setLoading(false);
-        }
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 429) {
-          toast.error("ใจเย็นๆ น้าาา 🧊 พักหายใจสัก 1 นาทีแล้วลองใหม่ครับ");
-        }
-        if (!isCancelled) {
-          console.error(error);
-          setLoading(false);
-        }
+      } else {
+        console.error(error);
       }
-    };
+    }
+  }, [error]);
 
-    fetchSynergy();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [myId, partnerId]);
+  // const [data, setData] = useState<SynergyData | null>(null); // ❌
+  // const [loading, setLoading] = useState(true); // ❌
+  // useEffect(() => { ... }, [myId, partnerId]); // ❌
 
   const renderBulletList = (text: string) => {
     if (!text) return null;

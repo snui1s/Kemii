@@ -15,9 +15,20 @@ interface User {
 }
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+import { useQuery } from "@tanstack/react-query";
+import ElementalLoader from "@/components/ElementalLoader";
+
+// ... (imports)
+
 export default function Home() {
-  const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>([]);
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const res = await axios.get(`${API_URL}/users`);
+      return res.data;
+    },
+  });
+
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
   );
@@ -45,18 +56,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/users`);
-        setUsers(res.data);
-      } catch (err) {
-        console.error("Error fetching users:", err);
-        toast.error("เชื่อมต่อระบบไม่ได้ ลองใหม่นะ 🥺");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
     const storedId = localStorage.getItem("myUserId");
     if (storedId) setMyId(Number(storedId));
 
@@ -71,11 +70,16 @@ export default function Home() {
 
   const handleCardClick = (partnerId: number) => {
     if (!myId) {
-      toast.error("คุณต้องทำแบบประเมินก่อน ถึงจะส่องเคมีกับเพื่อนได้! 🔒");
+      toast.error("คุณต้องทำแบบประเมินก่อน ถึงจะส่องเคมีกับเพื่อนได้! 🔒", {
+        id: "auth-error",
+      });
       return;
     }
     if (partnerId === myId) {
-      toast("นี่คือตัวคุณเองนะ", { icon: "🤞" });
+      toast("นี่คือตัวคุณเองนะ", {
+        icon: "🤞",
+        id: "self-click",
+      });
       return;
     }
     setSelectedPartnerId(partnerId);
@@ -83,14 +87,11 @@ export default function Home() {
 
   return (
     <div className="relative h-full w-full max-w-5xl mx-auto mb-12 mt-5 px-4 sm:px-0">
-      {/* --- ✨ HERO BANNER (RE-DESIGNED FOR DARK MODE) --- */}
       <div className="relative bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors duration-500">
-        {/* 🎨 Background Decorative Blobs (ปรับสีใหม่ให้โกลว์ในโหมดมืด) */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-blue-100/50 to-purple-100/50 dark:from-blue-600/20 dark:to-purple-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none transition-colors duration-500"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-linear-to-tr from-yellow-100/50 to-red-100/50 dark:from-yellow-600/10 dark:to-red-600/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none transition-colors duration-500"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
-          {/* ฝั่งซ้าย: ข้อความต้อนรับ */}
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tight mb-3">
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
@@ -149,16 +150,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ฝั่งขวา: Action Card (Update สีตามธาตุ + Dark Mode) */}
           <div className="shrink-0 w-full md:w-auto flex justify-center">
             {myId ? (
               (() => {
                 const animal = typeof window !== "undefined" ? myAnimal : "";
                 const name = typeof window !== "undefined" ? myName : "";
 
-                // 2. 🎨 กำหนดธีมสี (แยก Dark Mode ชัดเจน)
                 let theme = {
-                  // Default
                   wrapper:
                     "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700",
                   text: "text-slate-800 dark:text-slate-200",
@@ -263,9 +261,9 @@ export default function Home() {
         </div>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="text-center p-10 text-zinc-900 dark:text-zinc-200 text-3xl animate-pulse">
-          Loading...
+          <ElementalLoader />
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -290,7 +288,7 @@ export default function Home() {
         />
       )}
 
-      {users.length === 0 && !loading && (
+      {users.length === 0 && !isLoading && (
         <div className="text-center text-gray-400 dark:text-gray-500 mt-10">
           ยังไม่มีสมาชิกในทีม
         </div>

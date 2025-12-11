@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import axios from "axios"; // Added axios import
+import { useQuery } from "@tanstack/react-query";
 import {
   History,
   RefreshCcw,
@@ -44,26 +45,20 @@ interface TeamLog {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function TeamHistoryPage() {
-  const [logs, setLogs] = useState<TeamLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
+  // ✅ ใช้ TanStack Query
+  const {
+    data: logs = [],
+    isLoading: loading,
+    refetch: refetchLogs,
+  } = useQuery<TeamLog[]>({
+    queryKey: ["team-history"],
+    queryFn: async () => {
       const res = await axios.get(`${API_URL}/team-logs`);
-      setLogs(res.data);
-    } catch (error) {
-      console.error(error);
-      toast.error("ดึงข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+      return res.data;
+    },
+  });
 
   // ✅ 2. ฟังก์ชัน Revive (ยืนยันทีมเก่า)
   const handleRevive = (id: number, teamName: string) => {
@@ -130,7 +125,7 @@ export default function TeamHistoryPage() {
                   toast.success("ยืนยันทีมเรียบร้อย! ลุยงานได้เลย", {
                     id: toastId,
                   });
-                  fetchLogs(); // โหลดข้อมูลใหม่
+                  refetchLogs(); // โหลดข้อมูลใหม่
                 } catch (error) {
                   // Handle Error กรณีคนไม่ว่าง
                   if (
@@ -188,7 +183,7 @@ export default function TeamHistoryPage() {
                   {
                     loading: "กำลังยุบทีม...",
                     success: () => {
-                      fetchLogs();
+                      refetchLogs();
                       return "ยุบทีมเรียบร้อย!";
                     },
                     error: "เกิดข้อผิดพลาด",
@@ -232,7 +227,7 @@ export default function TeamHistoryPage() {
                 toast.promise(axios.delete(`${API_URL}/team-logs/${id}`), {
                   loading: "กำลังลบ...",
                   success: () => {
-                    fetchLogs();
+                    refetchLogs();
                     return "ลบเรียบร้อย!";
                   },
                   error: "ลบไม่สำเร็จ",
@@ -278,7 +273,7 @@ export default function TeamHistoryPage() {
                 toast.promise(axios.delete(`${API_URL}/team-logs`), {
                   loading: "กำลังกวาดล้าง...",
                   success: () => {
-                    fetchLogs();
+                    refetchLogs();
                     return "สะอาดเอี่ยม! ล้างประวัติแล้ว";
                   },
                   error: "เกิดข้อผิดพลาดในการล้าง",
@@ -396,7 +391,7 @@ export default function TeamHistoryPage() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={fetchLogs}
+                    onClick={() => refetchLogs()}
                     className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
                     title="รีเฟรชข้อมูล"
                   >
@@ -451,18 +446,32 @@ export default function TeamHistoryPage() {
                     {/* Badge Status */}
                     <div className="absolute top-4 right-4 z-10">
                       {isConfirmed && (
-                        <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-800 shadow-sm">
-                          <CheckCircle2 size={14} /> ใช้งานอยู่
+                        <span
+                          className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-800 shadow-sm"
+                          title="ใช้งานอยู่"
+                        >
+                          <CheckCircle2 size={14} />{" "}
+                          <span className="hidden sm:inline">ใช้งานอยู่</span>
                         </span>
                       )}
                       {isDisbanded && (
-                        <span className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full border border-red-200 dark:border-red-800 shadow-sm">
-                          <XCircle size={14} /> เลิกใช้งานแล้ว
+                        <span
+                          className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full border border-red-200 dark:border-red-800 shadow-sm"
+                          title="เลิกใช้งานแล้ว"
+                        >
+                          <XCircle size={14} />{" "}
+                          <span className="hidden sm:inline">
+                            เลิกใช้งานแล้ว
+                          </span>
                         </span>
                       )}
                       {isGenerated && (
-                        <span className="flex items-center gap-1 px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-full border border-slate-300 dark:border-slate-700">
-                          <Clock size={14} /> Generated
+                        <span
+                          className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-full border border-slate-300 dark:border-slate-700"
+                          title="รอใช้งาน"
+                        >
+                          <Clock size={14} />{" "}
+                          <span className="hidden sm:inline">รอใช้งาน</span>
                         </span>
                       )}
                     </div>

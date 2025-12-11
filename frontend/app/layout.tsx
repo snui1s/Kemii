@@ -5,6 +5,7 @@ import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Providers from "@/components/Providers";
 
 const lineSeed = localFont({
   src: [
@@ -40,6 +41,9 @@ const lineSeed = localFont({
 export const metadata: Metadata = {
   title: "Kemii",
   description: "Team Chemistry",
+  icons: {
+    icon: "/icon2.svg",
+  },
 };
 
 export default function RootLayout({
@@ -50,43 +54,45 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${lineSeed.className} min-h-screen flex flex-col`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Navbar />
-          <main className="flex-1 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 overflow-auto flex flex-col">
-            <div className="flex-1 p-6">{children}</div>
-            <div className="mt-auto">
-              <Footer />
-            </div>
-          </main>
-          <Toaster
-            position="top-center"
-            reverseOrder={false}
-            toastOptions={{
-              // ใช้ ! นำหน้าเพื่อบังคับทับ style เดิมของ library
-              className:
-                "!bg-white dark:!bg-slate-800 " +
-                "!text-slate-900 dark:!text-slate-100 " +
-                "!border !border-slate-100 dark:!border-slate-700 " +
-                "!shadow-xl dark:!shadow-slate-900/50 " +
-                "!rounded-xl",
+        <Providers>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <Navbar />
+            <main className="flex-1 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 overflow-auto flex flex-col">
+              <div className="flex-1 p-6">{children}</div>
+              <div className="mt-auto">
+                <Footer />
+              </div>
+            </main>
+            <Toaster
+              position="top-center"
+              reverseOrder={false}
+              toastOptions={{
+                // ใช้ ! นำหน้าเพื่อบังคับทับ style เดิมของ library
+                className:
+                  "!bg-white dark:!bg-slate-800 " +
+                  "!text-slate-900 dark:!text-slate-100 " +
+                  "!border !border-slate-100 dark:!border-slate-700 " +
+                  "!shadow-xl dark:!shadow-slate-900/50 " +
+                  "!rounded-xl",
 
-              duration: 4000,
+                duration: 4000,
 
-              success: {
-                iconTheme: {
-                  primary: "#10b981",
-                  secondary: "white",
+                success: {
+                  iconTheme: {
+                    primary: "#10b981",
+                    secondary: "white",
+                  },
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: "#ef4444",
-                  secondary: "white",
+                error: {
+                  iconTheme: {
+                    primary: "#ef4444",
+                    secondary: "white",
+                  },
                 },
-              },
-            }}
-          />
-        </ThemeProvider>
+              }}
+            />
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

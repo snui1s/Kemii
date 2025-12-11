@@ -249,7 +249,9 @@ export default function AssessmentPage() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error("กรุณากรอกชื่อก่อนนะครับ 🥺");
+      toast.error("กรุณากรอกชื่อก่อนนะครับ 🥺", {
+        id: "name-error",
+      });
       return;
     }
 
@@ -257,7 +259,9 @@ export default function AssessmentPage() {
       (a) => a.most && a.least
     ).length;
     if (answeredCount < fullQuestions.length) {
-      toast.error("ตอบให้ครบทุกข้อก่อนน้า เหลืออีกนิดเดียว");
+      toast.error("ตอบให้ครบทุกข้อก่อนน้า เหลืออีกนิดเดียว", {
+        id: "answer-error",
+      });
       return;
     }
 
@@ -290,7 +294,9 @@ export default function AssessmentPage() {
       router.push(`/result/${newUser.id}`);
     } catch (err) {
       console.error(err);
-      toast.error("อุ๊ย ระบบมีปัญหา ลองใหม่อีกทีนะครับ");
+      toast.error("อุ๊ย ระบบมีปัญหา ลองใหม่อีกทีนะครับ", {
+        id: "submit-error",
+      });
       setIsSubmitting(false);
     }
   };

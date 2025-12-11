@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { Users, Wand2, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import ElementalLoader from "@/components/ElementalLoader";
@@ -25,13 +26,15 @@ export default function GroupingPage() {
   const [numTeams, setNumTeams] = useState(2); // ค่าเริ่มต้น 2 ทีม
   const [result, setResult] = useState<{ teams: Team[] } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [totalUsers, setTotalUsers] = useState(0);
 
-  useEffect(() => {
-    axios.get(`${API_URL}/users`).then((res) => {
-      setTotalUsers(res.data.length);
-    });
-  }, []);
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const res = await axios.get(`${API_URL}/users`);
+      return res.data;
+    },
+  });
+  const totalUsers = users.length;
 
   const MIN_MEMBERS_PER_TEAM = 2;
   const maxTeams =
@@ -49,13 +52,19 @@ export default function GroupingPage() {
       toast.success("จัดทีมเสร็จแล้ว!");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 429) {
-        toast.error("ใจเย็นๆ น้าาา 🧊 พักหายใจสัก 1 นาทีแล้วลองใหม่ครับ");
+        toast.error("ใจเย็นๆ น้าาา 🧊 พักหายใจสัก 1 นาทีแล้วลองใหม่ครับ", {
+          id: "rate-limit-error",
+        });
       }
       if (axios.isAxiosError(err) && err.response) {
         const errorMessage = (err.response.data as { detail: string }).detail;
-        toast.error(errorMessage || "เกิดข้อผิดพลาดจาก Server");
+        toast.error(errorMessage || "เกิดข้อผิดพลาดจาก Server", {
+          id: "server-error",
+        });
       } else {
-        toast.error("เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+        toast.error("เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ", {
+          id: "unknown-error",
+        });
       }
     } finally {
       setLoading(false);
@@ -107,7 +116,10 @@ export default function GroupingPage() {
                     setNumTeams((n) => n + 1);
                   } else {
                     toast.error(
-                      `คนไม่พอครับ! สูงสุดได้แค่ ${maxTeams} ทีม (ทีมละ ${MIN_MEMBERS_PER_TEAM} คน)`
+                      `คนไม่พอครับ! สูงสุดได้แค่ ${maxTeams} ทีม (ทีมละ ${MIN_MEMBERS_PER_TEAM} คน)`,
+                      {
+                        id: "max-teams-error",
+                      }
                     );
                   }
                 }}

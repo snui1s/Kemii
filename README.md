@@ -1,6 +1,6 @@
 # Kemii (Chemistry)
 
-Kemii is an AI-powered team management and personality assessment platform designed to optimize team dynamics using the DISC behavioral model. It leverages Google Gemini AI to analyze individual traits, assess compatibility between team members, and automatically generate balanced team structures. 
+Kemii is an AI-powered team management and personality assessment platform designed to optimize team dynamics using the DISC behavioral model. It leverages Google Gemini AI to analyze individual traits, assess compatibility between team members, and automatically generate balanced team structures.
 
 ## Features
 
@@ -14,6 +14,7 @@ Kemii is an AI-powered team management and personality assessment platform desig
 ## Tech Stack
 
 ### Frontend
+
 - **Framework**: Next.js (App Router)
 - **Styling**: Tailwind CSS
 - **Visualization**: Recharts
@@ -22,6 +23,7 @@ Kemii is an AI-powered team management and personality assessment platform desig
 - **Deployment**: Vercel
 
 ### Backend
+
 - **Framework**: FastAPI
 - **Database**: SQLModel (SQLite for Dev / PostgreSQL for Prod)
 - **AI Integration**: LangChain, Google Gemini API
@@ -30,6 +32,7 @@ Kemii is an AI-powered team management and personality assessment platform desig
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - Python (v3.10 or higher)
 - Google Gemini API Key
@@ -39,6 +42,7 @@ Kemii is an AI-powered team management and personality assessment platform desig
 1. Navigate to the backend directory:
    ```bash
    cd backend
+   ```
 2. Create a virtual environment and activate it:
    ```bash
     python -m venv venv
@@ -46,33 +50,42 @@ Kemii is an AI-powered team management and personality assessment platform desig
     venv\Scripts\activate
     # macOS/Linux:
     source venv/bin/activate
+   ```
 3. Install dependencies:
-    ```bash
-    pip install -r requirements.txt
+   ```bash
+   pip install -r requirements.txt
+   ```
 4. Create a .env file in the backend directory:
    ```bash
    GOOGLE_API_KEY=your_gemini_api_key
    DATABASE_URL=sqlite:///elements.db
+   ```
 5. Run the server:
    ```bash
    uvicorn main:app --reload
-  The backend will start at http://localhost:8000.
+   The backend will start at http://localhost:8000.
+   ```
 
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
    ```bash
    cd frontend
+   ```
 2. Install dependencies:
+
    ```bash
-   npm install
-  
+   bun install
+   ```
+
 3. Run the development server:
    ```bash
-   npm run dev
-  The application will be available at http://localhost:3000.
+   bun run dev
+   The application will be available at http://localhost:3000.
+   ```
 
 ### Usage
+
 - **Assessment**: Users complete the assessment to identify their dominant element (Fire, Water, Wind, Earth).
 
 - **Dashboard**: View team members and filter by personality types.

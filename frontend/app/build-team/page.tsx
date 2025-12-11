@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import {
   Users,
   UserPlus,
@@ -52,9 +53,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const STRATEGIES = ["Balanced", "Aggressive", "Creative", "Supportive"];
 
 export default function BuildTeamPage() {
-  // Data State
-  const [roster, setRoster] = useState<User[]>([]);
-
   // Config State
   const [selectedLeaderId, setSelectedLeaderId] = useState<string>("");
   const [memberCount, setMemberCount] = useState(2);
@@ -70,44 +68,37 @@ export default function BuildTeamPage() {
 
   // Modal State
   const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [userDetail, setUserDetail] = useState<User | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // ✅ 1. Use Query for Roster
+  const { data: roster = [], refetch: refetchRoster } = useQuery<User[]>({
+    queryKey: ["users", "roster"],
+    queryFn: async () => {
+      const res = await axios.get(`${API_URL}/users/roster`);
+      return res.data;
+    },
+  });
+
+  // ✅ 2. Use Query for User Detail (Modal)
+  const { data: userDetailRaw, isLoading: loadingDetail } = useQuery<User>({
+    queryKey: ["user", viewingUser?.id],
+    queryFn: async () => {
+      if (!viewingUser?.id) throw new Error("No ID");
+      const res = await axios.get(`${API_URL}/users/${viewingUser.id}`);
+      return res.data;
+    },
+    enabled: !!viewingUser?.id,
+    retry: false,
+  });
+
+  // Fallback to viewingUser if detail fetch fails or is not yet available
+  // Note: logic slightly changed from strictly catching error to fall back,
+  // but if fetch fails, userDetailRaw is undefined.
+  // We can just use userDetailRaw || viewingUser
+  const userDetail = userDetailRaw || viewingUser;
 
   // คำนวณจำนวนลูกน้องสูงสุด (นับเฉพาะคนที่ว่าง)
   const availableCount = roster.filter((u) => u.is_available).length;
   const maxMemberCount = Math.max(1, availableCount - 1);
-
-  // 1. ดึงรายชื่อทุกคน (Roster)
-  const fetchRoster = useCallback(async () => {
-    try {
-      const res = await axios.get<User[]>(`${API_URL}/users/roster`);
-      setRoster(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("ดึงข้อมูลไม่สำเร็จ");
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchRoster();
-  }, [fetchRoster]);
-
-  // Effect: โหลด Detail ใน Modal
-  useEffect(() => {
-    if (viewingUser) {
-      setLoadingDetail(true);
-      axios
-        .get<User>(`${API_URL}/users/${viewingUser.id}`)
-        .then((res) => setUserDetail(res.data))
-        .catch((err) => {
-          console.error(err);
-          setUserDetail(viewingUser);
-        })
-        .finally(() => setLoadingDetail(false));
-    } else {
-      setUserDetail(null);
-    }
-  }, [viewingUser]);
 
   // ฟังก์ชันแปลงวันที่ให้สวยงาม
   const formatDate = (dateString?: string) => {
@@ -122,7 +113,9 @@ export default function BuildTeamPage() {
   // 2. สั่ง AI หาคน
   const handleRecommendAll = async () => {
     if (!selectedLeaderId) {
-      toast.error("เลือกหัวหน้าทีมก่อนครับ!");
+      toast.error("เลือกหัวหน้าทีมก่อนครับ!", {
+        id: "leader-error",
+      });
       return;
     }
 
@@ -132,7 +125,9 @@ export default function BuildTeamPage() {
     ).length;
 
     if (memberCount > currentAvailable) {
-      toast.error(`คนว่างไม่พอครับ! เหลือคนว่างงานแค่ ${currentAvailable} คน`);
+      toast.error(`คนว่างไม่พอครับ! เหลือคนว่างงานแค่ ${currentAvailable} คน`, {
+        id: "member-error",
+      });
       return;
     }
 
@@ -171,13 +166,19 @@ export default function BuildTeamPage() {
       setAllResults(resultMap);
 
       if (successCount > 0) {
-        toast.success(`AI วิเคราะห์ครบ ${successCount} รูปแบบเรียบร้อย!`);
+        toast.success(`AI วิเคราะห์ครบ ${successCount} รูปแบบเรียบร้อย!`, {
+          id: "success",
+        });
       } else {
-        toast.error("AI ประมวลผลล้มเหลว ลองใหม่อีกครั้งครับ");
+        toast.error("AI ประมวลผลล้มเหลว ลองใหม่อีกครั้งครับ", {
+          id: "error",
+        });
       }
     } catch (error) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ", {
+        id: "connection-error",
+      });
     } finally {
       setLoading(false);
     }
@@ -189,7 +190,9 @@ export default function BuildTeamPage() {
     if (!targetResult) return;
 
     if (!startDate || !endDate) {
-      toast.error("กรุณาระบุวันเริ่มและวันจบโปรเจกต์ (ช่องซ้ายมือ)");
+      toast.error("กรุณาระบุวันเริ่มและวันจบโปรเจกต์ (ช่องซ้ายมือ)", {
+        id: "date-error",
+      });
       return;
     }
 
@@ -216,10 +219,12 @@ export default function BuildTeamPage() {
       setSelectedLeaderId("");
       setStartDate("");
       setEndDate("");
-      fetchRoster();
+      refetchRoster();
     } catch (err) {
       console.error(err);
-      toast.error("บันทึกไม่สำเร็จ");
+      toast.error("บันทึกไม่สำเร็จ", {
+        id: "confirm-error",
+      });
     }
   };
 
@@ -228,13 +233,15 @@ export default function BuildTeamPage() {
     if (confirm("ล้างทีมทั้งหมด? ทุกคนจะกลับมาว่างงานนะ")) {
       try {
         await axios.post(`${API_URL}/reset-teams`);
-        fetchRoster();
+        refetchRoster();
         toast.success("ล้างกระดานเรียบร้อย!");
         setAllResults({});
         setSelectedLeaderId("");
       } catch (err) {
         console.error(err);
-        toast.error("Reset ไม่สำเร็จ");
+        toast.error("Reset ไม่สำเร็จ", {
+          id: "reset-error",
+        });
       }
     }
   };

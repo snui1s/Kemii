@@ -1,72 +1,132 @@
-import { Code, Heart } from "lucide-react";
+import Link from "next/link";
+import { Code } from "lucide-react";
 
 export default function Footer() {
-  const APP_VERSION = "v2.2";
+  const APP_VERSION = "v2.5";
 
   return (
     <footer
       id="site-footer"
-      // ✅ เพิ่ม dark:bg-slate-900, dark:border-slate-800, dark:text-slate-400
-      className="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 py-6 sm:py-8 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300"
+      className="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 py-8 sm:py-10 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300"
     >
-      <div className="container mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-3 gap-4 items-center text-center lg:text-left">
-        {/* 1. Copyright & Version */}
-        <div className="text-sm font-medium flex flex-wrap items-center justify-center lg:justify-start gap-2 lg:justify-self-start">
-          <div className="flex items-center gap-2">
-            <span>© {new Date().getFullYear()}</span>
-            {/* ✅ ชื่อแบรนด์สีขาวในโหมดมืด */}
-            <span className="text-slate-700 dark:text-slate-200 font-bold">
-              Kemii
-            </span>
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          {/* Column 1: Brand & Version */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-slate-800 dark:text-white">
+                Kemii
+              </span>
+              <span className="text-xs bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-mono border border-transparent dark:border-slate-700">
+                {APP_VERSION}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
+              ค้นหาเคมีที่ลงตัว ปลดล็อกศักยภาพทีมด้วย AI
+              เครื่องมือวิเคราะห์บุคลิกภาพที่ช่วยให้การทำงานร่วมกันง่ายขึ้น
+            </p>
           </div>
 
-          <span className="text-slate-400 hidden sm:inline">|</span>
-          <span className="text-slate-500 dark:text-slate-500 text-xs">
-            All rights reserved.
-          </span>
+          {/* Column 2: Quick Links */}
+          <div>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+              เมนูหลัก
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  หน้าแรก
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/assessment"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  ทำแบบประเมิน
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/team-history"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  ประวัติทีม
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-          {/* ✅ Badge Version สีเข้มขึ้นในโหมดมืด */}
-          <span className="text-xs bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-mono border border-transparent dark:border-slate-700">
-            {APP_VERSION}
-          </span>
+          {/* Column 3: Legal */}
+          <div>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+              กฎหมายและความเป็นส่วนตัว
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/privacy-policy"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  นโยบายความเป็นส่วนตัว
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/disclaimer"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  ข้อจำกัดความรับผิดชอบ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  ข้อตกลงการใช้งาน
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Contact */}
+          <div>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+              ช่วยเหลือ
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/contact"
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                >
+                  ติดต่อเรา
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://github.com/snailsqz/Kemii"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition group"
+                >
+                  <Code size={16} />
+                  <span>GitHub Repository</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        {/* 2. Credits */}
-        <div className="flex items-center justify-center gap-2 text-sm font-medium lg:justify-self-center">
-          <span>Built with</span>
-          <Heart
-            size={16}
-            className="text-red-500 fill-red-500 animate-pulse"
-          />
-          <span>by</span>
-          <a
-            href="https://github.com/snailsqz"
-            target="_blank"
-            rel="noopener noreferrer"
-            // ✅ ลิงก์สี Indigo สว่างขึ้นในโหมดมืด
-            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition font-bold border-b border-transparent hover:border-indigo-600 dark:hover:border-indigo-400"
-          >
-            Pawee & Apiwat
-          </a>
-        </div>
-
-        {/* 3. GitHub Link */}
-        <div className="flex justify-center lg:justify-end lg:justify-self-end animate-fade-in">
-          <a
-            href="https://github.com/snailsqz/Kemii"
-            target="_blank"
-            rel="noopener noreferrer"
-            // ✅ Hover แล้วเป็นสีขาวในโหมดมืด
-            className="flex items-center gap-2 hover:text-slate-900 dark:hover:text-white transition group"
-          >
-            <Code
-              size={20}
-              className="group-hover:scale-110 transition-transform"
-            />
-            <span className="text-sm font-semibold group-hover:underline decoration-slate-400 underline-offset-4">
-              snailsqz/Kemii
-            </span>
-          </a>
+        <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-center sm:text-left">
+            © {new Date().getFullYear()} Kemii Team Chemistry. All rights
+            reserved.
+          </p>
         </div>
       </div>
     </footer>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -112,14 +112,26 @@ export default function Navbar() {
     return "👤";
   };
 
+  const toastCooldown = useRef(false);
+
   const handleProtectedLink = (e: React.MouseEvent, href: string) => {
     if (!myData) {
       e.preventDefault();
+
+      if (toastCooldown.current) return;
+
+      toastCooldown.current = true;
+      setTimeout(() => {
+        toastCooldown.current = false;
+      }, 3000);
+
       toast.error("🔒 กรุณาทำแบบประเมินก่อนใช้งานฟีเจอร์นี้ครับ", {
         style: {
           background: "#334155",
           color: "#fff",
         },
+        id: "assessment-error",
+        duration: 3000,
       });
     }
   };

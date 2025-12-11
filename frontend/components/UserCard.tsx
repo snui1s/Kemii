@@ -136,7 +136,6 @@ export default function UserCard({
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
-        {/* ================= หน้าการ์ด (Front) ================= */}
         <div
           className={`
             absolute inset-0 w-full h-full backface-hidden
@@ -207,8 +206,9 @@ export default function UserCard({
               </p>
 
               {/* ✅ 5. ถ้า allowFlip ให้โชว์ "คลิกดูพลัง" ถ้าไม่ ให้โชว์ "คลิกดู" เฉยๆ */}
-              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1 animate-pulse">
-                <Zap size={10} /> {allowFlip ? "คลิกดูพลัง" : "คลิกเพื่อดู"}
+              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 flex items-center gap-1 whitespace-nowrap">
+                <Zap size={10} fill="currentColor" />{" "}
+                {allowFlip ? "คลิกดูพลัง" : "คลิกเพื่อดู"}
               </p>
             </div>
 
@@ -244,8 +244,6 @@ export default function UserCard({
             }}
           />
         </div>
-
-        {/* ================= หลังการ์ด (Back) ================= */}
         <div
           className={`
             absolute inset-0 w-full h-full backface-hidden

@@ -29,8 +29,14 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
 
   const x = scores.D + scores.I - (scores.S + scores.C);
   const y = scores.D + scores.S - (scores.I + scores.C);
-  const data = [{ x, y }];
   const maxRange = 25;
+
+  // ✅ Fix: เพิ่มจุดหลอก (Invisible Points) ที่มุมกราฟเพื่อให้ Scale ไม่เพี้ยน
+  const data = [
+    { x, y, r: 1 }, // จุดจริง
+    { x: -maxRange, y: -maxRange, r: 0 }, // มุมซ้ายล่าง (ซ่อน)
+    { x: maxRange, y: maxRange, r: 0 }, // มุมขวาบน (ซ่อน)
+  ];
 
   if (!isMounted) {
     return (
@@ -115,7 +121,7 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
         minHeight={300}
         className="relative z-10"
       >
-        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+        <ScatterChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <XAxis
             type="number"
             dataKey="x"
@@ -129,29 +135,24 @@ export default function DiscGraph({ scores }: DiscGraphProps) {
             domain={[-maxRange, maxRange]}
           />
           <Tooltip cursor={{ strokeDasharray: "3 3" }} content={() => null} />
-          {/* ปรับสีเส้น Grid ให้จางลงในโหมดมืด */}
-          <ReferenceLine
-            x={0}
-            stroke="#94a3b8"
-            strokeOpacity={0.5}
-            strokeDasharray="3 3"
-          />
-          <ReferenceLine
-            y={0}
-            stroke="#94a3b8"
-            strokeOpacity={0.5}
-            strokeDasharray="3 3"
-          />
-          <Scatter name="You" data={data} fill="#0f172a" opacity={0}>
+          <Scatter name="You" data={data} fill="#0f172a">
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} />
+              <Cell key={`cell-${index}`} fillOpacity={entry.r === 0 ? 0 : 0} />
             ))}
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
 
+      {/* ✅ CSS Axis Lines (เส้นแกนกลางใช้ CSS เพื่อความเป๊ะ 100%) */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* เส้นตั้ง */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-px border-l border-dashed border-slate-400/50 dark:border-slate-500/50"></div>
+        {/* เส้นนอน */}
+        <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-slate-400/50 dark:border-slate-500/50"></div>
+      </div>
+
       <div
-        className="absolute z-10 flex flex-col items-center justify-center w-6 h-6"
+        className="absolute z-10 flex flex-col items-center justify-center w-6 h-6 pointer-events-none"
         style={{
           left: `${50 + (x / maxRange) * 50}%`,
           top: `${50 - (y / maxRange) * 50}%`,
