@@ -1,17 +1,17 @@
 import { Code, Heart } from "lucide-react";
 
 export default function Footer() {
-  const APP_VERSION = "v2";
+  const APP_VERSION = "v2.2";
 
   return (
     <footer
       id="site-footer"
       // ✅ เพิ่ม dark:bg-slate-900, dark:border-slate-800, dark:text-slate-400
-      className="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 py-8 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300"
+      className="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 py-6 sm:py-8 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300"
     >
-      <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center md:text-left">
+      <div className="container mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-3 gap-4 items-center text-center lg:text-left">
         {/* 1. Copyright & Version */}
-        <div className="text-sm font-medium flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-2 md:justify-self-start">
+        <div className="text-sm font-medium flex flex-wrap items-center justify-center lg:justify-start gap-2 lg:justify-self-start">
           <div className="flex items-center gap-2">
             <span>© {new Date().getFullYear()}</span>
             {/* ✅ ชื่อแบรนด์สีขาวในโหมดมืด */}
@@ -20,7 +20,7 @@ export default function Footer() {
             </span>
           </div>
 
-          <span className="text-slate-400 hidden md:inline">|</span>
+          <span className="text-slate-400 hidden sm:inline">|</span>
           <span className="text-slate-500 dark:text-slate-500 text-xs">
             All rights reserved.
           </span>
@@ -32,7 +32,7 @@ export default function Footer() {
         </div>
 
         {/* 2. Credits */}
-        <div className="flex items-center justify-center gap-2 text-sm font-medium md:justify-self-center">
+        <div className="flex items-center justify-center gap-2 text-sm font-medium lg:justify-self-center">
           <span>Built with</span>
           <Heart
             size={16}
@@ -51,7 +51,7 @@ export default function Footer() {
         </div>
 
         {/* 3. GitHub Link */}
-        <div className="flex justify-center md:justify-end md:justify-self-end animate-fade-in">
+        <div className="flex justify-center lg:justify-end lg:justify-self-end animate-fade-in">
           <a
             href="https://github.com/snailsqz/Kemii"
             target="_blank"

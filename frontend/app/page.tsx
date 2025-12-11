@@ -100,16 +100,39 @@ export default function Home() {
                 Team Chemistry
               </span>
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-lg max-w-xl leading-relaxed">
-              สำรวจจักรวาลของทีม ค้นหาเคมีที่ลงตัว{" "}
-              <br className="hidden md:inline" />
-              และปลดล็อกศักยภาพสูงสุดด้วย{" "}
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                AI Analysis
-              </span>{" "}
-              ⚡
-            </p>
+            {myId ? (
+              <div className="animate-fade-in-up">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white mt-6 mb-6 leading-tight">
+                  คุณได้ค้นพบพลังของ{" "}
+                  <span className="text-blue-600 dark:text-blue-400">
+                    {myAnimal}
+                  </span>{" "}
+                  แล้ว!
+                </h1>
 
+                <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
+                  ตอนนี้ถึงเวลาใช้ AI ช่วยหา{" "}
+                  <span className="font-bold text-slate-800 dark:text-white">
+                    เพื่อนร่วมทีมที่เคมีตรงกันที่สุด
+                  </span>{" "}
+                  <br className="hidden sm:block" />
+                  และปลดล็อกศักยภาพสูงสุดด้วย{" "}
+                  <span className="inline-block bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 rounded font-bold">
+                    DISC AI Analysis
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <p className="text-slate-500 dark:text-slate-400 text-lg max-w-xl leading-relaxed animate-fade-in-up">
+                สำรวจจักรวาลของทีม ค้นหาเคมีที่ลงตัว{" "}
+                <br className="hidden md:inline" />
+                และปลดล็อกศักยภาพสูงสุดด้วย{" "}
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                  DISC AI Analysis
+                </span>{" "}
+                ⚡
+              </p>
+            )}
             <div className="mt-6 flex items-center justify-center md:justify-start gap-4">
               {/* Stat Badge */}
               <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/50 border border-transparent dark:border-slate-700 rounded-full text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2 shadow-sm">
@@ -207,7 +230,7 @@ export default function Home() {
 
                     <button
                       onClick={() => (window.location.href = `/result/${myId}`)}
-                      className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 shadow-sm transition hover:shadow-md hover:scale-[1.02] active:scale-95"
+                      className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 shadow-sm transition hover:shadow-md hover:scale-[1.02] hover:text-green-500 active:scale-95"
                     >
                       ดูผลวิเคราะห์ของฉัน
                     </button>
@@ -245,7 +268,7 @@ export default function Home() {
           Loading...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {users.map((user) => (
             <div key={user.id} onClick={() => handleCardClick(user.id)}>
               <UserCard

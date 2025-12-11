@@ -17,6 +17,7 @@ from schemas import (
     Answer,UserSubmission, UserResult, MatchRequest, GroupingRequest, 
     UserNameUpdate, TeamBuilderRequest, ConfirmTeamRequest, ReviveRequest
 )
+from auth import create_access_token, verify_token
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -71,7 +72,7 @@ def check_and_release_users(session: Session):
             
     if updated_count > 0:
         session.commit()
-        print("⏰ Auto-released {updated_count} users because projects ended.")
+        print(f"⏰ Auto-released {updated_count} users because projects ended.")
 
 @app.get("/")
 @app.head("/")
@@ -123,7 +124,7 @@ def submit_assessment(submission: UserSubmission, session: Session = Depends(get
     session.add(user_db)
     session.commit()
     session.refresh(user_db) 
-    
+    token = create_access_token(user_db.id)
     return {
         "id": user_db.id,
         "name": user_db.name,
@@ -131,7 +132,8 @@ def submit_assessment(submission: UserSubmission, session: Session = Depends(get
         "animal": user_db.animal,
         "scores": raw_scores,
         "team_name": user_db.team_name,
-        "is_available": user_db.is_available
+        "is_available": user_db.is_available,
+        "access_token":token
     }
 
 @app.get("/users", response_model=List[UserResult])
@@ -248,8 +250,12 @@ async def match_users_ai(request: Request, req: MatchRequest, session: Session =
     }
     
 @app.get("/users/{user_id}/analysis")
-async def analyze_user(user_id: int, session: Session = Depends(get_session)):
+async def analyze_user(user_id: int, session: Session = Depends(get_session),current_user_id: int = Depends(verify_token)):
     user = session.get(User, user_id)
+    
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="คุณไม่มีสิทธิ์ดูข้อมูลของคนอื่น!")
+    
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

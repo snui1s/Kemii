@@ -250,7 +250,7 @@ export default function BuildTeamPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 text-slate-900 dark:text-slate-100">
           {/* --- LEFT PANEL: Config --- */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors sticky top-6">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors relative lg:sticky lg:top-6">
               <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                 <UserPlus className="text-blue-600 dark:text-blue-400" /> Create
                 Team
@@ -283,7 +283,7 @@ export default function BuildTeamPage() {
 
                 <div className="relative">
                   <select
-                    className="w-full p-3 pl-4 pr-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl appearance-none outline-none focus:ring-2 focus:ring-blue-500 dark:text-white cursor-pointer transition-all disabled:opacity-50"
+                    className="w-full p-3 pl-4 pr-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl appearance-none outline-none focus:ring-2 focus:ring-blue-500 dark:text-white cursor-pointer transition-all disabled:opacity-50 text-base"
                     value={selectedLeaderId}
                     onChange={(e) => setSelectedLeaderId(e.target.value)}
                   >
@@ -479,21 +479,23 @@ export default function BuildTeamPage() {
                       </div>
 
                       <div className="relative z-10">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                          <div>
-                            <span className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full mb-2 border border-blue-100 dark:border-blue-800">
-                              แนะนำสำหรับ: {activeStrategy} Strategy
-                            </span>
-                            <h2 className="text-3xl font-black text-slate-800 dark:text-white">
-                              {allResults[activeStrategy]?.team_name}
-                            </h2>
+                        <div className="flex flex-col gap-4 mb-4">
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                              <span className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full mb-2 border border-blue-100 dark:border-blue-800">
+                                แนะนำสำหรับ: {activeStrategy} Strategy
+                              </span>
+                              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white break-words">
+                                {allResults[activeStrategy]?.team_name}
+                              </h2>
+                            </div>
+                            <button
+                              onClick={handleConfirm}
+                              className="w-full md:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                              <Save size={20} /> เลือกทีมนี้ & เริ่มโครงการ
+                            </button>
                           </div>
-                          <button
-                            onClick={handleConfirm}
-                            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center gap-2"
-                          >
-                            <Save size={20} /> เลือกทีมนี้ & เริ่มโครงการ
-                          </button>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl text-slate-600 dark:text-slate-300 text-sm leading-relaxed border border-slate-100 dark:border-slate-700/50">
                           <span className="font-bold text-blue-500">
@@ -541,7 +543,7 @@ export default function BuildTeamPage() {
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                           <Users size={16} /> Team Members
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                           {allResults[activeStrategy]?.members?.map((m, i) => (
                             <UserCard
                               key={
