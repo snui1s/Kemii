@@ -96,12 +96,12 @@ const CLASS_THEMES = {
   },
   Rogue: {
     icon: <Skull size={64} />,
-    color: "from-slate-500 to-zinc-600",
-    border: "border-slate-500",
-    statColor: "#94a3b8",
+    color: "from-blue-900 to-indigo-900",
+    border: "border-blue-900",
+    statColor: "#1e3a5f",
     softBg:
-      "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700",
-    softText: "text-slate-700 dark:text-slate-300",
+      "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+    softText: "text-blue-900 dark:text-blue-300",
   },
 } as const;
 
@@ -138,24 +138,24 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
 
   // สร้างข้อมูลสำหรับ Radar Chart
   const statsData = [
-    { subject: `INT ${scores.Openness}`, A: scores.Openness, fullMark: 20 },
+    { subject: `O ${scores.Openness}`, A: scores.Openness, fullMark: 20 },
     {
-      subject: `VIT ${scores.Conscientiousness}`,
+      subject: `C ${scores.Conscientiousness}`,
       A: scores.Conscientiousness,
       fullMark: 20,
     },
     {
-      subject: `STR ${scores.Extraversion}`,
+      subject: `E ${scores.Extraversion}`,
       A: scores.Extraversion,
       fullMark: 20,
     },
     {
-      subject: `FTH ${scores.Agreeableness}`,
+      subject: `A ${scores.Agreeableness}`,
       A: scores.Agreeableness,
       fullMark: 20,
     },
     {
-      subject: `DEX ${scores.Neuroticism}`,
+      subject: `N ${scores.Neuroticism}`,
       A: scores.Neuroticism,
       fullMark: 20,
     },

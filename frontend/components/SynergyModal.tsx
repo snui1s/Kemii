@@ -1,15 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import {
   X,
-  Flame,
-  Wind,
-  Droplets,
-  Mountain,
+  Swords, // ดาบไขว้ (VS)
+  Handshake, // จับมือ (Good Synergy)
+  Scroll,
+  Sparkles,
   Zap,
-  CheckCircle2,
+  Wand,
+  Shield,
+  Sword,
+  Heart,
+  Skull,
+  User as UserIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -22,14 +27,13 @@ interface SynergyModalProps {
 interface UserBase {
   id: number;
   name: string;
-  animal: string;
-  dominant_type: string;
+  character_class: string; // ใช้ class แทน animal
+  level: number;
 }
 
 interface AIAnalysis {
   synergy_score: number;
   synergy_name: string;
-  element_visual: string;
   analysis: string;
   pro_tip: string;
 }
@@ -46,7 +50,6 @@ export default function SynergyModal({
   partnerId,
   onClose,
 }: SynergyModalProps) {
-  // ✅ ใช้ TanStack Query
   const {
     data,
     isLoading: loading,
@@ -64,225 +67,184 @@ export default function SynergyModal({
     retry: false,
   });
 
-  // ❌ Handle Error (Rate Limit)
   useEffect(() => {
     if (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 429) {
-        toast.error("ใจเย็นๆ น้าาา 🧊 พักหายใจสัก 1 นาทีแล้วลองใหม่ครับ", {
-          id: "rate-limit-error",
-        });
-      } else {
-        console.error(error);
-      }
+      toast.error("การเชื่อมต่อวิญญาณล้มเหลว... ลองใหม่ภายหลัง");
     }
   }, [error]);
 
-  // const [data, setData] = useState<SynergyData | null>(null); // ❌
-  // const [loading, setLoading] = useState(true); // ❌
-  // useEffect(() => { ... }, [myId, partnerId]); // ❌
-
   const renderBulletList = (text: string) => {
     if (!text) return null;
-    const lines = text.split("\n").filter((line) => line.trim() !== "");
+    // Clean text และแสดงผล
     return (
-      <ul className="space-y-2 mt-2">
-        {lines.map((line, index) => {
-          const cleanText = line.replace(/^[-•*]\s*/, "").trim();
-          return (
-            <li
-              key={index}
-              // ✅ ปรับสี Text ให้รองรับ Dark Mode
-              className="flex items-start gap-2 text-slate-600 dark:text-slate-300 text-sm leading-relaxed"
-            >
-              <CheckCircle2
-                size={16}
-                className="text-green-500 dark:text-green-400 mt-0.5 shrink-0"
-              />
-              <span>{cleanText}</span>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="text-slate-300 text-sm leading-relaxed space-y-2">
+        <p>{text.replace(/\*\*/g, "").replace(/-/g, "• ")}</p>
+      </div>
     );
   };
 
-  const getElementIcon = (animal: string) => {
-    if (animal.includes("กระทิง"))
-      return <Flame size={40} className="text-red-500 animate-bounce" />;
-    if (animal.includes("อินทรี"))
-      return <Wind size={40} className="text-yellow-500 animate-bounce" />;
-    if (animal.includes("หนู"))
-      return <Mountain size={40} className="text-green-500 animate-bounce" />;
-    return <Droplets size={40} className="text-blue-500 animate-bounce" />;
+  const getClassIcon = (cls: string) => {
+    const c = (cls || "").toLowerCase();
+    if (c.includes("mage"))
+      return <Wand size={32} className="text-purple-400" />;
+    if (c.includes("paladin"))
+      return <Shield size={32} className="text-amber-400" />;
+    if (c.includes("warrior"))
+      return <Sword size={32} className="text-red-400" />;
+    if (c.includes("cleric"))
+      return <Heart size={32} className="text-emerald-400" />;
+    if (c.includes("rogue"))
+      return <Skull size={32} className="text-slate-400" />;
+    return <UserIcon size={32} className="text-gray-400" />;
   };
 
   return (
-    <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
-      {/* ✅ Main Container Dark Mode */}
-      <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden relative border border-transparent dark:border-slate-800 transition-colors">
-        {/* ปุ่มปิด */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+      {/* Container: Ancient Stone Tablet Style */}
+      <div className="bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden relative border border-slate-700/50">
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-200 z-10 bg-white/50 dark:bg-slate-800/50 rounded-full p-1 transition-colors"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white z-20 bg-slate-800/50 rounded-full p-2 transition-colors hover:bg-red-500/20"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
         {loading ? (
-          // --- Loading State ---
-          <div className="h-96 flex flex-col items-center justify-center relative overflow-hidden bg-slate-50/50 dark:bg-slate-900/50">
-            {/* Background Effect */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow mix-blend-multiply dark:mix-blend-normal"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-red-400/20 dark:bg-red-500/10 rounded-full blur-3xl animate-pulse-slow animation-delay-1000 mix-blend-multiply dark:mix-blend-normal"></div>
+          // --- 🔮 Loading: Summoning Circle ---
+          <div className="h-[450px] flex flex-col items-center justify-center relative overflow-hidden">
+            {/* Background Ambience */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-900 to-slate-900"></div>
 
-            {/* Content Container */}
-            <div className="relative z-10 flex flex-col items-center space-y-8 p-8 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-sm">
-              {/* Icon & Text */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="text-6xl animate-bounce relative">
-                  🧪
-                  <span className="absolute -top-2 -right-2 text-2xl animate-ping opacity-75">
-                    🫧
-                  </span>
+            <div className="relative z-10 flex flex-col items-center gap-8">
+              {/* Magic Circle Animation */}
+              <div className="relative w-40 h-40">
+                {/* Outer Ring */}
+                <div className="absolute inset-0 border-2 border-dashed border-indigo-500/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                {/* Inner Ring */}
+                <div className="absolute inset-4 border-2 border-indigo-400/50 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
+
+                {/* Core Energy */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Sparkles
+                    size={48}
+                    className="text-indigo-400 animate-pulse"
+                  />
                 </div>
 
-                <div className="text-2xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-500 to-red-600 dark:from-blue-400 dark:via-purple-400 dark:to-red-400">
-                  กำลังวิเคราะห์เคมี...
+                {/* Floating Runes */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-indigo-300 animate-bounce">
+                  ⚡
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  รอสักครู่ AI กำลังคำนวณความเข้ากันได้
-                </p>
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-indigo-300 animate-bounce delay-100">
+                  🔥
+                </div>
               </div>
 
-              <div className="relative w-72 h-8 flex items-center justify-center">
-                <style jsx>{`
-                  @keyframes energetic-shake {
-                    0% {
-                      transform: translate(-50%, -50%) translateX(0px)
-                        rotate(0deg);
-                    }
-                    25% {
-                      transform: translate(-50%, -50%) translateX(-2px)
-                        rotate(-5deg);
-                    }
-                    50% {
-                      transform: translate(-50%, -50%) translateX(2px)
-                        rotate(3deg);
-                    }
-                    75% {
-                      transform: translate(-50%, -50%) translateX(-1px)
-                        rotate(-3deg);
-                    }
-                    100% {
-                      transform: translate(-50%, -50%) translateX(0px)
-                        rotate(0deg);
-                    }
-                  }
-                  .animate-core-shake {
-                    animation: energetic-shake 0.15s infinite linear;
-                  }
-                `}</style>
-
-                {/* รางวิ่ง (Track) */}
-                <div className="absolute inset-0 top-2 bottom-2 bg-slate-200 dark:bg-slate-700 rounded-full shadow-inner overflow-hidden">
-                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/60 dark:via-slate-500/30 to-transparent -translate-x-full animate-[shimmer_1s_infinite]"></div>
-                </div>
-
-                {/* 🌊 ธาตุน้ำ */}
-                <div className="absolute left-0 h-2 top-3 w-[52%] bg-linear-to-r from-cyan-500 via-blue-500 to-white rounded-l-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
-
-                {/* 🔥 ธาตุไฟ */}
-                <div className="absolute right-0 h-2 top-3 w-[52%] bg-linear-to-l from-yellow-500 via-red-500 to-white rounded-r-full animate-pulse animation-delay-75 shadow-[0_0_15px_rgba(239,68,68,0.8)]"></div>
-
-                {/* 💥 จุดปะทะตรงกลาง */}
-                <div className="absolute top-1/2 left-1/2 w-12 h-12 z-20 flex items-center justify-center animate-core-shake">
-                  <div className="absolute inset-0 bg-purple-500 rounded-full animate-ping opacity-75"></div>
-                  <div className="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-50 animation-delay-300"></div>
-
-                  <div className="relative w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,1)] border-2 border-purple-200 dark:border-purple-600 z-30">
-                    <Zap
-                      size={24}
-                      className="text-purple-600 dark:text-purple-400 fill-purple-600 dark:fill-purple-400 animate-spin duration-700"
-                    />
-                  </div>
-                  <div className="absolute -top-4 -right-4 w-2 h-2 bg-yellow-400 rounded-full animate-bounce"></div>
-                  <div className="absolute -bottom-3 -left-3 w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce animation-delay-500"></div>
-                </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 animate-pulse">
+                  Casting Soul Link...
+                </h3>
+                <p className="text-slate-500 text-xs tracking-widest uppercase">
+                  Reading Fate & Destiny
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          // --- Result State ---
+          // --- 📜 Result: Ancient Scroll ---
           data && (
             <div>
-              {/* Header */}
-              <div className="bg-slate-900 text-white p-8 text-center relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+              {/* Header: Synergy Name */}
+              <div className="bg-slate-950 p-8 text-center relative border-b border-slate-800">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-20"></div>
 
-                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-red-500 relative z-10">
+                <h2 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-600 relative z-10 drop-shadow-md">
                   {data.ai_analysis.synergy_name}
                 </h2>
 
-                <div className="flex items-center justify-center gap-2 mt-2 text-yellow-400">
-                  <Zap fill="currentColor" />
-                  <span className="text-xl font-bold">
-                    Compatibility: {data.ai_analysis.synergy_score}%
-                  </span>
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <div
+                    className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                      data.ai_analysis.synergy_score > 80
+                        ? "bg-green-900/30 text-green-400 border-green-500/30"
+                        : "bg-yellow-900/30 text-yellow-400 border-yellow-500/30"
+                    }`}
+                  >
+                    Resonance Rate: {data.ai_analysis.synergy_score}%
+                  </div>
                 </div>
               </div>
 
-              {/* Battle Arena */}
-              <div className="flex justify-between items-center p-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 transition-colors">
-                {/* Me */}
-                <div className="text-center w-1/3">
-                  <div className="flex justify-center mb-2">
-                    {getElementIcon(data.user1.animal)}
+              {/* Arena: User vs User */}
+              <div className="flex justify-between items-center p-6 bg-slate-900 relative overflow-hidden">
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent"></div>
+
+                {/* Left User */}
+                <div className="text-center w-1/3 relative z-10">
+                  <div className="flex justify-center mb-3">
+                    <div className="p-4 bg-slate-800 rounded-full border border-slate-700 shadow-lg shadow-indigo-900/20">
+                      {getClassIcon(data.user1.character_class)}
+                    </div>
                   </div>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                  <h3 className="font-bold text-slate-200 text-sm">
                     {data.user1.name}
                   </h3>
-                  <span className="text-xs bg-white dark:bg-slate-700 border dark:border-slate-600 px-2 py-1 rounded-full text-slate-500 dark:text-slate-300">
-                    {data.user1.animal}
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                    {data.user1.character_class}
                   </span>
                 </div>
 
-                {/* VS */}
-                <div className="text-2xl font-black text-slate-300 dark:text-slate-600 italic">
-                  VS
+                {/* VS Icon */}
+                <div className="text-slate-600">
+                  {data.ai_analysis.synergy_score > 80 ? (
+                    <Handshake
+                      size={32}
+                      className="text-green-500 animate-pulse"
+                    />
+                  ) : (
+                    <Swords size={32} className="text-red-500 animate-pulse" />
+                  )}
                 </div>
 
-                {/* Partner */}
-                <div className="text-center w-1/3">
-                  <div className="flex justify-center mb-2">
-                    {getElementIcon(data.user2.animal)}
+                {/* Right User */}
+                <div className="text-center w-1/3 relative z-10">
+                  <div className="flex justify-center mb-3">
+                    <div className="p-4 bg-slate-800 rounded-full border border-slate-700 shadow-lg shadow-purple-900/20">
+                      {getClassIcon(data.user2.character_class)}
+                    </div>
                   </div>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                  <h3 className="font-bold text-slate-200 text-sm">
                     {data.user2.name}
                   </h3>
-                  <span className="text-xs bg-white dark:bg-slate-700 border dark:border-slate-600 px-2 py-1 rounded-full text-slate-500 dark:text-slate-300">
-                    {data.user2.animal}
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                    {data.user2.character_class}
                   </span>
                 </div>
               </div>
 
-              {/* Analysis Content */}
-              <div className="p-8 space-y-6">
-                <div>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
-                    🧐 วิเคราะห์เคมี
+              {/* Content: Analysis Scroll */}
+              <div className="p-8 bg-slate-900/50 space-y-6">
+                {/* Analysis Box */}
+                <div className="relative">
+                  <div className="absolute -left-3 top-0 bottom-0 w-1 bg-slate-700 rounded-full"></div>
+                  <h4 className="font-bold text-indigo-400 mb-2 flex items-center gap-2 text-sm uppercase tracking-widest">
+                    <Scroll size={16} /> Oracle's Insight
                   </h4>
-                  <div className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
+                  <div className="pl-2">
                     {data && renderBulletList(data.ai_analysis.analysis)}
                   </div>
                 </div>
 
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-700/30 p-4 rounded-xl flex gap-3 items-start transition-colors">
-                  <span className="text-2xl">💡</span>
+                {/* Pro Tip Box (Quest Hint) */}
+                <div className="bg-slate-800/50 border border-amber-500/20 p-4 rounded-xl flex gap-3 items-start">
+                  <span className="text-xl">💡</span>
                   <div>
-                    <h4 className="font-bold text-yellow-800 dark:text-yellow-300 text-sm mb-1">
-                      Pro Tip
+                    <h4 className="font-bold text-amber-400 text-xs uppercase mb-1">
+                      Guild Master's Advice
                     </h4>
-                    <p className="text-yellow-800/80 dark:text-yellow-200/80 text-sm">
+                    <p className="text-slate-400 text-sm leading-relaxed">
                       {data.ai_analysis.pro_tip}
                     </p>
                   </div>

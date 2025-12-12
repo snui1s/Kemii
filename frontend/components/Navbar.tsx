@@ -140,7 +140,7 @@ export default function Navbar() {
     if (c.includes("cleric") || c.includes("นักบวช"))
       return <Heart size={18} className="text-green-500" />;
     if (c.includes("rogue") || c.includes("โจร"))
-      return <Skull size={18} className="text-slate-500" />;
+      return <Skull size={18} className="text-blue-500" />;
 
     return <UserIcon size={18} />;
   };

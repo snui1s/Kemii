@@ -243,6 +243,122 @@ def get_users(session: Session = Depends(get_session)):
             "is_assessed": u.is_assessed
         })
     return results
+
+
+@app.post("/match-ai")
+# @limiter.limit("10/minute") # Uncomment ถ้าจะใช้ Rate Limit
+async def match_users_ai(request: Request, req: MatchRequest, session: Session = Depends(get_session)):
+    u1 = session.get(User, req.user1_id)
+    u2 = session.get(User, req.user2_id)
+    
+    if not u1 or not u2:
+        raise HTTPException(status_code=404, detail="Heroes not found")
+        
+    # --- 1. คำนวณ Synergy Score (สูตร RPG Basic) ---
+    # หลักการ: 
+    # - Agreeableness สูงทั้งคู่ = เข้ากันได้ดี (+Score)
+    # - Neuroticism สูงทั้งคู่ = เสี่ยงตีกัน (-Score)
+    # - Openness ใกล้กัน = คุยภาษาเดียวกันรู้เรื่อง
+    
+    # ดึงค่าคะแนน (กันเหนียวเป็น 0)
+    def get_stats(u):
+        return {
+            "O": u.ocean_openness or 0,
+            "C": u.ocean_conscientiousness or 0,
+            "E": u.ocean_extraversion or 0,
+            "A": u.ocean_agreeableness or 0,
+            "N": u.ocean_neuroticism or 0
+        }
+        
+    s1 = get_stats(u1)
+    s2 = get_stats(u2)
+    
+    # Base Score เริ่มต้น 60%
+    score = 60
+    
+    # Logic: Agreeableness (FTH) คือกาวใจ
+    avg_A = (s1["A"] + s2["A"]) / 2
+    score += (avg_A / 20) * 15  # สูงสุด +15%
+    
+    # Logic: Neuroticism (DEX/Sensitivity) สูงทั้งคู่คือระเบิดเวลา
+    avg_N = (s1["N"] + s2["N"]) / 2
+    if avg_N > 15: score -= 10
+    
+    # Logic: Extraversion (STR) ต่างกันเติมเต็มกัน (คนนึงพูด คนนึงฟัง)
+    diff_E = abs(s1["E"] - s2["E"])
+    if diff_E > 10: score += 10 # ต่างกันเยอะ = ดี (Balance)
+    
+    # Logic: Conscientiousness (VIT) ใกล้กันทำงานง่าย
+    diff_C = abs(s1["C"] - s2["C"])
+    if diff_C < 5: score += 10 # ใกล้กัน = ดี
+    
+    # Cap Score 0-100
+    final_score = max(10, min(99, int(score)))
+    
+    print(f"⚔️ Soul Link: {u1.name} ({u1.character_class}) x {u2.name} ({u2.character_class}) = {final_score}%")
+
+    # --- 2. เรียก AI ให้วิเคราะห์ (Roleplay) ---
+    match_prompt = ChatPromptTemplate.from_template("""
+    Role: You are the "Grand Guild Master" analyzing the compatibility of two adventurers for a party.
+    Tone: Epic, Fantasy RPG, Constructive, Insightful (Thai Language).
+    
+    **Hero 1:** {name1} (Class: {class1})
+    - Stats: O={o1}, C={c1}, E={e1}, A={a1}, N={n1}
+    
+    **Hero 2:** {name2} (Class: {class2})
+    - Stats: O={o2}, C={c2}, E={e2}, A={a2}, N={n2}
+    
+    **Calculated Synergy:** {score}%
+    
+    **TASK:**
+    Analyze their chemistry based on OCEAN stats but describe it using RPG metaphors.
+    - High Synergy (>80%): Describe a legendary combo (e.g. "Shield & Sword", "Light & Shadow").
+    - Low Synergy (<50%): Warn about potential conflict (e.g. "Fire & Oil").
+    
+    **JSON OUTPUT RULES:**
+    1. **synergy_name**: A cool combo name in Thai (e.g. "คู่หูทลายดันเจี้ยน", "ดาบโล่พิทักษ์").
+    2. **analysis**: A paragraph describing how they work together. Explain how their Classes support (or clash with) each other.
+    3. **pro_tip**: Advice for the Party Leader on how to manage this duo.
+    
+    **JSON FORMAT ONLY (No Markdown):**
+    {{
+      "synergy_score": {score},
+      "synergy_name": "...",
+      "analysis": "...",
+      "pro_tip": "..."
+    }}
+    """)
+    
+    chain = match_prompt | llm | StrOutputParser()
+    
+    try:
+        raw_result = await chain.ainvoke({
+            "name1": u1.name, "class1": u1.character_class, 
+            "o1": s1["O"], "c1": s1["C"], "e1": s1["E"], "a1": s1["A"], "n1": s1["N"],
+            "name2": u2.name, "class2": u2.character_class,
+            "o2": s2["O"], "c2": s2["C"], "e2": s2["E"], "a2": s2["A"], "n2": s2["N"],
+            "score": final_score
+        })
+        
+        cleaned_json = raw_result.replace("```json", "").replace("```", "").strip()
+        analysis_json = json.loads(cleaned_json)
+        
+    except Exception as e:
+        print(f"AI Error: {e}")
+        analysis_json = {
+            "synergy_score": final_score,
+            "synergy_name": "พันธสัญญาแห่งโชคชะตา",
+            "analysis": "พลังเวทย์ผันผวน... ไม่สามารถอ่านคำทำนายได้ชัดเจน แต่ค่าพลังพื้นฐานบ่งบอกถึงความเป็นไปได้",
+            "pro_tip": "ลองให้ทั้งคู่ลงดันเจี้ยนง่ายๆ ร่วมกันดูก่อน",
+        }
+    
+    # ส่งข้อมูลกลับ (Frontend จะเอาไปโชว์ใน Modal)
+    return {
+        "user1": u1,
+        "user2": u2,
+        "ai_analysis": analysis_json
+    }
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
