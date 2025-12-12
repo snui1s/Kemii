@@ -1,306 +1,321 @@
 "use client";
-import { useRouter } from "next/navigation";
-import {
-  Flame,
-  Wind,
-  Mountain,
-  Droplets,
-  ArrowLeft,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
-import DiscGraph from "@/components/DiscGraph";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 
-// --- Interfaces ---
-interface Scores {
-  D: number;
-  I: number;
-  S: number;
-  C: number;
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Shield,
+  Sword,
+  Wand,
+  Heart,
+  Skull,
+  ChevronRight,
+  Scroll,
+  Star,
+  AlertTriangle,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+
+// --- Types ---
+interface OceanScores {
+  Openness: number;
+  Conscientiousness: number;
+  Extraversion: number;
+  Agreeableness: number;
+  Neuroticism: number;
 }
-interface User {
+
+interface UserData {
   id: number;
   name: string;
-  dominant_type: string;
-  animal: string;
-  scores: Scores;
+  character_class: string;
+  level: number;
+  ocean_scores?: OceanScores;
+  ocean_openness?: number;
+  ocean_conscientiousness?: number;
+  ocean_extraversion?: number;
+  ocean_agreeableness?: number;
+  ocean_neuroticism?: number;
 }
-interface Analysis {
-  title: string;
-  element_desc: string;
-  personality: string;
-  weakness: string;
-  work_style: string;
-  compatible_with: string;
+
+interface AnalysisData {
+  class_title: string;
+  prophecy: string;
+  strengths: string[];
+  weaknesses: string[];
+  best_partner: string;
 }
-interface ResultData {
-  user: User;
-  analysis: Analysis;
+
+interface ResultClientProps {
+  user: UserData;
+  analysis: AnalysisData;
 }
+
+// --- Theme Config ---
+const CLASS_THEMES = {
+  Mage: {
+    icon: <Wand size={64} />,
+    color: "from-purple-500 to-indigo-600",
+    border: "border-purple-500",
+    statColor: "#a855f7",
+    softBg:
+      "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+    softText: "text-purple-700 dark:text-purple-300",
+  },
+  Paladin: {
+    icon: <Shield size={64} />,
+    color: "from-yellow-500 to-amber-600",
+    border: "border-yellow-500",
+    statColor: "#eab308",
+    softBg:
+      "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
+    softText: "text-yellow-700 dark:text-yellow-300",
+  },
+  Warrior: {
+    icon: <Sword size={64} />,
+    color: "from-red-500 to-rose-600",
+    border: "border-red-500",
+    statColor: "#ef4444",
+    softBg: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
+    softText: "text-red-700 dark:text-red-300",
+  },
+  Cleric: {
+    icon: <Heart size={64} />,
+    color: "from-green-500 to-emerald-600",
+    border: "border-green-500",
+    statColor: "#22c55e",
+    softBg:
+      "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+    softText: "text-green-700 dark:text-green-300",
+  },
+  Rogue: {
+    icon: <Skull size={64} />,
+    color: "from-slate-500 to-zinc-600",
+    border: "border-slate-500",
+    statColor: "#94a3b8",
+    softBg:
+      "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700",
+    softText: "text-slate-700 dark:text-slate-300",
+  },
+} as const;
+
+type ClassName = keyof typeof CLASS_THEMES;
 
 // --- Helper Functions ---
-const getThemeColor = (type: string) => {
-  switch (type) {
-    case "D":
-      return "bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100 border-red-200 dark:border-red-800";
-    case "I":
-      return "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-100 border-yellow-200 dark:border-yellow-800";
-    case "S":
-      return "bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-100 border-green-200 dark:border-green-800";
-    case "C":
-      return "bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800";
-    default:
-      return "bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100";
-  }
-};
+function getTheme(characterClass: string | undefined | null) {
+  // แปลงชื่อไทย -> อังกฤษ
+  let key = (characterClass || "Warrior").trim();
+  if (key.includes("เวทย์") || key.includes("Mage")) key = "Mage";
+  else if (key.includes("อัศวิน") || key.includes("Paladin")) key = "Paladin";
+  else if (key.includes("นักรบ") || key.includes("Warrior")) key = "Warrior";
+  else if (key.includes("นักบวช") || key.includes("Cleric")) key = "Cleric";
+  else if (key.includes("โจร") || key.includes("Rogue")) key = "Rogue";
 
-const getElementIcon = (type: string) => {
-  switch (type) {
-    case "D":
-      return <Flame size={48} className="text-red-500 dark:text-red-400" />;
-    case "I":
-      return (
-        <Wind size={48} className="text-yellow-500 dark:text-yellow-400" />
-      );
-    case "S":
-      return (
-        <Mountain size={48} className="text-green-500 dark:text-green-400" />
-      );
-    case "C":
-      return (
-        <Droplets size={48} className="text-blue-500 dark:text-blue-400" />
-      );
-    default:
-      return null;
-  }
-};
+  return CLASS_THEMES[key as ClassName] || CLASS_THEMES.Warrior;
+}
 
-const renderBulletList = (
-  text: string | string[] | null | undefined,
-  type: "normal" | "warning" = "normal"
-) => {
-  if (!text) return null;
-  let lines: string[] = [];
-  if (Array.isArray(text)) lines = text;
-  else if (typeof text === "string") lines = text.split("\n");
-  else return null;
+function cleanText(text: string | undefined): string {
+  if (!text) return "";
+  return text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/##/g, "").trim();
+}
 
-  lines = lines.filter((line) => line.trim() !== "");
+// --- Main Component ---
+export default function ResultClient({ user, analysis }: ResultClientProps) {
+  // ดึงคะแนน OCEAN
+  const scores = user.ocean_scores || {
+    Openness: user.ocean_openness || 0,
+    Conscientiousness: user.ocean_conscientiousness || 0,
+    Extraversion: user.ocean_extraversion || 0,
+    Agreeableness: user.ocean_agreeableness || 0,
+    Neuroticism: user.ocean_neuroticism || 0,
+  };
+
+  // สร้างข้อมูลสำหรับ Radar Chart
+  const statsData = [
+    { subject: `INT ${scores.Openness}`, A: scores.Openness, fullMark: 20 },
+    {
+      subject: `VIT ${scores.Conscientiousness}`,
+      A: scores.Conscientiousness,
+      fullMark: 20,
+    },
+    {
+      subject: `STR ${scores.Extraversion}`,
+      A: scores.Extraversion,
+      fullMark: 20,
+    },
+    {
+      subject: `FTH ${scores.Agreeableness}`,
+      A: scores.Agreeableness,
+      fullMark: 20,
+    },
+    {
+      subject: `DEX ${scores.Neuroticism}`,
+      A: scores.Neuroticism,
+      fullMark: 20,
+    },
+  ];
+
+  // ดึง Theme ตาม Class
+  const theme = getTheme(user.character_class);
 
   return (
-    <ul className="space-y-3 mt-3">
-      {lines.map((line, index) => {
-        const cleanText = line.replace(/^[-•*]\s*/, "").trim();
-        const isWarning = type === "warning";
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-4 md:p-8 font-sans flex justify-center items-center relative overflow-hidden transition-colors duration-300">
+      {/* Background FX */}
+      <div
+        className={`absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-br ${theme.color} opacity-10 blur-[100px] pointer-events-none`}
+      />
 
-        // 🎨 ปรับสีรายการ (List Item) ให้รองรับ Dark Mode
-        const itemStyle = isWarning
-          ? "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/50 text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/30"
-          : "bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-200 dark:hover:border-slate-600";
-
-        const Icon = isWarning ? AlertCircle : CheckCircle2;
-        const iconColor = isWarning
-          ? "text-red-500 dark:text-red-400"
-          : "text-blue-500 dark:text-blue-400";
-
-        return (
-          <li
-            key={index}
-            className={`p-3 rounded-lg border flex items-start gap-3 transition-colors duration-200 ${itemStyle}`}
+      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+        {/* --- LEFT: HERO CARD --- */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          <div
+            className={`relative p-[2px] rounded-3xl bg-gradient-to-b ${theme.color} shadow-2xl`}
           >
-            <Icon size={18} className={`mt-0.5 shrink-0 ${iconColor}`} />
-            <span className="leading-relaxed text-sm font-medium">
-              {cleanText}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-};
+            <div className="bg-white dark:bg-slate-900 rounded-[22px] p-6 flex flex-col items-center text-center h-full relative overflow-hidden">
+              {/* Badge */}
+              <div className="absolute top-4 right-4 bg-black/40 px-3 py-1 rounded-full text-xs font-mono text-yellow-400 border border-white/10">
+                LV. {user.level || 1}
+              </div>
 
-// --- Component หลัก ---
-export default function ResultClient({ data }: { data: ResultData }) {
-  const router = useRouter();
-  const { user, analysis } = data;
-  const theme = getThemeColor(user.dominant_type);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+              {/* Class Icon */}
+              <div
+                className={`mt-4 mb-4 p-5 rounded-full bg-slate-100 dark:bg-slate-800 border-2 ${theme.border} shadow-lg`}
+              >
+                <div className="text-slate-700 dark:text-white drop-shadow-md">
+                  {theme.icon}
+                </div>
+              </div>
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const myStoredId = localStorage.getItem("myUserId");
+              {/* Titles */}
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-1">
+                {user.name}
+              </h2>
+              <div
+                className={`px-4 py-1 rounded-lg text-sm font-bold bg-gradient-to-r ${theme.color} text-white mb-4 shadow-lg inline-block`}
+              >
+                {cleanText(analysis.class_title) || user.character_class}
+              </div>
 
-      if (!myStoredId || myStoredId !== String(user.id)) {
-        toast.error("แอบดูผลลัพธ์ของคนอื่นไม่ได้นะจ๊ะ 😜", {
-          icon: "🔒",
-          duration: 4000,
-          id: "assessment-error",
-        });
-        router.push("/");
-      } else {
-        setIsAuthorized(true);
-      }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [user.id, router]);
-
-  if (!isAuthorized) {
-    return <div className="min-h-screen bg-slate-100 dark:bg-slate-900"></div>;
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 py-6 sm:py-10 px-4 transition-colors">
-      <div className="max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push("/")}
-          className="flex  cursor-pointer items-center text-slate-500 dark:text-slate-400 mb-6 hover:text-green-400 dark:hover:text-green-400 transition-colors duration-300 text-sm"
-        >
-          <ArrowLeft size={18} className="mr-2" /> กลับหน้าหลัก
-        </button>
-
-        {/* Header Card */}
-        <div
-          className={`relative p-5 sm:p-8 rounded-2xl shadow-lg border-2 mb-6 text-center ${theme} overflow-hidden`}
-        >
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="p-4 bg-white dark:bg-slate-800 rounded-full shadow-md mb-4 border border-slate-100 dark:border-slate-700">
-              {getElementIcon(user.dominant_type)}
-            </div>
-            <h1 className="text-3xl font-bold mb-2">{analysis.title}</h1>
-
-            <div className="mt-4 px-4 py-1 bg-white/50 dark:bg-slate-900/30 rounded-full text-sm font-semibold inline-block backdrop-blur-sm">
-              สัตว์ประจำตัว: {user.animal} ({user.dominant_type})
+              {/* Stats Graph */}
+              <div className="w-full h-[220px] relative mt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="70%"
+                    data={statsData}
+                  >
+                    <PolarGrid stroke="#94a3b8" />
+                    <PolarAngleAxis
+                      dataKey="subject"
+                      tick={{
+                        fill: "#64748b",
+                        fontSize: 11,
+                        fontWeight: "bold",
+                      }}
+                    />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 20]}
+                      tick={false}
+                      axisLine={false}
+                    />
+                    <Radar
+                      dataKey="A"
+                      stroke={theme.statColor}
+                      strokeWidth={2}
+                      fill={theme.statColor}
+                      fillOpacity={0.5}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
+
+          <Link href="/" className="block">
+            <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md">
+              <ChevronRight size={18} /> Back to Guild
+            </button>
+          </Link>
         </div>
 
-        {/* Graph */}
-        <div className="mb-8 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
-          <DiscGraph scores={user.scores} />
-
-          {/* Explanation Box */}
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/10 text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-800/50 rounded-lg text-sm flex gap-3 items-start">
-            <span className="text-xl mt-0.5">💡</span>
-            <div className="leading-relaxed">
-              <strong className="block mb-1 text-blue-700 dark:text-blue-300">
-                ทำไมจุดของฉันถึงอยู่ตรงกลาง?
-              </strong>
-              หากตำแหน่งจุดในกราฟดูไม่ตรงกับธาตุหลัก (เช่น
-              ได้อินทรีแต่จุดอยู่ตรงกลาง)
-              เกิดจากคะแนนธาตุคู่ตรงข้ามของคุณมีค่าสูงพอๆ กัน เช่น สูงทั้ง D และ
-              S ทำให้แรงดึงดูดหักล้างกันเองจนจุดเคลื่อนเข้าสู่ศูนย์กลาง
-              ซึ่งสะท้อนว่าคุณเป็นคนที่มี <b>ความยืดหยุ่นสูง (Well-Rounded)</b>{" "}
-              และสามารถปรับเปลี่ยนสไตล์ได้ตามสถานการณ์ครับ
-            </div>
-          </div>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* ซ้าย */}
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                ✨ ตัวตนของคุณ
-              </h3>
-              <div className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                {renderBulletList(analysis.element_desc)}
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                🍾 จุดเด่นที่เฉิดฉาย
-              </h3>
-              <div className="text-slate-600 dark:text-slate-300 text-sm">
-                {renderBulletList(analysis.personality)}
-              </div>
-            </div>
-          </div>
-
-          {/* ขวา */}
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                💼 สไตล์การทำงาน
-              </h3>
-              <div className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                {renderBulletList(analysis.work_style)}
-              </div>
+        {/* --- RIGHT: AI ANALYSIS --- */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* 1. The Prophecy */}
+          <div className="rounded-3xl p-8 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-xl relative overflow-hidden backdrop-blur-sm">
+            <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none scale-150">
+              {theme.icon}
             </div>
 
-            {/* Warning Card */}
-            <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-2xl border border-red-100 dark:border-red-800/50 relative overflow-hidden">
-              <h3 className="text-lg font-bold text-red-700 dark:text-red-300 mb-3 flex items-center gap-2 relative z-10">
-                ⚠️ ด้านมืดที่ต้องระวัง
-              </h3>
-              <div className="relative z-10 text-red-800/80 dark:text-red-200/80 text-sm">
-                {renderBulletList(analysis.weakness, "warning")}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Card */}
-        <div className="mt-6 bg-linear-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 p-6 rounded-2xl border border-pink-100 dark:border-pink-800/30 flex items-center gap-6 shadow-sm">
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-full shadow-sm text-3xl shrink-0 border border-pink-100 dark:border-slate-700">
-            ❤️
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-pink-700 dark:text-pink-300 mb-2">
-              คู่หูที่แนะนำ
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <Scroll className="text-yellow-500" /> Guild Master's Prophecy
             </h3>
-            <div className="text-slate-700 dark:text-slate-200 text-sm">
-              {renderBulletList(analysis.compatible_with)}
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-lg font-medium italic">
+              "{cleanText(analysis.prophecy)}"
+            </p>
+          </div>
+
+          {/* 2. Combat Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white/60 dark:bg-slate-900/80 p-6 rounded-2xl border border-green-500/30 shadow-sm">
+              <h4 className="text-green-600 dark:text-green-400 font-bold mb-4 flex items-center gap-2 uppercase text-sm tracking-wider">
+                <Star size={16} /> Heroic Strengths
+              </h4>
+              <ul className="space-y-3">
+                {analysis.strengths?.map((s, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-3 text-slate-600 dark:text-slate-300 text-sm"
+                  >
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                    {cleanText(s)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-white/60 dark:bg-slate-900/80 p-6 rounded-2xl border border-red-500/30 shadow-sm">
+              <h4 className="text-red-600 dark:text-red-400 font-bold mb-4 flex items-center gap-2 uppercase text-sm tracking-wider">
+                <AlertTriangle size={16} /> Fatal Flaws
+              </h4>
+              <ul className="space-y-3">
+                {analysis.weaknesses?.map((w, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-3 text-slate-600 dark:text-slate-300 text-sm"
+                  >
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                    {cleanText(w)}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-        </div>
 
-        {/* Stat Bars */}
-        <div className="mt-6 bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
-            📊 ระดับพลังธาตุ
-          </h3>
-          <div className="space-y-3">
-            {[
-              {
-                label: "🔥 Fire (D)",
-                score: user.scores.D,
-                color: "bg-red-500",
-              },
-              {
-                label: "💨 Wind (I)",
-                score: user.scores.I,
-                color: "bg-yellow-500",
-              },
-              {
-                label: "⛰️ Earth (S)",
-                score: user.scores.S,
-                color: "bg-green-500",
-              },
-              {
-                label: "💧 Water (C)",
-                score: user.scores.C,
-                color: "bg-blue-500",
-              },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="flex justify-between text-sm mb-1 text-slate-900 dark:text-slate-200">
-                  <span>{stat.label}</span>
-                  <span className="font-bold">{stat.score}</span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5">
-                  <div
-                    className={`h-2.5 rounded-full ${stat.color} shadow-sm`}
-                    style={{
-                      width: `${Math.min((stat.score / 30) * 100, 100)}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-            ))}
+          {/* 3. Soulmate */}
+          <div
+            className={`p-6 rounded-2xl ${theme.softBg} border flex items-start gap-4 shadow-sm`}
+          >
+            <div
+              className={`p-3 rounded-xl ${theme.softText} bg-white dark:bg-slate-800`}
+            >
+              <Users size={24} />
+            </div>
+            <div>
+              <h4 className={`${theme.softText} font-bold mb-1`}>
+                Recommended Party Member
+              </h4>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">
+                {cleanText(analysis.best_partner)}
+              </p>
+            </div>
           </div>
         </div>
       </div>

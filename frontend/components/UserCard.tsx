@@ -2,23 +2,25 @@
 import { useState, useEffect, CSSProperties } from "react";
 import {
   User,
-  Flame,
-  Wind,
-  Mountain,
-  Leaf,
+  Wand, // Mage
+  Shield, // Paladin
+  Sword, // Warrior
+  Heart, // Cleric
+  Skull, // Rogue
   Zap,
-  Droplet,
   BarChart3,
+  Sparkles,
+  Crosshair,
 } from "lucide-react";
 
 interface UserCardProps {
   name?: string;
-  animal?: string;
-  type?: string;
+  animal?: string; // ใช้รับชื่อ Class (เช่น "Mage", "Paladin")
+  type?: string; // ใช้รับ Level (เช่น "Lv.5")
   id?: number;
-  scores?: { [key: string]: number };
+  scores?: { [key: string]: number }; // รับค่าพลัง INT, VIT, STR...
   onInspect?: () => void;
-  allowFlip?: boolean; // ✅ 1. เพิ่ม Prop นี้
+  allowFlip?: boolean;
 }
 
 interface Particle {
@@ -32,96 +34,117 @@ interface Particle {
 }
 
 export default function UserCard({
-  name = "Unknown",
-  animal = "?",
-  type = "D",
+  name = "Unknown Hero",
+  animal = "Novice", // รับ Class Name
+  type = "Lv.1", // รับ Level string
   id,
   scores,
   onInspect,
-  allowFlip = false, // ✅ 2. ค่า Default คือ false (หน้าอื่นจะไม่หมุน)
+  allowFlip = false,
 }: UserCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const generatedParticles = Array.from({ length: 15 }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        delay: Math.random() * 100,
-        duration: Math.random() * 1000 + 800,
-        size: Math.random() * 10 + 10,
-        rotation: Math.random() * 360,
-      }));
-      setParticles(generatedParticles);
-    }, 0);
-    return () => clearTimeout(timer);
+    // สร้างละอองเวทมนตร์ (Particles)
+    const generatedParticles = Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      delay: Math.random() * 100,
+      duration: Math.random() * 1000 + 1500,
+      size: Math.random() * 6 + 4,
+      rotation: Math.random() * 360,
+    }));
+    setParticles(generatedParticles);
   }, []);
 
-  // ✅ 3. สร้างฟังก์ชันจัดการ Click แยกตามเงื่อนไข
   const handleClick = () => {
     if (allowFlip) {
-      // ถ้าอนุญาตให้หมุน -> ก็หมุน
       setIsFlipped(!isFlipped);
     } else {
-      // ถ้าไม่อนุญาต -> ให้ทำงานแบบเดิม (เปิดลิงก์ หรือ Inspect)
       if (onInspect) {
         onInspect();
       } else if (id) {
-        window.open(`/result/${id}`, "_blank");
+        window.location.href = `/assessment/result/${id}`;
       }
     }
   };
 
-  const getElementConfig = (t: string) => {
-    const safeType = t || "D";
-    switch (safeType) {
-      case "D":
-        return {
-          color: "#ef4444",
-          mainIcon: <Flame className={isHovered ? "animate-bounce" : ""} />,
-          particleIcon: <Flame fill="currentColor" />,
-          animationName: "rise-up",
-        };
-      case "I":
-        return {
-          color: "#eab308",
-          mainIcon: <Wind className={isHovered ? "animate-pulse" : ""} />,
-          particleIcon: <Wind style={{}} />,
-          animationName: "slide-right",
-        };
-      case "S":
-        return {
-          color: "#22c55e",
-          mainIcon: <Mountain className={isHovered ? "animate-bounce" : ""} />,
-          particleIcon: <Leaf fill="currentColor" />,
-          animationName: "fall-diagonal",
-        };
-      case "C":
-        return {
-          color: "#3b82f6",
-          mainIcon: <Droplet className={isHovered ? "animate-pulse" : ""} />,
-          particleIcon: <Droplet fill="currentColor" />,
-          animationName: "fall-down",
-        };
-      default:
-        return {
-          color: "#94a3b8",
-          mainIcon: <User />,
-          particleIcon: null,
-          animationName: "",
-        };
+  // 🛡️ Logic เลือกธีมตามอาชีพ RPG
+  const getClassConfig = (className: string) => {
+    // ป้องกัน Case Sensitive
+    const safeClass = (className || "").trim();
+
+    if (safeClass.includes("Mage") || safeClass.includes("เวทย์")) {
+      return {
+        color: "#a855f7", // Purple
+        bgGradient: "from-purple-500/10 to-indigo-500/10",
+        border: "border-purple-200 dark:border-purple-800",
+        mainIcon: <Wand className={isHovered ? "animate-pulse" : ""} />,
+        particleIcon: <Sparkles size={10} />,
+        animationName: "float-up",
+      };
     }
+    if (safeClass.includes("Paladin") || safeClass.includes("อัศวิน")) {
+      return {
+        color: "#eab308", // Yellow/Amber
+        bgGradient: "from-yellow-500/10 to-orange-500/10",
+        border: "border-yellow-200 dark:border-yellow-800",
+        mainIcon: <Shield className={isHovered ? "animate-bounce" : ""} />,
+        particleIcon: <Shield size={8} />,
+        animationName: "pulse-glow",
+      };
+    }
+    if (safeClass.includes("Warrior") || safeClass.includes("นักรบ")) {
+      return {
+        color: "#ef4444", // Red
+        bgGradient: "from-red-500/10 to-orange-500/10",
+        border: "border-red-200 dark:border-red-800",
+        mainIcon: <Sword className={isHovered ? "animate-wiggle" : ""} />,
+        particleIcon: <Crosshair size={10} />,
+        animationName: "rise-fast",
+      };
+    }
+    if (safeClass.includes("Cleric") || safeClass.includes("นักบวช")) {
+      return {
+        color: "#22c55e", // Green
+        bgGradient: "from-green-500/10 to-emerald-500/10",
+        border: "border-green-200 dark:border-green-800",
+        mainIcon: <Heart className={isHovered ? "animate-pulse" : ""} />,
+        particleIcon: <Heart size={8} />,
+        animationName: "float-gentle",
+      };
+    }
+    if (safeClass.includes("Rogue") || safeClass.includes("โจร")) {
+      return {
+        color: "#94a3b8", // Slate
+        bgGradient: "from-slate-500/10 to-gray-500/10",
+        border: "border-slate-200 dark:border-slate-700",
+        mainIcon: <Skull className={isHovered ? "animate-pulse" : ""} />,
+        particleIcon: <Skull size={8} />,
+        animationName: "fade-move",
+      };
+    }
+
+    // Default (Novice)
+    return {
+      color: "#64748b",
+      bgGradient: "from-gray-500/5 to-slate-500/5",
+      border: "border-slate-200 dark:border-slate-700",
+      mainIcon: <User />,
+      particleIcon: <Sparkles size={6} />,
+      animationName: "float-gentle",
+    };
   };
 
-  const config = getElementConfig(type);
+  const config = getClassConfig(animal);
   const themeColor = config.color;
 
   return (
     <div
-      className="relative w-full h-[120px] sm:h-[140px] cursor-pointer group perspective"
+      className="relative w-full h-[140px] cursor-pointer group perspective"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
@@ -136,114 +159,83 @@ export default function UserCard({
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
+        {/* --- FRONT SIDE --- */}
         <div
           className={`
             absolute inset-0 w-full h-full backface-hidden
-            overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 
-            bg-white dark:bg-slate-800 
-            border-2 border-slate-200 dark:border-slate-700
-            shadow-sm dark:shadow-none
+            overflow-hidden rounded-2xl p-4
+            bg-white dark:bg-slate-900 
+            bg-gradient-to-br ${config.bgGradient}
+            border-2 ${config.border}
+            shadow-sm hover:shadow-md transition-all
           `}
           style={{
             backfaceVisibility: "hidden",
-            borderLeftColor: themeColor,
-            borderLeftWidth: isHovered ? "2px" : "6px",
-            boxShadow: isHovered
-              ? `0 10px 25px -5px ${themeColor}40`
-              : undefined,
+            borderTopColor: isHovered ? themeColor : undefined,
+            borderRightColor: isHovered ? themeColor : undefined,
+            borderBottomColor: isHovered ? themeColor : undefined,
+            borderLeftColor: isHovered ? themeColor : undefined,
           }}
         >
+          {/* Particles FX */}
           {isHovered &&
-            particles.map((p) => {
-              let startStyle: CSSProperties = {
-                opacity: 0,
-                pointerEvents: "none",
-                position: "absolute",
-                zIndex: 0,
-              };
-              if (type === "D")
-                startStyle = {
-                  ...startStyle,
-                  bottom: "-20px",
-                  left: `${p.left}%`,
-                };
-              else if (type === "I")
-                startStyle = { ...startStyle, left: "-20px", top: `${p.top}%` };
-              else
-                startStyle = {
-                  ...startStyle,
-                  top: "-30px",
-                  left: `${p.left}%`,
-                };
-
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    ...startStyle,
-                    color: config.color,
-                    animation: `${config.animationName} ${p.duration}ms linear infinite`,
-                    animationDelay: `${p.delay}ms`,
-                  }}
-                >
-                  <div style={{ width: p.size, height: p.size, opacity: 0.6 }}>
-                    {config.particleIcon}
-                  </div>
-                </div>
-              );
-            })}
-
-          <div className="flex items-center justify-between relative z-10 w-full h-full">
-            <div className="overflow-hidden pr-2">
-              <h3
-                style={{ color: isHovered ? themeColor : undefined }}
-                className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 truncate"
-              >
-                {name}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 flex items-center gap-2 truncate">
-                <span className="truncate">{animal}</span>
-              </p>
-
-              {/* ✅ 5. ถ้า allowFlip ให้โชว์ "คลิกดูพลัง" ถ้าไม่ ให้โชว์ "คลิกดู" เฉยๆ */}
-              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 flex items-center gap-1 whitespace-nowrap">
-                <Zap size={10} fill="currentColor" />{" "}
-                {allowFlip ? "คลิกดูพลัง" : "คลิกเพื่อดู"}
-              </p>
-            </div>
-
-            <div className="shrink-0 flex items-center gap-2">
+            particles.map((p) => (
               <div
-                className="p-2 sm:p-3 rounded-full transition-all duration-300"
+                key={p.id}
+                className="absolute pointer-events-none opacity-0"
+                style={{
+                  left: `${p.left}%`,
+                  top: `${p.top}%`,
+                  color: themeColor,
+                  animation: `${config.animationName} ${p.duration}ms linear infinite`,
+                  animationDelay: `${p.delay}ms`,
+                }}
+              >
+                {config.particleIcon}
+              </div>
+            ))}
+
+          <div className="flex flex-col justify-between h-full relative z-10">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3
+                  style={{ color: isHovered ? themeColor : undefined }}
+                  className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate transition-colors"
+                >
+                  {name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    {animal}
+                  </span>
+                  <span className="text-[10px] text-slate-400">{type}</span>
+                </div>
+              </div>
+
+              {/* Class Icon Badge */}
+              <div
+                className="p-3 rounded-full transition-all duration-300 shadow-inner"
                 style={{
                   backgroundColor: isHovered
-                    ? `${themeColor}40`
-                    : `${themeColor}20`,
+                    ? `${themeColor}20`
+                    : `${themeColor}10`,
                   color: themeColor,
                 }}
               >
-                <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
-                  {config.mainIcon}
-                </div>
+                {config.mainIcon}
               </div>
             </div>
-          </div>
 
-          <div
-            style={{
-              position: "absolute",
-              bottom: "-20%",
-              right: "-10%",
-              width: "150px",
-              height: "150px",
-              background: `radial-gradient(circle, ${themeColor}30 0%, transparent 70%)`,
-              opacity: isHovered ? 0.6 : 0.3,
-              pointerEvents: "none",
-              filter: "blur(20px)",
-              zIndex: 0,
-            }}
-          />
+            <div className="flex justify-between items-end">
+              <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                <Zap size={10} fill="currentColor" />{" "}
+                {allowFlip ? "คลิกดูสเตตัส" : "คลิกเพื่อดู"}
+              </p>
+            </div>
+          </div>
         </div>
+
+        {/* --- BACK SIDE (STATS) --- */}
         <div
           className={`
             absolute inset-0 w-full h-full backface-hidden
@@ -258,31 +250,43 @@ export default function UserCard({
           }}
         >
           {scores ? (
-            <div className="space-y-2 w-full">
-              <div className="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                <span>Elemental Stats</span>
-                <BarChart3 size={14} />
+            <div className="space-y-1.5 w-full">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-500 mb-1 border-b border-slate-200 dark:border-slate-700 pb-1">
+                <span>Battle Stats</span>
+                <BarChart3 size={12} />
               </div>
-              <MiniStat color="bg-red-500" value={scores["D"] || 0} label="D" />
+
+              {/* Stats Bar */}
               <MiniStat
-                color="bg-yellow-400"
-                value={scores["I"] || 0}
-                label="I"
+                label="INT"
+                value={scores["INT"] || scores["Openness"] || 0}
+                color="bg-purple-500"
               />
               <MiniStat
+                label="VIT"
+                value={scores["VIT"] || scores["Conscientiousness"] || 0}
+                color="bg-yellow-500"
+              />
+              <MiniStat
+                label="STR"
+                value={scores["STR"] || scores["Extraversion"] || 0}
+                color="bg-red-500"
+              />
+              <MiniStat
+                label="FTH"
+                value={scores["FTH"] || scores["Agreeableness"] || 0}
                 color="bg-green-500"
-                value={scores["S"] || 0}
-                label="S"
               />
               <MiniStat
-                color="bg-blue-500"
-                value={scores["C"] || 0}
-                label="C"
+                label="DEX"
+                value={scores["DEX"] || scores["Neuroticism"] || 0}
+                color="bg-slate-500"
               />
             </div>
           ) : (
-            <div className="text-center text-xs text-slate-400">
-              ไม่มีข้อมูลคะแนน
+            <div className="text-center flex flex-col items-center gap-2 text-slate-400">
+              <Sparkles size={24} className="opacity-50" />
+              <span className="text-xs">ยังไม่ปลุกพลัง</span>
             </div>
           )}
         </div>
@@ -301,56 +305,77 @@ export default function UserCard({
         .rotate-y-180 {
           transform: rotateY(180deg);
         }
-        @keyframes rise-up {
+
+        @keyframes float-up {
           0% {
-            transform: translateY(100px) scale(0.5);
+            transform: translateY(20px) scale(0.5);
             opacity: 0;
           }
-          20% {
+          50% {
             opacity: 0.8;
           }
           100% {
-            transform: translateY(-150px) scale(1.2);
+            transform: translateY(-40px) scale(1.2);
             opacity: 0;
           }
         }
-        @keyframes slide-right {
+        @keyframes pulse-glow {
           0% {
-            transform: translateX(-50px) rotate(0deg);
+            transform: scale(0.8);
             opacity: 0;
           }
-          20% {
+          50% {
+            opacity: 1;
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+        @keyframes rise-fast {
+          0% {
+            transform: translateY(30px);
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(-50px);
+            opacity: 0.7;
+          }
+        }
+        @keyframes float-gentle {
+          0% {
+            transform: translateY(10px) rotate(0deg);
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(-30px) rotate(10deg);
             opacity: 0.6;
           }
+        }
+        @keyframes fade-move {
+          0% {
+            transform: translate(0, 0);
+            opacity: 0;
+          }
+          50% {
+            opacity: 0.5;
+          }
           100% {
-            transform: translateX(300px) rotate(10deg);
+            transform: translate(10px, -20px);
             opacity: 0;
           }
         }
-        @keyframes fall-down {
-          0% {
-            transform: translateY(-50px);
-            opacity: 0;
-          }
-          20% {
-            opacity: 0.8;
-          }
-          100% {
-            transform: translateY(200px);
-            opacity: 0;
-          }
+        .animate-wiggle {
+          animation: wiggle 1s ease-in-out infinite;
         }
-        @keyframes fall-diagonal {
-          0% {
-            transform: translate(20px, -50px) rotate(0deg);
-            opacity: 0;
-          }
-          20% {
-            opacity: 1;
-          }
+        @keyframes wiggle {
+          0%,
           100% {
-            transform: translate(-100px, 200px) rotate(360deg);
-            opacity: 0;
+            transform: rotate(-3deg);
+          }
+          50% {
+            transform: rotate(3deg);
           }
         }
       `}</style>
@@ -367,11 +392,12 @@ function MiniStat({
   value: number;
   label: string;
 }) {
-  const percent = Math.min(100, (value / 40) * 100);
+  // สมมติคะแนนเต็ม 20 (ตามระบบ OCEAN ใหม่) ถ้าเป็นระบบเก่า 100 ก็ปรับตัวหาร
+  const percent = Math.min(100, (value / 20) * 100);
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-bold w-3 text-slate-400">{label}</span>
-      <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+      <span className="text-[9px] font-bold w-5 text-slate-400">{label}</span>
+      <div className="flex-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
         <div
           className={`h-full ${color}`}
           style={{ width: `${percent}%` }}

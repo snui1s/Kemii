@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Providers from "@/components/Providers";
+import ThemeBackground from "@/components/ThemeBackground";
 
 const lineSeed = localFont({
   src: [
@@ -56,8 +57,9 @@ export default function RootLayout({
       <body className={`${lineSeed.className} min-h-screen flex flex-col`}>
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ThemeBackground />
             <Navbar />
-            <main className="flex-1 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 overflow-auto flex flex-col">
+            <main className="flex-1 dark:border-slate-700 overflow-auto flex flex-col relative z-0">
               <div className="flex-1 p-6">{children}</div>
               <div className="mt-auto">
                 <Footer />

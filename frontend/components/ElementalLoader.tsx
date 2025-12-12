@@ -1,6 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Flame, Droplets, Wind, Mountain, FlaskConical } from "lucide-react";
+import {
+  Wand, // Mage
+  Shield, // Paladin
+  Sword, // Warrior
+  Heart, // Cleric
+  Skull, // Rogue
+  Compass, // เข็มทิศ
+  Map, // แผนที่
+  Footprints, // รอยเท้า
+} from "lucide-react";
 
 export default function ElementalLoader() {
   const [progress, setProgress] = useState(0);
@@ -9,108 +18,127 @@ export default function ElementalLoader() {
     const interval = setInterval(() => {
       setProgress((oldValue) => {
         if (oldValue >= 99) return 99;
-        // สุ่มการกระโดดของตัวเลขให้ดูเหมือนกำลังคำนวณจริง
         let jump = 0;
         if (oldValue < 30) jump = Math.random() * 2 + 1;
         else if (oldValue < 70) jump = Math.random() * 3;
         else jump = Math.random() * 0.5;
-
         return Math.min(oldValue + jump, 99);
       });
     }, 200);
-
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div className="flex flex-col items-center justify-center p-12 space-y-12 animate-fade-in min-h-[400px]">
-      {/* --- ส่วน Animation หลัก --- */}
-      <div className="relative w-32 h-32 flex items-center justify-center">
-        {/* 1. เส้นวงโคจร (Orbit Track) - ให้ดูเป็นวิทย์ */}
-        <div className="absolute inset-0 rounded-full border-2 border-dashed border-slate-200 dark:border-slate-700 animate-[spin_10s_linear_infinite]"></div>
-        <div className="absolute inset-2 rounded-full border border-slate-100 dark:border-slate-800 opacity-50"></div>
+  // Animation สำหรับตัวละครเดิน (โยกซ้ายขวา)
+  const walkBounce = "animate-[bounce_1s_infinite]";
 
-        {/* 2. ธาตุหมุนวน (Electrons) */}
-        {/* ใช้ animate-spin หมุนรอบตัวเอง */}
-        <div className="absolute inset-0 animate-spin duration-3000 linear">
-          {/* 🔥 ไฟ (บน) */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 p-1.5 rounded-full border border-red-100 dark:border-red-900 shadow-sm shadow-red-500/20">
-            <Flame
-              size={20}
-              className="text-red-500 animate-pulse"
+  return (
+    <div className="flex flex-col items-center justify-center p-12 space-y-10 animate-fade-in min-h-[400px] relative overflow-hidden">
+      {/* 🌲 พื้นหลังป่า (Background Elements) */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-10">
+        <div className="absolute top-10 left-10 text-green-600">
+          <Map size={40} />
+        </div>
+        <div className="absolute bottom-20 right-10 text-amber-600">
+          <Footprints size={30} className="rotate-45" />
+        </div>
+        <div className="absolute top-1/2 left-1/4 text-green-800">
+          <Map size={24} className="-rotate-12" />
+        </div>
+        {/* ต้นไม้จำลอง (ใช้ icon แทน) */}
+        <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-green-100 to-transparent dark:from-green-900/30 z-0"></div>
+      </div>
+
+      {/* --- ส่วน Animation หลัก --- */}
+      <div className="relative w-48 h-48 flex items-center justify-center z-10">
+        {/* 1. ทางเดิน/แผนที่ (หมุนติ้วๆ) */}
+        <div className="absolute inset-0 rounded-full border-4 border-dashed border-amber-200 dark:border-amber-800 animate-[spin_20s_linear_infinite] opacity-50"></div>
+        <div className="absolute inset-4 rounded-full border border-amber-100 dark:border-amber-900 opacity-30"></div>
+
+        {/* 2. แก๊งนักผจญภัย (เดินวนรอบ) */}
+        {/* ใช้ animate-spin หมุนรอบตัวเอง เพื่อให้ตัวละครเดินเป็นวงกลม */}
+        <div className="absolute inset-0 animate-spin duration-[10s] linear">
+          {/* 🧙‍♂️ Mage (เดินนำ) */}
+          <div
+            className={`absolute -top-4 left-1/2 -translate-x-1/2 p-2 bg-purple-100 dark:bg-purple-900/50 rounded-full shadow-md ${walkBounce}`}
+          >
+            <Wand
+              size={24}
+              className="text-purple-600 dark:text-purple-300"
               fill="currentColor"
             />
           </div>
-          {/* 💧 น้ำ (ล่าง) */}
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 p-1.5 rounded-full border border-blue-100 dark:border-blue-900 shadow-sm shadow-blue-500/20">
-            <Droplets
-              size={20}
-              className="text-blue-500 animate-pulse delay-75"
+          {/* ⚔️ Warrior (ขวา) */}
+          <div
+            className={`absolute top-1/2 -right-4 -translate-y-1/2 p-2 bg-red-100 dark:bg-red-900/50 rounded-full shadow-md ${walkBounce} delay-150`}
+          >
+            <Sword
+              size={24}
+              className="text-red-600 dark:text-red-300"
               fill="currentColor"
             />
           </div>
-          {/* 💨 ลม (ซ้าย) */}
-          <div className="absolute top-1/2 -left-3 -translate-y-1/2 bg-white dark:bg-slate-900 p-1.5 rounded-full border border-yellow-100 dark:border-yellow-900 shadow-sm shadow-yellow-500/20">
-            <Wind
-              size={20}
-              className="text-yellow-500 animate-pulse delay-150"
+          {/* 🛡️ Paladin (ล่าง) */}
+          <div
+            className={`absolute -bottom-4 left-1/2 -translate-x-1/2 p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-full shadow-md ${walkBounce} delay-300`}
+          >
+            <Shield
+              size={24}
+              className="text-yellow-600 dark:text-yellow-300"
               fill="currentColor"
             />
           </div>
-          {/* ⛰️ ดิน (ขวา) */}
-          <div className="absolute top-1/2 -right-3 -translate-y-1/2 bg-white dark:bg-slate-900 p-1.5 rounded-full border border-green-100 dark:border-green-900 shadow-sm shadow-green-500/20">
-            <Mountain
-              size={20}
-              className="text-green-500 animate-pulse delay-200"
+          {/* 🌿 Cleric (ซ้าย) */}
+          <div
+            className={`absolute top-1/2 -left-4 -translate-y-1/2 p-2 bg-green-100 dark:bg-green-900/50 rounded-full shadow-md ${walkBounce} delay-450`}
+          >
+            <Heart
+              size={24}
+              className="text-green-600 dark:text-green-300"
               fill="currentColor"
             />
           </div>
         </div>
 
-        {/* 3. ตรงกลาง: หลอดทดลอง (Nucleus) */}
-        <div className="relative z-10 flex items-center justify-center">
-          {/* แสงเรืองหลังขวด */}
+        {/* 3. ตรงกลาง: เข็มทิศ (นำทาง) */}
+        <div className="relative z-10 flex items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-full border-4 border-indigo-100 dark:border-indigo-900 shadow-lg">
+          {/* แสงเรือง */}
           <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
-
-          <div className="relative">
-            <FlaskConical
-              size={48}
-              className="text-indigo-600 dark:text-indigo-400 drop-shadow-md"
-              strokeWidth={1.5}
-            />
-
-            {/* ฟองอากาศลอยขึ้นจากขวด (Bubbles) */}
-            <div className="absolute -top-4 right-0 w-2 h-2 bg-indigo-400 rounded-full animate-ping opacity-75 delay-300"></div>
-            <div className="absolute -top-2 -right-2 w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping opacity-75 delay-700"></div>
-          </div>
+          <Compass
+            size={48}
+            className="text-indigo-600 dark:text-indigo-400 animate-[spin_3s_ease-in-out_infinite]"
+            strokeWidth={1.5}
+          />
         </div>
       </div>
 
       {/* --- ส่วนข้อความ --- */}
       <div className="text-center space-y-3 w-full max-w-xs z-20">
-        <h3 className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 animate-pulse">
-          กำลังคนสารเคมีให้ลงตัว...
+        <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-green-600 dark:from-amber-400 dark:to-green-400 animate-pulse">
+          กำลังออกเดินทางสู่ดันเจี้ยน...
         </h3>
 
-        <div className="flex justify-between text-xs uppercase tracking-wider text-slate-400 font-bold">
-          <span>Analysis</span>
+        <div className="flex justify-between text-xs uppercase tracking-wider text-slate-500 font-bold">
+          <span>Adventure Progress</span>
           <span>{Math.floor(progress)}%</span>
         </div>
 
-        {/* Progress Bar แบบหลอดทดลอง */}
-        <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 relative">
-          {/* แถบสีวิ่ง */}
+        {/* Progress Bar แบบแถบผจญภัย */}
+        <div className="w-full h-4 bg-amber-50 dark:bg-slate-800 rounded-full overflow-hidden border border-amber-200 dark:border-slate-700 relative">
+          {/* แถบสีวิ่ง (ลายแผนที่) */}
           <div
-            className="h-full bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out relative"
+            className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-green-500 transition-all duration-300 ease-out relative flex items-center justify-end px-1"
             style={{ width: `${progress}%` }}
           >
-            {/* ประกายวิบวับบนแถบ */}
-            <div className="absolute top-0 right-0 bottom-0 w-full bg-white/20 animate-pulse"></div>
+            {/* รอยเท้าเดินนำหน้า */}
+            <Footprints
+              size={12}
+              className="text-white animate-pulse opacity-80"
+            />
           </div>
         </div>
 
         <p className="text-xs text-slate-400 dark:text-slate-500 pt-2">
-          AI is calculating your elemental chemistry
+          Guild Master is calculating the best route.
         </p>
       </div>
     </div>

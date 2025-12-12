@@ -1,47 +1,24 @@
-# schemas.py
 from pydantic import BaseModel
-from typing import List, Dict, Optional
-from datetime import datetime
+from typing import Optional, Dict, List
 
-class Answer(BaseModel):
-    question_id: int
-    most_value: str
-    least_value: str     
-
-class UserSubmission(BaseModel):
+class OceanSubmission(BaseModel):
     name: str
-    answers: List[Answer]
+    openness: int
+    conscientiousness: int
+    extraversion: int
+    agreeableness: int
+    neuroticism: int
 
-class UserResult(BaseModel):
+class UserProfile(BaseModel):
     id: int
     name: str
-    dominant_type: str
-    animal: str
-    scores: Dict[str, int]
-    team_name: Optional[str]
-    is_available: bool
+    character_class: str  
+    level: int
+    
+    ocean_scores: Dict[str, int]  
+    
+    is_assessed: bool
     access_token: Optional[str] = None
 
-class MatchRequest(BaseModel):
-    user1_id: int
-    user2_id: int
-    
-class GroupingRequest(BaseModel):
-    num_teams: int
-    
 class UserNameUpdate(BaseModel):
     name: str
-    
-class TeamBuilderRequest(BaseModel):
-    leader_id: int
-    member_count: int
-    strategy: str
-
-class ConfirmTeamRequest(BaseModel):
-    log_id: int
-    start_date: Optional[datetime] = None 
-    end_date: Optional[datetime] = None
-    
-class ReviveRequest(BaseModel):
-    start_date: datetime
-    end_date: datetime

@@ -10,28 +10,50 @@ import {
   UserPlus,
   Lock,
   HelpCircle,
-  Menu, // Added
-  X, // Added
+  Menu,
+  X,
+  // ✅ เพิ่มไอคอนสำหรับ RPG Class
+  Wand, // Mage
+  Shield, // Paladin
+  Sword, // Warrior
+  Heart, // Cleric
+  Skull, // Rogue
+  User as UserIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ThemeToggle } from "./ThemeToggle";
 import InfoModal from "./InfoModal";
 
+// Interface สำหรับข้อมูล User ใน Navbar
+interface UserData {
+  name: string;
+  character_class: string;
+  level: number;
+}
+
 export default function Navbar() {
   const router = useRouter();
-  const [myData, setMyData] = useState<{ name: string; animal: string } | null>(
-    null
-  );
+
+  // ✅ 1. เปลี่ยน State ให้เก็บ Class และ Level
+  const [myData, setMyData] = useState<UserData | null>(null);
+
   const [mounted, setMounted] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Added mobile menu state
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkUser = () => {
+      // ✅ 2. อ่าน Key ใหม่จาก LocalStorage
       const name = localStorage.getItem("myName");
-      const animal = localStorage.getItem("myAnimal");
-      if (name && animal) {
-        setMyData({ name, animal });
+      const character_class = localStorage.getItem("myClass");
+      const level = localStorage.getItem("myLevel");
+
+      if (name && character_class) {
+        setMyData({
+          name,
+          character_class,
+          level: level ? parseInt(level) : 1,
+        });
       } else {
         setMyData(null);
       }
@@ -76,11 +98,13 @@ export default function Navbar() {
             <button
               onClick={() => {
                 toast.dismiss(t.id);
+                // ✅ 3. ลบ Key ใหม่ทิ้ง
                 localStorage.removeItem("myUserId");
                 localStorage.removeItem("myName");
-                localStorage.removeItem("myAnimal");
-                localStorage.removeItem("myScores");
+                localStorage.removeItem("myClass"); // RPG Class
+                localStorage.removeItem("myLevel"); // RPG Level
                 localStorage.removeItem("myToken");
+
                 setMyData(null);
                 window.dispatchEvent(new Event("user-updated"));
                 toast.success("บ๊ายบาย! ไว้เจอกันใหม่ครับ 👋");
@@ -97,19 +121,28 @@ export default function Navbar() {
         duration: 5000,
         className:
           "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
-        style: {
-          color: "inherit",
-        },
+        style: { color: "inherit" },
       }
     );
   };
 
-  const getAnimalEmoji = (animal: string) => {
-    if (animal.includes("กระทิง")) return "🔥";
-    if (animal.includes("อินทรี")) return "🦅";
-    if (animal.includes("หนู")) return "🐁";
-    if (animal.includes("หมี")) return "🐻";
-    return "👤";
+  // ✅ 4. ฟังก์ชันเลือกไอคอนตามอาชีพ (RPG Theme)
+  const getClassIcon = (cls: string) => {
+    // เช็คชื่ออาชีพ (เผื่อ Backend ส่งมาเป็น Mage หรือ นักเวทย์)
+    const c = cls.toLowerCase();
+
+    if (c.includes("mage") || c.includes("เวทย์"))
+      return <Wand size={18} className="text-purple-500" />;
+    if (c.includes("paladin") || c.includes("อัศวิน"))
+      return <Shield size={18} className="text-yellow-500" />;
+    if (c.includes("warrior") || c.includes("นักรบ"))
+      return <Sword size={18} className="text-red-500" />;
+    if (c.includes("cleric") || c.includes("นักบวช"))
+      return <Heart size={18} className="text-green-500" />;
+    if (c.includes("rogue") || c.includes("โจร"))
+      return <Skull size={18} className="text-slate-500" />;
+
+    return <UserIcon size={18} />;
   };
 
   const toastCooldown = useRef(false);
@@ -125,7 +158,7 @@ export default function Navbar() {
         toastCooldown.current = false;
       }, 3000);
 
-      toast.error("🔒 กรุณาทำแบบประเมินก่อนใช้งานฟีเจอร์นี้ครับ", {
+      toast.error("🔒 กรุณาทำพิธีปลุกพลัง (Assessment) ก่อนใช้งานครับ", {
         style: {
           background: "#334155",
           color: "#fff",
@@ -183,62 +216,44 @@ export default function Navbar() {
 
           {/* RIGHT SIDE ACTIONS */}
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
-            {/* DESKTOP MENU LINKS - Hidden on mobile */}
+            {/* DESKTOP MENU LINKS */}
             <div className="hidden lg:flex items-center gap-3 sm:gap-4 lg:gap-6">
-              {/* 1. ประวัติทีม */}
               <Link
                 href="/team-history"
                 onClick={(e) => handleProtectedLink(e, "/team-history")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
                   myData
-                    ? "hover:text-green-600 dark:hover:text-green-400"
+                    ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
-                title="ประวัติทีม"
               >
-                {myData ? (
-                  <Users className="w-[18px] h-[18px]" />
-                ) : (
-                  <Lock className="w-[18px] h-[18px]" />
-                )}
+                {myData ? <Users size={18} /> : <Lock size={18} />}
                 <span>ทีม</span>
               </Link>
 
-              {/* 2. สร้างทีม */}
               <Link
                 href="/build-team"
                 onClick={(e) => handleProtectedLink(e, "/build-team")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
                   myData
-                    ? "hover:text-green-600 dark:hover:text-green-400"
+                    ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
-                title="สร้างทีม"
               >
-                {myData ? (
-                  <UserPlus className="w-[18px] h-[18px]" />
-                ) : (
-                  <Lock className="w-[18px] h-[18px]" />
-                )}
+                {myData ? <UserPlus size={18} /> : <Lock size={18} />}
                 <span>สร้างทีม</span>
               </Link>
 
-              {/* 3. จัดทีม AI */}
               <Link
                 href="/grouping"
                 onClick={(e) => handleProtectedLink(e, "/grouping")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
                   myData
-                    ? "hover:text-green-600 dark:hover:text-green-400"
+                    ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
-                title="จัดทีม AI"
               >
-                {myData ? (
-                  <Shuffle className="w-[18px] h-[18px]" />
-                ) : (
-                  <Lock className="w-[18px] h-[18px]" />
-                )}
+                {myData ? <Shuffle size={18} /> : <Lock size={18} />}
                 <span>จัดทีม AI</span>
               </Link>
             </div>
@@ -247,12 +262,11 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-2">
               <button
                 onClick={() => setShowInfo(true)}
-                className="text-slate-400 hover:text-green-400 transition-colors p-1"
-                title="เกี่ยวกับธาตุ"
+                className="text-slate-400 hover:text-indigo-400 transition-colors p-1"
+                title="คู่มือคลาส"
               >
                 <HelpCircle size={20} />
               </button>
-
               <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
               <ThemeToggle />
             </div>
@@ -261,18 +275,24 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center">
               {myData ? (
                 <div className="flex items-center gap-2 pl-2">
-                  <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm max-w-[140px]">
-                    <span className="text-lg animate-bounce-slow leading-none">
-                      {getAnimalEmoji(myData.animal)}
-                    </span>
-                    <span className="font-bold text-slate-700 dark:text-green-400 text-sm truncate">
-                      {myData.name}
-                    </span>
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm min-w-[120px]">
+                    {/* Icon Class */}
+                    <div className="p-1 bg-slate-100 dark:bg-slate-700 rounded-full">
+                      {getClassIcon(myData.character_class)}
+                    </div>
+
+                    <div className="flex flex-col leading-none">
+                      <span className="font-bold text-slate-700 dark:text-indigo-300 text-sm truncate max-w-[80px]">
+                        {myData.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        Lv.{myData.level}
+                      </span>
+                    </div>
                   </div>
                   <button
                     onClick={handleLogout}
                     className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-colors shrink-0"
-                    title="ออกจากระบบ"
                   >
                     <LogOut size={20} />
                   </button>
@@ -280,25 +300,22 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/assessment"
-                  className="flex items-center gap-2 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-full text-sm font-bold transition shadow-lg shadow-green-900/20 hover:scale-105 active:scale-95 ml-2 whitespace-nowrap"
+                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-full text-sm font-bold transition shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95 ml-2 whitespace-nowrap"
                 >
                   <ClipboardList size={18} />
-                  <span>เริ่มทำแบบประเมิน</span>
+                  <span>ปลุกพลัง</span>
                 </Link>
               )}
             </div>
 
-            {/* MOBILE TOGGLE & ACTIONS - Visible on Mobile (< lg) */}
+            {/* MOBILE TOGGLE & ACTIONS */}
             <div className="flex lg:hidden items-center gap-3">
               <ThemeToggle />
 
-              {/* Mobile: Show minimal profile or Start button if space permits, or put in menu? 
-                   Let's put primary action (Start Assessment) outside if user not logged in for better conversion.
-               */}
               {!myData && (
                 <Link
                   href="/assessment"
-                  className="flex items-center justify-center bg-green-600 text-white w-8 h-8 rounded-full shadow-md"
+                  className="flex items-center justify-center bg-indigo-600 text-white w-8 h-8 rounded-full shadow-md"
                 >
                   <ClipboardList size={16} />
                 </Link>
@@ -317,19 +334,18 @@ export default function Navbar() {
         {/* MOBILE MENU DROPDOWN */}
         {isMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-xl p-4 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
-            {/* Mobile User Profile Section */}
             {myData && (
               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">
-                    {getAnimalEmoji(myData.animal)}
-                  </span>
+                  <div className="p-2 bg-white dark:bg-slate-700 rounded-full shadow-sm">
+                    {getClassIcon(myData.character_class)}
+                  </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-slate-700 dark:text-slate-200">
                       {myData.name}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {myData.animal}
+                      {myData.character_class} (Lv.{myData.level})
                     </span>
                   </div>
                 </div>
@@ -358,7 +374,7 @@ export default function Navbar() {
                 {myData ? <Users size={20} /> : <Lock size={20} />}
                 ประวัติทีม
               </Link>
-
+              {/* ... ลิงก์อื่นๆ เหมือนเดิม ... */}
               <Link
                 href="/build-team"
                 onClick={(e) => {
@@ -402,17 +418,17 @@ export default function Navbar() {
               className="flex items-center gap-3 p-3 rounded-xl font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition w-full text-left"
             >
               <HelpCircle size={20} />
-              เกี่ยวกับธาตุ
+              คู่มือคลาส
             </button>
 
             {!myData && (
               <Link
                 href="/assessment"
                 onClick={() => setIsMenuOpen(false)}
-                className="mt-2 flex items-center justify-center gap-2 w-full bg-green-600 text-white p-3 rounded-xl font-bold shadow-green-900/20 shadow-lg active:scale-95 transition"
+                className="mt-2 flex items-center justify-center gap-2 w-full bg-indigo-600 text-white p-3 rounded-xl font-bold shadow-indigo-900/20 shadow-lg active:scale-95 transition"
               >
                 <ClipboardList size={20} />
-                เริ่มทำแบบประเมิน
+                เริ่มทำพิธีปลุกพลัง
               </Link>
             )}
           </div>
