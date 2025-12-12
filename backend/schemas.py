@@ -22,3 +22,7 @@ class UserProfile(BaseModel):
 
 class UserNameUpdate(BaseModel):
     name: str
+
+class MatchRequest(BaseModel):
+    user1_id: int
+    user2_id: int

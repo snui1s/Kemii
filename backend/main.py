@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from typing import List, Optional, Dict
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlmodel import Session, select
@@ -15,8 +15,9 @@ from langchain_core.output_parsers import StrOutputParser
 
 from database import create_db_and_tables, get_session
 from models import User
-from schemas import OceanSubmission, UserProfile
+from schemas import OceanSubmission, UserProfile, MatchRequest
 from auth import create_access_token
+
 
 load_dotenv()
 
