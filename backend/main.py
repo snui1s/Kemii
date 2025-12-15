@@ -62,8 +62,9 @@ def check_and_release_users(session: Session):
         print(f"Auto-released {released_count} heroes from duty.")
 
 @app.get("/")
+@app.head("/")
 def read_root():
-    return {"status": "RPG AI Online", "service": "Hero Analysis"}
+    return {"status": "I am awake!", "service": "Kemii API"}
 
 @app.post("/submit-assessment", response_model=UserProfile)
 def submit_assessment(data: OceanSubmission, session: Session = Depends(get_session)):
