@@ -86,9 +86,9 @@ for user in all_users:
         if response.status_code == 200:
             res_data = response.json()
             # ดึงสัตว์ที่ระบบคำนวณได้มาโชว์
-            animal = res_data.get('animal', 'Unknown')
+            character_class = res_data.get('character_class', 'Unknown')
             type_code = res_data.get('dominant_type', '?')
-            print(f"✅ {user['name']:<20} -> บันทึกสำเร็จ! เป็น '{animal}' ({type_code})")
+            print(f"✅ {user['name']:<20} -> บันทึกสำเร็จ! เป็น '{character_class}' ({type_code})")
             success_count += 1
         else:
             print(f"❌ {user['name']:<20} -> ล้มเหลว: {response.text}")

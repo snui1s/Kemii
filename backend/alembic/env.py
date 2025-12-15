@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from sqlmodel import SQLModel
-import models
+from models import User, TeamLog
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -27,9 +27,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-database_url = os.getenv("DATABASE_URL")
+database_url = os.getenv("DATABASE_URL") or "sqlite:///./elements.db"
 if not database_url:
     raise ValueError("DATABASE_URL not found in .env file")
 

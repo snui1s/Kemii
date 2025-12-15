@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
               1. ข้อมูลที่เราเก็บรวบรวม
             </h2>
             <p>
-              เว็บไซต์ <strong>Kemii Team Chemistry</strong>{" "}
+              เว็บไซต์ <strong>Kemii</strong>{" "}
               มีการจัดเก็บข้อมูลบางส่วนของท่านเพื่อใช้ในการประมวลผลและแสดงผลลัพธ์
               ได้แก่:
             </p>
@@ -30,7 +30,9 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>ผลลัพธ์แบบประเมิน (Assessment Results):</strong>{" "}
-                คะแนนจากแบบทดสอบ DISC (กระทิง, อินทรี, หนู, หมี)
+                คะแนนจากแบบทดสอบ OCEAN (Openness, Conscientiousness,
+                Extraversion, Agreeableness, Neuroticism) และคลาสตัวละคร (Mage,
+                Paladin, Warrior, Cleric, Rogue)
               </li>
               <li>
                 <strong>ข้อมูลการจัดทีม:</strong>{" "}
@@ -63,8 +65,8 @@ export default function PrivacyPolicy() {
               3. การเปิดเผยข้อมูล
             </h2>
             <p>
-              ข้อมูล (ชื่อ, สัตว์ประจำตัว) ของท่าน{" "}
-              <strong>จะถูกแสดงต่อสาธารณะ</strong> ภายในหน้าแรก และหน้า Team
+              ข้อมูล (ชื่อ, คลาส) ของท่าน <strong>จะถูกแสดงต่อสาธารณะ</strong>{" "}
+              ภายในหน้าแรก และหน้า Team
               เพื่อให้เพื่อนร่วมทีมสามารถค้นหาและจับคู่กับท่านได้
               หากท่านไม่ต้องการเปิดเผยข้อมูล
               กรุณาแจ้งลบข้อมูลผ่านช่องทางการติดต่อ
@@ -84,7 +86,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <p className="text-sm text-slate-400 mt-8 pt-4 border-t border-slate-200 dark:border-slate-800">
-            ประกาศ ณ วันที่ {new Date().toLocaleDateString("th-TH")}
+            ประกาศ ณ วันที่ 15/12/2025
           </p>
         </div>
       </div>

@@ -17,58 +17,156 @@ import {
 import toast from "react-hot-toast";
 import ElementalLoader from "@/components/ElementalLoader";
 
-// --- 1. ข้อมูลคำถาม OCEAN (10 ข้อ) ---
 const questions = [
+  // --- Extraversion (E) ---
+  { id: 1, type: 1, math: "+", text: "เรามักเป็นตัวสร้างสีสันในงานสังสรรค์" },
+  { id: 6, type: 1, math: "-", text: "เราเป็นคนพูดน้อย" },
   {
-    id: 1,
-    trait: "Extraversion",
-    text: "ฉันชอบเป็นจุดสนใจท่ามกลางผู้คน และเริ่มบทสนทนากับคนแปลกหน้าได้ง่าย",
+    id: 11,
+    type: 1,
+    math: "+",
+    text: "เรารู้สึกสบายใจเวลาอยู่ท่ามกลางผู้คนเยอะๆ",
   },
+  { id: 16, type: 1, math: "-", text: "เราชอบอยู่เงียบๆ ไม่ชอบทำตัวเด่น" },
+  { id: 21, type: 1, math: "+", text: "เรามักเป็นฝ่ายชวนคุยก่อนเสมอ" },
+  { id: 26, type: 1, math: "-", text: "เราไม่ค่อยมีเรื่องอะไรจะคุยกับคนอื่น" },
+  {
+    id: 31,
+    type: 1,
+    math: "+",
+    text: "เราชอบคุยกับผู้คนหลากหลายในงานสังสรรค์",
+  },
+  { id: 36, type: 1, math: "-", text: "เราไม่ชอบทำตัวเด่นหรือเป็นจุดสนใจ" },
+  {
+    id: 41,
+    type: 1,
+    math: "+",
+    text: "เราโอเคกับการเป็นจุดสนใจหรือตกเป็นเป้าสายตา",
+  },
+  {
+    id: 46,
+    type: 1,
+    math: "-",
+    text: "เรามักจะเงียบเวลาอยู่ท่ามกลางคนแปลกหน้า",
+  },
+
+  // --- Agreeableness (A) ---
   {
     id: 2,
-    trait: "Agreeableness",
-    text: "ฉันมักจะเห็นอกเห็นใจ และชอบช่วยเหลือผู้อื่นเสมอ",
+    type: 2,
+    math: "-",
+    text: "เราไม่ค่อยใส่ใจความรู้สึกของคนอื่นเท่าไหร่",
+  },
+  { id: 7, type: 2, math: "+", text: "เราสนใจความเป็นไปของผู้อื่น" },
+  { id: 12, type: 2, math: "-", text: "เรามักเผลอพูดจาไม่ถนอมน้ำใจคนอื่น" },
+  { id: 17, type: 2, math: "+", text: "เรามีความเห็นอกเห็นใจผู้อื่น" },
+  { id: 22, type: 2, math: "-", text: "เราไม่ค่อยอยากรับรู้ปัญหาของคนอื่น" },
+  { id: 27, type: 2, math: "+", text: "เราเป็นคนใจอ่อน ขี้สงสาร" },
+  { id: 32, type: 2, math: "-", text: "เราไม่ค่อยสนใจเรื่องของคนอื่นเท่าไหร่" },
+  { id: 37, type: 2, math: "+", text: "เราพร้อมสละเวลาช่วยเหลือผู้อื่นเสมอ" },
+  {
+    id: 42,
+    type: 2,
+    math: "+",
+    text: "เราสัมผัสและรับรู้อารมณ์ของคนอื่นได้ไว",
   },
   {
-    id: 3,
-    trait: "Conscientiousness",
-    text: "ฉันทำงานอย่างเป็นระบบ มีระเบียบ และทำเสร็จทันเวลาเสมอ",
+    id: 47,
+    type: 2,
+    math: "+",
+    text: "เราทำให้คนอื่นรู้สึกผ่อนคลายและสบายใจเมื่ออยู่ด้วย",
+  },
+
+  // --- Conscientiousness (C) ---
+  { id: 3, type: 3, math: "+", text: "เรามักเตรียมตัวให้พร้อมอยู่เสมอ" },
+  { id: 8, type: 3, math: "-", text: "เรามักวางของทิ้งไว้ไม่เป็นที่เป็นทาง" },
+  { id: 13, type: 3, math: "+", text: "เราเป็นคนใส่ใจในรายละเอียด" },
+  { id: 18, type: 3, math: "-", text: "เรามักทำข้าวของรก ไม่เป็นระเบียบ" },
+  {
+    id: 23,
+    type: 3,
+    math: "+",
+    text: "เรารีบจัดการงานบ้านหรือธุระให้เสร็จทันที ไม่ชอบดองไว้",
+  },
+  { id: 28, type: 3, math: "-", text: "เรามักลืมเก็บของเข้าที่ให้เป็นระเบียบ" },
+  { id: 33, type: 3, math: "+", text: "เราชอบความเป็นระเบียบเรียบร้อย" },
+  {
+    id: 38,
+    type: 3,
+    math: "-",
+    text: "เรามักจะหลบเลี่ยงหน้าที่หรือความรับผิดชอบ",
   },
   {
-    id: 4,
-    trait: "Neuroticism",
-    text: "ฉันมักจะกังวล หรือเครียดง่าย เวลาเจอปัญหาที่ไม่คาดคิด",
+    id: 43,
+    type: 3,
+    math: "+",
+    text: "เราใช้ชีวิตตามตารางเวลาที่วางไว้อย่างเคร่งครัด",
   },
-  {
-    id: 5,
-    trait: "Openness",
-    text: "ฉันชอบจินตนาการ คิดไอเดียใหม่ๆ และเรียนรู้อะไรที่เป็นนามธรรม",
-  },
-  {
-    id: 6,
-    trait: "Extraversion",
-    text: "ฉันรู้สึกมีพลังเมื่อได้ออกไปสังสรรค์ หรือทำกิจกรรมกลุ่ม",
-  },
-  {
-    id: 7,
-    trait: "Agreeableness",
-    text: "ฉันหลีกเลี่ยงการขัดแย้ง และพยายามทำให้ทุกคนปรองดองกัน",
-  },
-  {
-    id: 8,
-    trait: "Conscientiousness",
-    text: "ฉันใส่ใจรายละเอียดเล็กๆ น้อยๆ และตรวจสอบความถูกต้องเสมอ",
-  },
+  { id: 48, type: 3, math: "+", text: "เราเป็นคนทำงานละเอียดและพิถีพิถัน" },
+
+  // --- Neuroticism (N) ---
+  { id: 4, type: 4, math: "-", text: "เรารู้สึกเครียดได้ง่าย" },
   {
     id: 9,
-    trait: "Neuroticism",
-    text: "ฉันอารมณ์แปรปรวนได้ง่าย ขึ้นอยู่กับสถานการณ์รอบตัว",
+    type: 4,
+    math: "+",
+    text: "เรารู้สึกผ่อนคลายและสบายใจเกือบตลอดเวลา",
+  },
+  {
+    id: 14,
+    type: 4,
+    math: "-",
+    text: "เรามักจะกังวลใจกับเรื่องต่างๆ อยู่เสมอ",
+  },
+  { id: 19, type: 4, math: "+", text: "เราไม่ค่อยรู้สึกหดหู่หรือซึมเศร้า" },
+  {
+    id: 24,
+    type: 4,
+    math: "-",
+    text: "เรารู้สึกปั่นป่วนใจได้ง่ายเมื่อมีเรื่องมากระทบ",
+  },
+  { id: 29, type: 4, math: "-", text: "เราอารมณ์เสียหรือหัวร้อนได้ง่าย" },
+  { id: 34, type: 4, math: "-", text: "อารมณ์เราขึ้นๆ ลงๆ เปลี่ยนแปลงบ่อย" },
+  {
+    id: 39,
+    type: 4,
+    math: "-",
+    text: "เรามีอารมณ์แปรปรวนบ่อย เดี๋ยวดีเดี๋ยวร้าย",
+  },
+  { id: 44, type: 4, math: "-", text: "เรารู้สึกหงุดหงิดรำคาญใจได้ง่าย" },
+  { id: 49, type: 4, math: "-", text: "เรามักรู้สึกเศร้าหมองอยู่บ่อยครั้ง" },
+
+  // --- Openness (O) ---
+  {
+    id: 5,
+    type: 5,
+    math: "+",
+    text: "เรารู้จักคำศัพท์เยอะและเลือกใช้คำได้หลากหลาย",
   },
   {
     id: 10,
-    trait: "Openness",
-    text: "ฉันชอบศิลปะ ดนตรี หรือการแก้ปัญหาด้วยวิธีที่สร้างสรรค์",
+    type: 5,
+    math: "-",
+    text: "เราเข้าใจเรื่องที่เป็นนามธรรมหรือทฤษฎีซับซ้อนได้ยาก",
   },
+  { id: 15, type: 5, math: "+", text: "เราเป็นคนจินตนาการสูง" },
+  { id: 20, type: 5, math: "-", text: "เราไม่ค่อยอินกับเรื่องที่เป็นนามธรรม" },
+  { id: 25, type: 5, math: "+", text: "เรามักจะปิ๊งไอเดียเจ๋งๆ อยู่เสมอ" },
+  { id: 30, type: 5, math: "-", text: "เราเป็นคนจินตนาการไม่ค่อยเก่ง" },
+  { id: 35, type: 5, math: "+", text: "เราหัวไว เข้าใจอะไรได้เร็ว" },
+  {
+    id: 40,
+    type: 5,
+    math: "+",
+    text: "เราชอบใช้คำศัพท์ยากๆ หรือคำที่มีความหมายลึกซึ้ง",
+  },
+  {
+    id: 45,
+    type: 5,
+    math: "+",
+    text: "เราชอบใช้เวลาคิดทบทวนเรื่องราวต่างๆ อย่างลึกซึ้ง",
+  },
+  { id: 50, type: 5, math: "+", text: "ในหัวเรามีไอเดียผุดขึ้นมาเต็มไปหมด" },
 ];
 
 // Glowing Rune Rating Options
@@ -137,45 +235,69 @@ export default function AssessmentPage() {
   };
 
   // --- DEBUG TOOL ---
-  const handleDebugFill = (targetTrait: string, namePrefix: string) => {
+  const handleDebugFill = (
+    targetType: number | "random",
+    namePrefix: string
+  ) => {
     const newAnswers: Record<number, number> = {};
+
     questions.forEach((q) => {
-      if (q.trait === targetTrait) {
-        newAnswers[q.id] = 5;
+      let baseScore;
+
+      if (targetType === "random") {
+        // Random 1-5
+        baseScore = Math.floor(Math.random() * 5) + 1;
+      } else if (q.type === targetType) {
+        // Target: High score (4 or 5)
+        const high = Math.random() > 0.3 ? 5 : 4;
+        // Adjust for Math direction to get the desired *Result*
+        // If Math is +, answer high. If Math is -, answer low (1 or 2).
+        baseScore = q.math === "+" ? high : 6 - high;
       } else {
-        newAnswers[q.id] = 1;
+        // Others: Medium score (2, 3, or 4)
+        const mid = Math.floor(Math.random() * 3) + 2;
+        baseScore = q.math === "+" ? mid : 6 - mid;
       }
+
+      newAnswers[q.id] = baseScore;
     });
+
     setAnswers(newAnswers);
-    if (!name) setName(`Test ${namePrefix}`);
-    toast.success(`Debug: Filled for ${namePrefix} (${targetTrait})`);
+    if (!name)
+      setName(targetType === "random" ? "Random Guy" : `Test ${namePrefix}`);
+    toast.success(`Debug: Filled for ${namePrefix}`);
   };
 
   const debugButtons = [
     {
       label: "Mage (O)",
-      trait: "Openness",
+      type: 5,
       color: "text-purple-400 border-purple-500/50",
     },
     {
       label: "Paladin (C)",
-      trait: "Conscientiousness",
+      type: 3,
       color: "text-yellow-400 border-yellow-500/50",
     },
     {
       label: "Warrior (E)",
-      trait: "Extraversion",
+      type: 1,
       color: "text-red-400 border-red-500/50",
     },
     {
       label: "Cleric (A)",
-      trait: "Agreeableness",
+      type: 2,
       color: "text-green-400 border-green-500/50",
     },
     {
       label: "Rogue (N)",
-      trait: "Neuroticism",
+      type: 4,
       color: "text-blue-400 border-blue-500/50",
+    },
+    {
+      label: "🎲 Random",
+      type: "random",
+      color: "text-slate-500 border-slate-500/50",
     },
   ];
 
@@ -185,34 +307,44 @@ export default function AssessmentPage() {
       return;
     }
     if (Object.keys(answers).length < questions.length) {
-      toast.error("ตอบให้ครบทุกข้อก่อนนะ");
+      toast.error(
+        `ตอบให้ครบ ${questions.length} ข้อก่อนนะ (ตอนนี้ ${
+          Object.keys(answers).length
+        }/${questions.length})`
+      );
       return;
     }
     setIsSubmitting(true);
 
     const scores = {
-      Openness: 0,
-      Conscientiousness: 0,
-      Extraversion: 0,
-      Agreeableness: 0,
-      Neuroticism: 0,
+      1: 0, // Extraversion
+      2: 0, // Agreeableness
+      3: 0, // Conscientiousness
+      4: 0, // Neuroticism
+      5: 0, // Openness
     };
+
     questions.forEach((q) => {
-      const score = answers[q.id] || 0;
-      // @ts-ignore
-      if (scores[q.trait] !== undefined) {
-        // @ts-ignore
-        scores[q.trait] += score;
+      const rawScore = answers[q.id] || 0;
+      let finalScore = 0;
+
+      if (q.math === "+") {
+        finalScore = rawScore;
+      } else {
+        finalScore = 6 - rawScore;
       }
+
+      // @ts-ignore
+      scores[q.type] += finalScore;
     });
 
     const payload = {
       name: name,
-      openness: scores.Openness,
-      conscientiousness: scores.Conscientiousness,
-      extraversion: scores.Extraversion,
-      agreeableness: scores.Agreeableness,
-      neuroticism: scores.Neuroticism,
+      extraversion: scores[1],
+      agreeableness: scores[2],
+      conscientiousness: scores[3],
+      neuroticism: scores[4],
+      openness: scores[5],
     };
 
     try {
@@ -248,7 +380,7 @@ export default function AssessmentPage() {
 
       {/* --- Tutorial Modal --- */}
       {showGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 dark:bg-black/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-black/30 backdrop-blur-md">
           <div className="bg-white dark:bg-slate-900/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
             {/* Header */}
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 text-center">
@@ -381,7 +513,10 @@ export default function AssessmentPage() {
               <button
                 key={btn.label}
                 onClick={() =>
-                  handleDebugFill(btn.trait, btn.label.split(" ")[0])
+                  handleDebugFill(
+                    btn.type as number | "random",
+                    btn.label.split(" ")[0]
+                  )
                 }
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition ${btn.color}`}
               >
@@ -400,7 +535,7 @@ export default function AssessmentPage() {
             พิธีปลุกพลัง
           </h1>
           <p className="text-slate-500">
-            ตอบคำถาม 10 ข้อ เพื่อค้นหาอาชีพและสเตตัสที่แท้จริงของคุณ
+            ตอบคำถาม 50 ข้อ เพื่อค้นหาอาชีพและสเตตัสที่แท้จริงของคุณ
           </p>
         </div>
 
@@ -429,7 +564,7 @@ export default function AssessmentPage() {
               {/* Question Card */}
               <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
                 <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                  Question {idx + 1}/10
+                  Question {idx + 1}/50
                 </span>
                 <h3 className="text-lg sm:text-xl font-medium text-slate-800 dark:text-white mt-2 leading-relaxed text-center">
                   {q.text}
@@ -437,14 +572,16 @@ export default function AssessmentPage() {
               </div>
 
               {/* Spirit Orbs - Glowing Runes */}
-              <div className="flex items-center justify-center gap-3 sm:gap-6">
+              <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-4">
                 {ratingOptions.map((opt) => {
                   const isSelected = answers[q.id] === opt.value;
-                  const size = 32 + opt.value * 6; // 38, 44, 50, 56, 62
+                  // Mobile (375px): sizes 28-48, Desktop: sizes 36-60
+                  const mobileSize = 24 + opt.value * 5; // 29, 34, 39, 44, 49
+                  const desktopSize = 32 + opt.value * 6; // 38, 44, 50, 56, 62
                   return (
                     <div
                       key={opt.value}
-                      className="flex flex-col items-center gap-2 cursor-pointer group"
+                      className="flex flex-col items-center gap-1 sm:gap-2 cursor-pointer group"
                       onClick={() => handleSelect(q.id, opt.value)}
                     >
                       <div
@@ -456,16 +593,19 @@ export default function AssessmentPage() {
                               : "bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 group-hover:border-slate-400 dark:group-hover:border-slate-500"
                           }
                         `}
-                        style={{ width: size, height: size }}
+                        style={{
+                          width: `clamp(${mobileSize}px, 8vw, ${desktopSize}px)`,
+                          height: `clamp(${mobileSize}px, 8vw, ${desktopSize}px)`,
+                        }}
                       >
                         {isSelected && (
                           <CheckCircle2 className="text-white w-1/2 h-1/2" />
                         )}
                       </div>
                       <span
-                        className={`text-[10px] font-bold transition-all duration-300 ${
+                        className={`text-[8px] sm:text-[10px] font-bold transition-all duration-300 whitespace-nowrap ${
                           isSelected
-                            ? "opacity-100 text-white"
+                            ? "opacity-100 text-slate-800 dark:text-white"
                             : "opacity-0 group-hover:opacity-100 text-slate-500"
                         }`}
                       >

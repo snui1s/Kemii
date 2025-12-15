@@ -4,34 +4,34 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import {
   Users,
-  UserPlus,
-  Save,
-  RefreshCcw,
   Crown,
   X,
   ExternalLink,
-  Flame,
-  Wind,
-  Mountain,
-  Droplets,
   Zap,
   AlertCircle,
-  CalendarDays,
-  LayoutGrid,
-  Lock,
+  Scroll,
+  Sword,
+  Shield,
+  Map,
+  Sparkles,
+  Brain,
+  Heart,
+  Ghost,
+  RefreshCcw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import UserCard from "@/components/UserCard";
 import ElementalLoader from "@/components/ElementalLoader";
 import AuthGuard from "@/components/AuthGuard";
+import ThemeBackground from "@/components/ThemeBackground";
 
 // --- Interfaces ---
 interface User {
   id: number;
   name: string;
-  animal: string;
-  dominant_type: string;
-  scores?: { [key: string]: number };
+  character_class: string; // รับค่า character_class จาก backend
+  dominant_type: string; // Lv.
+  scores?: { [key: string]: number }; // OCEAN Scores
   is_available: boolean;
   active_project_end_date?: string;
 }
@@ -50,7 +50,39 @@ interface TeamResult {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const STRATEGIES = ["Balanced", "Aggressive", "Creative", "Supportive"];
+
+// ⚔️ RPG Strategy Mapping (แปลไทย)
+const RPG_STRATEGIES: Record<
+  string,
+  { name: string; icon: any; desc: string; color: string }
+> = {
+  Balanced: {
+    name: "⚖️ สมดุลผู้กล้า",
+    icon: Users,
+    desc: "สมดุลทุกด้านดั่งปาร์ตี้ผู้กล้าในตำนาน (All-Rounder)",
+    color: "text-blue-400 border-blue-500/30 bg-blue-500/10",
+  },
+  Aggressive: {
+    name: "⚔️ กองหน้าบ้าเลือด",
+    icon: Sword,
+    desc: "เน้นพลังโจมตี บุกทะลวงงานให้จบไว (High Extraversion)",
+    color: "text-red-400 border-red-500/30 bg-red-500/10",
+  },
+  Creative: {
+    name: "🔮 ภูมิปัญญาเวทมนตร์",
+    icon: Zap,
+    desc: "เน้นไอเดียใหม่ๆ และการพลิกแพลง (High Openness)",
+    color: "text-purple-400 border-purple-500/30 bg-purple-500/10",
+  },
+  Supportive: {
+    name: "🛡️ กำแพงพิทักษ์",
+    icon: Shield,
+    desc: "เน้นการป้องกัน สนับสนุน และความละเอียด (High Conscientiousness)",
+    color: "text-green-400 border-green-500/30 bg-green-500/10",
+  },
+};
+
+const STRATEGIES = Object.keys(RPG_STRATEGIES);
 
 export default function BuildTeamPage() {
   // Config State
@@ -69,7 +101,7 @@ export default function BuildTeamPage() {
   // Modal State
   const [viewingUser, setViewingUser] = useState<User | null>(null);
 
-  // ✅ 1. Use Query for Roster
+  // Query Data
   const { data: roster = [], refetch: refetchRoster } = useQuery<User[]>({
     queryKey: ["users", "roster"],
     queryFn: async () => {
@@ -78,7 +110,6 @@ export default function BuildTeamPage() {
     },
   });
 
-  // ✅ 2. Use Query for User Detail (Modal)
   const { data: userDetailRaw, isLoading: loadingDetail } = useQuery<User>({
     queryKey: ["user", viewingUser?.id],
     queryFn: async () => {
@@ -90,46 +121,18 @@ export default function BuildTeamPage() {
     retry: false,
   });
 
-  // Fallback to viewingUser if detail fetch fails or is not yet available
-  // Note: logic slightly changed from strictly catching error to fall back,
-  // but if fetch fails, userDetailRaw is undefined.
-  // We can just use userDetailRaw || viewingUser
   const userDetail = userDetailRaw || viewingUser;
-
-  // คำนวณจำนวนลูกน้องสูงสุด (นับเฉพาะคนที่ว่าง)
   const availableCount = roster.filter((u) => u.is_available).length;
   const maxMemberCount = Math.max(1, availableCount - 1);
 
-  // ฟังก์ชันแปลงวันที่ให้สวยงาม
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-      year: "2-digit",
-    });
-  };
-
-  // 2. สั่ง AI หาคน
+  // --- Handlers ---
   const handleRecommendAll = async () => {
-    if (!selectedLeaderId) {
-      toast.error("เลือกหัวหน้าทีมก่อนครับ!", {
-        id: "leader-error",
-      });
-      return;
-    }
-
-    // เช็คคนว่างจริงๆ (ไม่นับคนติดงาน และไม่นับหัวหน้าที่เลือกไปแล้ว)
+    if (!selectedLeaderId) return toast.error("กรุณาเลือกผู้นำปาร์ตี้ก่อน!");
     const currentAvailable = roster.filter(
       (u) => u.is_available && u.id !== Number(selectedLeaderId)
     ).length;
-
-    if (memberCount > currentAvailable) {
-      toast.error(`คนว่างไม่พอครับ! เหลือคนว่างงานแค่ ${currentAvailable} คน`, {
-        id: "member-error",
-      });
-      return;
-    }
+    if (memberCount > currentAvailable)
+      return toast.error(`นักผจญภัยว่างไม่พอ! เหลือแค่ ${currentAvailable} คน`);
 
     setLoading(true);
     setAllResults({});
@@ -146,55 +149,25 @@ export default function BuildTeamPage() {
         );
         return { ...res.data, strategy };
       } catch (error) {
-        console.error(`Error fetching ${strategy}:`, error);
         return null;
       }
     });
 
-    try {
-      const results = await Promise.all(promises);
-      const resultMap: Record<string, TeamResult | null> = {};
-      let successCount = 0;
-
-      results.forEach((res) => {
-        if (res) {
-          resultMap[res.strategy] = res;
-          successCount++;
-        }
-      });
-
-      setAllResults(resultMap);
-
-      if (successCount > 0) {
-        toast.success(`AI วิเคราะห์ครบ ${successCount} รูปแบบเรียบร้อย!`, {
-          id: "success",
-        });
-      } else {
-        toast.error("AI ประมวลผลล้มเหลว ลองใหม่อีกครั้งครับ", {
-          id: "error",
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ", {
-        id: "connection-error",
-      });
-    } finally {
-      setLoading(false);
-    }
+    const results = await Promise.all(promises);
+    const resultMap: Record<string, TeamResult | null> = {};
+    results.forEach((res) => {
+      if (res) resultMap[res.strategy] = res;
+    });
+    setAllResults(resultMap);
+    setLoading(false);
+    toast.success("Guild Master วางแผนการรบเรียบร้อย!");
   };
 
-  // 3. บันทึกทีมจริง
   const handleConfirm = async () => {
     const targetResult = allResults[activeStrategy];
     if (!targetResult) return;
-
-    if (!startDate || !endDate) {
-      toast.error("กรุณาระบุวันเริ่มและวันจบโปรเจกต์ (ช่องซ้ายมือ)", {
-        id: "date-error",
-      });
-      return;
-    }
+    if (!startDate || !endDate)
+      return toast.error("ระบุวันเริ่มและสิ้นสุดภารกิจก่อน!");
 
     try {
       if (targetResult.log_id) {
@@ -204,321 +177,302 @@ export default function BuildTeamPage() {
           end_date: endDate,
         });
       } else {
-        // Fallback
         const memberIds = targetResult.members.map((m) => m.id);
         await axios.post(`${API_URL}/confirm-team`, {
           team_name: targetResult.team_name,
           member_ids: [targetResult.leader.id, ...memberIds],
         });
       }
-
-      toast.success(`บันทึกทีม "${targetResult.team_name}" เรียบร้อย!`);
-
-      // Reset
+      toast.success(`ปาร์ตี้ "${targetResult.team_name}" ออกเดินทางแล้ว!`);
       setAllResults({});
       setSelectedLeaderId("");
       setStartDate("");
       setEndDate("");
       refetchRoster();
     } catch (err) {
-      console.error(err);
-      toast.error("บันทึกไม่สำเร็จ", {
-        id: "confirm-error",
-      });
+      toast.error("เกิดข้อผิดพลาดในการบันทึก");
     }
   };
 
-  // 4. Reset
   const handleReset = async () => {
-    if (confirm("ล้างทีมทั้งหมด? ทุกคนจะกลับมาว่างงานนะ")) {
-      try {
-        await axios.post(`${API_URL}/reset-teams`);
-        refetchRoster();
-        toast.success("ล้างกระดานเรียบร้อย!");
-        setAllResults({});
-        setSelectedLeaderId("");
-      } catch (err) {
-        console.error(err);
-        toast.error("Reset ไม่สำเร็จ", {
-          id: "reset-error",
-        });
-      }
+    if (confirm("ต้องการเรียกตัวฮีโร่กลับกิลด์ทั้งหมดหรือไม่? (ล้างสถานะ)")) {
+      await axios.post(`${API_URL}/reset-teams`);
+      refetchRoster();
+      toast.success("เรียกตัวนักผจญภัยกลับโรงเตี๊ยมเรียบร้อย!");
+      setAllResults({});
+      setSelectedLeaderId("");
     }
-  };
-
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + "...";
   };
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-800 p-6 pb-20 transition-colors">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 text-slate-900 dark:text-slate-100">
-          {/* --- LEFT PANEL: Config --- */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors relative lg:sticky lg:top-6">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-                <UserPlus className="text-blue-600 dark:text-blue-400" /> Create
-                Team
-              </h2>
+      <div className="min-h-screen p-4 md:p-8 text-slate-800 dark:text-slate-200 font-sans relative overflow-hidden">
+        {/* 🌌 Background */}
+        <ThemeBackground />
 
-              {/* Alert คนหมด */}
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+          {/* --- LEFT PANEL: Quest Board (Config) --- */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg relative overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+                <div className="p-3 bg-indigo-100 dark:bg-indigo-500/20 rounded-lg border border-indigo-200 dark:border-indigo-500/40">
+                  <Map
+                    className="text-indigo-600 dark:text-indigo-400"
+                    size={24}
+                  />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-wide">
+                    กระดานภารกิจ
+                  </h2>
+                  <p className="text-xs text-slate-400 uppercase tracking-widest">
+                    ศูนย์บัญชาการกิลด์
+                  </p>
+                </div>
+              </div>
+
+              {/* Alert No Heroes */}
               {availableCount === 0 && roster.length > 0 && (
-                <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold">
-                    <AlertCircle size={20} /> ไม่มีคนว่างเลย!
+                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm">
+                    <AlertCircle size={16} /> โรงเตี๊ยมว่างเปล่า!
                   </div>
-                  <p className="text-sm text-slate-500">
-                    ทุกคนติดภารกิจหมดแล้ว
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    ฮีโร่ทุกคนออกไปทำภารกิจหมดแล้ว
                   </p>
                   <button
                     onClick={handleReset}
-                    className="mt-2 w-full py-2 bg-orange-100 dark:bg-orange-800/40 text-orange-700 dark:text-orange-300 rounded-lg text-sm font-bold hover:bg-orange-200 transition"
+                    className="mt-2 w-full py-2 bg-red-100 dark:bg-red-500/10 hover:bg-red-200 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold border border-red-200 dark:border-red-500/20 transition flex items-center justify-center gap-2"
                   >
-                    <RefreshCcw size={14} className="inline mr-1" />{" "}
-                    ล้างทีมทั้งหมด
+                    <RefreshCcw size={14} /> เรียกตัวกลับทั้งหมด
                   </button>
                 </div>
               )}
 
-              {/* ✅ 1. เลือกหัวหน้าทีม (UX ปรับปรุง) */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  1. เลือกหัวหน้าทีม (Leader)
+              {/* 1. Select Leader */}
+              <div className="mb-5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+                  1. เลือกผู้นำปาร์ตี้ (Leader)
                 </label>
-
-                <div className="relative">
+                <div className="relative group">
                   <select
-                    className="w-full p-3 pl-4 pr-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl appearance-none outline-none focus:ring-2 focus:ring-blue-500 dark:text-white cursor-pointer transition-all disabled:opacity-50 text-base"
+                    className="w-full p-3 pl-10 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-xl appearance-none outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-800 dark:text-slate-200 cursor-pointer transition-all text-sm group-hover:bg-slate-100 dark:group-hover:bg-slate-950/80"
                     value={selectedLeaderId}
                     onChange={(e) => setSelectedLeaderId(e.target.value)}
                   >
-                    <option value="">-- เลือกพนักงาน --</option>
-
+                    <option value="">-- อัญเชิญหัวหน้า --</option>
                     {roster.map((u) => {
                       const isBusy = !u.is_available;
-                      // ข้อความแสดงสถานะ
-                      const statusText = isBusy
-                        ? `🔴 ติดภารกิจ (ว่าง ${formatDate(
-                            u.active_project_end_date
-                          )})`
-                        : `🟢 ว่าง`;
-
-                      const fullLabel = `${u.name} (${u.animal}) — ${statusText}`;
-                      const displayLabel = truncateText(fullLabel, 50);
-
                       return (
                         <option
                           key={u.id}
                           value={u.id}
-                          disabled={isBusy} // 🔒 ล็อคคนไม่ว่าง
-                          className={
-                            isBusy
-                              ? "text-slate-400 bg-slate-100 dark:bg-slate-800"
-                              : "text-slate-800 font-medium dark:text-slate-300"
-                          }
+                          disabled={isBusy}
+                          className="bg-white dark:bg-slate-900"
                         >
-                          {displayLabel}
+                          {u.name} ({u.character_class}){" "}
+                          {isBusy ? "🔴 ติดภารกิจ" : "🟢 พร้อมลุย"}
                         </option>
                       );
                     })}
                   </select>
-
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                    <Users size={18} />
-                  </div>
+                  <Crown
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500 pointer-events-none"
+                  />
                 </div>
-
-                <p className="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
-                  <Lock size={10} /> คนที่มี 🔴 คือติดโปรเจกต์อยู่ (เลือกไม่ได้)
-                </p>
               </div>
 
-              {/* 2. จำนวนลูกน้อง */}
-              <div className="mb-6">
-                <label className="flex justify-between items-center text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  <span>2. ต้องการลูกน้องกี่คน?</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
-                    (ว่างสูงสุด {maxMemberCount} คน)
+              {/* 2. Party Size */}
+              <div className="mb-5">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    2. ขนาดปาร์ตี้ (สมาชิก)
+                  </label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                    สูงสุด: {maxMemberCount}
                   </span>
-                </label>
-                <div className="flex items-center gap-4">
+                </div>
+                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                   <button
                     onClick={() => setMemberCount(Math.max(1, memberCount - 1))}
                     disabled={memberCount <= 1}
-                    className="w-10 h-10 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50"
+                    className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 flex items-center justify-center transition"
                   >
                     -
                   </button>
-                  <span className="text-xl font-bold w-8 text-center">
-                    {memberCount}
-                  </span>
+                  <div className="flex-1 text-center font-mono text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                    {memberCount}{" "}
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-sans">
+                      คน
+                    </span>
+                  </div>
                   <button
                     onClick={() =>
                       setMemberCount(Math.min(maxMemberCount, memberCount + 1))
                     }
                     disabled={memberCount >= maxMemberCount}
-                    className="w-10 h-10 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50"
+                    className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 flex items-center justify-center transition"
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              <hr className="border-slate-100 dark:border-slate-800 mb-6" />
-
-              {/* 3. Date Picker */}
-              <div className="mb-6">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                  <CalendarDays size={18} className="text-blue-500" />{" "}
-                  ระยะเวลาโครงการ
+              {/* 3. Timeline */}
+              <div className="mb-8">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-2">
+                  <Scroll size={14} /> ระยะเวลาภารกิจ
                 </label>
-
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                      <span className="text-xs font-bold">START</span>
-                    </div>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                      เริ่ม
+                    </span>
                     <input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="block w-full pl-16 p-2.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white"
+                      className="w-full pl-12 pr-3 py-2 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-300 focus:border-indigo-500 outline-none"
                     />
                   </div>
-
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                      <span className="text-xs font-bold">END</span>
-                    </div>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                      สิ้นสุด
+                    </span>
                     <input
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="block w-full pl-16 p-2.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white"
+                      className="w-full pl-12 pr-3 py-2 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-300 focus:border-indigo-500 outline-none"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Summon Button */}
               <button
                 onClick={handleRecommendAll}
                 disabled={loading || !selectedLeaderId || availableCount <= 0}
-                className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none flex items-center justify-center gap-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 group border border-indigo-400/30"
               >
                 {loading ? (
-                  <>กำลังวิเคราะห์ 4 กลยุทธ์...</>
+                  <span className="animate-pulse">
+                    กำลังปรึกษาเทพพยากรณ์...
+                  </span>
                 ) : (
                   <>
-                    <LayoutGrid size={20} /> วิเคราะห์ทุกรูปแบบทีม
+                    <Sparkles size={18} className="group-hover:animate-spin" />{" "}
+                    ปรึกษาเทพพยากรณ์ (AI)
                   </>
                 )}
               </button>
-              <p className="text-center text-xs text-slate-400 mt-2">
-                *AI จะคำนวณ 4 รูปแบบพร้อมกัน
-              </p>
             </div>
           </div>
 
-          {/* --- RIGHT PANEL: Result --- */}
+          {/* --- RIGHT PANEL: Battle Plans (Result) --- */}
           <div className="lg:col-span-8">
             {loading ? (
-              <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900/40 rounded-3xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
                 <ElementalLoader />
-                <p className="mt-6 text-slate-500 dark:text-slate-400 animate-pulse font-medium">
-                  AI กำลังจำลองทีมทั้ง 4 รูปแบบ...
-                </p>
               </div>
             ) : Object.keys(allResults).length === 0 ? (
-              <div className="h-full min-h-[500px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 transition-colors">
-                <Users size={64} className="mb-4 opacity-20" />
-                <p className="text-lg font-medium">ตั้งค่าโครงการด้านซ้าย</p>
-                <p className="text-sm opacity-70">
-                  เพื่อเริ่มวิเคราะห์ทีมที่เหมาะสมที่สุด
+              <div className="h-full min-h-[500px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 bg-slate-100 dark:bg-slate-900/40 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800">
+                <div className="p-6 bg-slate-200 dark:bg-slate-800/50 rounded-full mb-4">
+                  <Map
+                    size={48}
+                    className="text-slate-400 dark:text-slate-700"
+                  />
+                </div>
+                <p className="text-lg font-medium text-slate-500">
+                  แผนที่ยังว่างเปล่า
+                </p>
+                <p className="text-sm text-slate-600">
+                  ตั้งค่าภารกิจทางซ้ายเพื่อเริ่มการวิเคราะห์
                 </p>
               </div>
             ) : (
               <div className="space-y-6 animate-fade-in-up">
-                {/* Strategy Tabs */}
-                <div className="flex flex-wrap gap-2 p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl overflow-x-auto">
+                {/* Formation Tabs */}
+                <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/80 rounded-xl overflow-x-auto border border-slate-200 dark:border-slate-800 no-scrollbar">
                   {STRATEGIES.map((strat) => {
                     const isActive = activeStrategy === strat;
                     const hasData = !!allResults[strat];
+                    const config = RPG_STRATEGIES[strat];
                     return (
                       <button
                         key={strat}
                         onClick={() => setActiveStrategy(strat)}
                         disabled={!hasData}
                         className={`
-                         flex-1 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap
+                         flex-1 px-4 py-3 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap flex items-center justify-center gap-2
                          ${
                            isActive
-                             ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                             : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50"
+                             ? `bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-lg border border-slate-200 dark:border-slate-600`
+                             : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white dark:hover:bg-slate-800/50"
                          }
-                         ${!hasData && "opacity-50 cursor-not-allowed"}
+                         ${!hasData && "opacity-30 cursor-not-allowed"}
                        `}
                       >
-                        {strat === "Balanced" && "⚖️ สมดุล"}
-                        {strat === "Aggressive" && "🔥 สายลุย"}
-                        {strat === "Creative" && "💡 ไอเดีย"}
-                        {strat === "Supportive" && "❤️ ซัพพอร์ต"}
+                        <config.icon size={16} /> {config.name}
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Active Team Content */}
+                {/* Active Formation Card */}
                 {allResults[activeStrategy] ? (
                   <div className="animate-fade-in">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-6 opacity-10">
-                        {activeStrategy === "Balanced" && <Users size={100} />}
-                        {activeStrategy === "Aggressive" && (
-                          <Flame size={100} />
-                        )}
-                        {activeStrategy === "Creative" && <Zap size={100} />}
-                        {activeStrategy === "Supportive" && (
-                          <Mountain size={100} />
-                        )}
-                      </div>
+                    {/* Formation Header */}
+                    <div
+                      className={`bg-white dark:bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-lg dark:shadow-xl mb-6 relative overflow-hidden group`}
+                    >
+                      {/* Ambient Glow */}
+                      <div
+                        className={`absolute top-0 right-0 p-20 opacity-10 blur-[80px] rounded-full ${
+                          RPG_STRATEGIES[activeStrategy].color
+                            .replace("text-", "bg-")
+                            .split(" ")[0]
+                        }`}
+                      ></div>
 
                       <div className="relative z-10">
-                        <div className="flex flex-col gap-4 mb-4">
-                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div>
-                              <span className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full mb-2 border border-blue-100 dark:border-blue-800">
-                                แนะนำสำหรับ: {activeStrategy} Strategy
-                              </span>
-                              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white break-words">
-                                {allResults[activeStrategy]?.team_name}
-                              </h2>
-                            </div>
-                            <button
-                              onClick={handleConfirm}
-                              className="w-full md:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                          <div>
+                            <div
+                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 border ${RPG_STRATEGIES[activeStrategy].color}`}
                             >
-                              <Save size={20} /> เลือกทีมนี้ & เริ่มโครงการ
-                            </button>
+                              {RPG_STRATEGIES[activeStrategy].name}
+                            </div>
+                            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-tight">
+                              {allResults[activeStrategy]?.team_name}
+                            </h2>
                           </div>
+                          <button
+                            onClick={handleConfirm}
+                            className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-[0_0_15px_rgba(16,185,129,0.3)] active:scale-95 transition-all flex items-center justify-center gap-2 border border-emerald-500/30"
+                          >
+                            <Scroll size={18} /> ลงนามสัญญา (ยืนยัน)
+                          </button>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl text-slate-600 dark:text-slate-300 text-sm leading-relaxed border border-slate-100 dark:border-slate-700/50">
-                          <span className="font-bold text-blue-500">
-                            ✨ ทำไมถึงเวิร์ค:{" "}
+
+                        {/* Strategy Description */}
+                        <div className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400 block mb-1">
+                            📜 คำแนะนำจากกุนซือ:
                           </span>
                           {allResults[activeStrategy]?.reason}
                         </div>
                       </div>
                     </div>
 
+                    {/* Team Roster Grid */}
                     <div className="space-y-6">
-                      {/* Leader */}
+                      {/* Leader Section */}
                       <div>
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                          <Crown size={16} className="text-yellow-500" /> Team
-                          Leader
+                        <h3 className="text-xs font-bold text-yellow-500 uppercase tracking-widest mb-3 flex items-center gap-2 pl-1">
+                          <Crown size={14} /> หัวหน้าปาร์ตี้ (Leader)
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <UserCard
@@ -526,12 +480,13 @@ export default function BuildTeamPage() {
                               allResults[activeStrategy]?.leader?.name ||
                               "Unknown"
                             }
-                            animal={
-                              allResults[activeStrategy]?.leader?.animal || "?"
+                            characterClass={
+                              allResults[activeStrategy]?.leader
+                                ?.character_class || "?"
                             }
                             type={
                               allResults[activeStrategy]?.leader
-                                ?.dominant_type || "D"
+                                ?.dominant_type || "Lv.1"
                             }
                             scores={allResults[activeStrategy]?.leader?.scores}
                             allowFlip={true}
@@ -545,12 +500,12 @@ export default function BuildTeamPage() {
                         </div>
                       </div>
 
-                      {/* Members */}
+                      {/* Members Section */}
                       <div>
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                          <Users size={16} /> Team Members
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2 pl-1">
+                          <Users size={14} /> สหายร่วมศึก (Companions)
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {allResults[activeStrategy]?.members?.map((m, i) => (
                             <UserCard
                               key={
@@ -559,8 +514,8 @@ export default function BuildTeamPage() {
                                   : `idx-${i}`
                               }
                               name={m.name || "Unknown"}
-                              animal={m.animal || "?"}
-                              type={m.dominant_type || "D"}
+                              characterClass={m.character_class || "?"}
+                              type={m.dominant_type || "Lv.1"}
                               scores={m.scores}
                               allowFlip={true}
                               onInspect={() => setViewingUser(m)}
@@ -571,8 +526,8 @@ export default function BuildTeamPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-20 text-red-400">
-                    เกิดข้อผิดพลาดในการโหลดข้อมูลแผนนี้
+                  <div className="text-center py-20 text-red-400/50">
+                    ไม่สามารถอ่านนิมิตในเส้นเวลานี้ได้...
                   </div>
                 )}
               </div>
@@ -580,36 +535,38 @@ export default function BuildTeamPage() {
           </div>
         </div>
 
-        {/* --- Native Modal --- */}
+        {/* --- Profile Modal (Character Sheet) --- */}
         {viewingUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative flex flex-col">
-              <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 relative flex flex-col">
+              {/* Modal Header */}
+              <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                 <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
-                  <Users
-                    className="text-blue-600 dark:text-blue-400"
-                    size={20}
+                  <Scroll
+                    className="text-indigo-600 dark:text-indigo-400"
+                    size={18}
                   />
-                  Profile Details
+                  ข้อมูลฮีโร่
                 </h3>
                 <div className="flex gap-2">
                   <a
-                    href={`/result/${viewingUser.id}`}
+                    href={`/assessment/result/${viewingUser.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2 text-slate-400 hover:text-blue-500 transition hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                    className="p-2 text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
                   >
-                    <ExternalLink size={20} />
+                    <ExternalLink size={18} />
                   </a>
                   <button
                     onClick={() => setViewingUser(null)}
-                    className="p-2 text-slate-400 hover:text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                    className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-slate-800 rounded-lg transition"
                   >
-                    <X size={24} />
+                    <X size={18} />
                   </button>
                 </div>
               </div>
 
+              {/* Modal Body */}
               <div className="p-6 bg-slate-50 dark:bg-slate-950 overflow-y-auto max-h-[70vh]">
                 {loadingDetail ? (
                   <div className="flex justify-center py-10">
@@ -617,45 +574,55 @@ export default function BuildTeamPage() {
                   </div>
                 ) : userDetail ? (
                   <div className="space-y-6">
-                    <div className="flex justify-center">
-                      <div className="w-full max-w-xs transform hover:scale-105 transition-transform duration-300">
+                    <div className="flex justify-center transform hover:scale-105 transition-transform duration-500">
+                      <div className="w-full max-w-xs">
                         <UserCard
                           name={userDetail.name}
-                          animal={userDetail.animal}
+                          characterClass={userDetail.character_class}
                           type={userDetail.dominant_type}
+                          scores={userDetail.scores}
+                          allowFlip={true}
                         />
                       </div>
                     </div>
+
+                    {/* ✅ Stats Breakdown */}
                     {userDetail.scores && (
-                      <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-                          <Zap className="text-yellow-500" size={18} />{" "}
-                          Elemental Analysis
+                      <div className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <h4 className="font-bold text-slate-600 dark:text-slate-300 mb-4 flex items-center gap-2 text-xs uppercase tracking-widest">
+                          <Zap className="text-yellow-500" size={14} />{" "}
+                          ค่าสถานะต่อสู้ (Battle Stats)
                         </h4>
                         <div className="space-y-4">
                           <StatBar
-                            label="Fire (กระทิง)"
-                            value={userDetail.scores["D"] || 0}
-                            color="bg-red-500"
-                            icon={<Flame size={14} />}
+                            label="INT (Openness)"
+                            value={userDetail.scores["Openness"] || 0}
+                            color="bg-purple-500"
+                            icon={<Brain size={12} />}
                           />
                           <StatBar
-                            label="Wind (อินทรี)"
-                            value={userDetail.scores["I"] || 0}
+                            label="VIT (Conscientiousness)"
+                            value={userDetail.scores["Conscientiousness"] || 0}
                             color="bg-yellow-500"
-                            icon={<Wind size={14} />}
+                            icon={<Shield size={12} />}
                           />
                           <StatBar
-                            label="Earth (หนู)"
-                            value={userDetail.scores["S"] || 0}
+                            label="STR (Extraversion)"
+                            value={userDetail.scores["Extraversion"] || 0}
+                            color="bg-red-500"
+                            icon={<Sword size={12} />}
+                          />
+                          <StatBar
+                            label="FTH (Agreeableness)"
+                            value={userDetail.scores["Agreeableness"] || 0}
                             color="bg-green-500"
-                            icon={<Mountain size={14} />}
+                            icon={<Heart size={12} />}
                           />
                           <StatBar
-                            label="Water (หมี)"
-                            value={userDetail.scores["C"] || 0}
-                            color="bg-blue-500"
-                            icon={<Droplets size={14} />}
+                            label="DEX (Neuroticism)"
+                            value={userDetail.scores["Neuroticism"] || 0}
+                            color="bg-slate-500"
+                            icon={<Ghost size={12} />}
                           />
                         </div>
                       </div>
@@ -663,7 +630,7 @@ export default function BuildTeamPage() {
                   </div>
                 ) : (
                   <div className="text-center text-red-500">
-                    ไม่พบข้อมูลผู้ใช้
+                    ไม่พบข้อมูลฮีโร่ในฐานข้อมูล
                   </div>
                 )}
               </div>
@@ -675,7 +642,7 @@ export default function BuildTeamPage() {
   );
 }
 
-// ✨ Component ย่อย (StatBar)
+// ✨ Component ย่อย (StatBar) - Minimal RPG Style
 function StatBar({
   label,
   value,
@@ -687,18 +654,18 @@ function StatBar({
   color: string;
   icon: React.ReactNode;
 }) {
-  const percent = Math.min(100, Math.max(5, (value / 40) * 100));
+  const percent = Math.min(100, Math.max(5, (value / 20) * 100)); // เทียบเต็ม 20
   return (
     <div>
-      <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
-        <span className="flex items-center gap-1">
+      <div className="flex justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
+        <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
           {icon} {label}
         </span>
-        <span>{value} pts</span>
+        <span>{value} / 20</span>
       </div>
-      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-300 dark:border-slate-700">
         <div
-          className={`h-2.5 rounded-full ${color} transition-all duration-1000 ease-out`}
+          className={`h-full rounded-full ${color} shadow-[0_0_10px_currentColor] transition-all duration-1000 ease-out`}
           style={{ width: `${percent}%` }}
         ></div>
       </div>

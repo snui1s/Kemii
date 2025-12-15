@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Code } from "lucide-react";
 
 export default function Footer() {
-  const APP_VERSION = "v2.5";
+  const APP_VERSION = "v3.0";
 
   return (
     <footer

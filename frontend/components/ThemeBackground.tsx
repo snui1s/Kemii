@@ -3,18 +3,9 @@
 export default function ThemeBackground() {
   return (
     <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transition-colors duration-700">
-      <div className="absolute inset-0 bg-slate-50 dark:opacity-0 transition-opacity duration-700">
-        <div
-          className="absolute inset-0 opacity-[0.5]"
-          style={{
-            backgroundImage: "radial-gradient(#475569 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
-        {/* แสงแดดส่องมุมขวาบน */}
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-orange-200/20 rounded-full blur-[100px]" />
-        <div className="absolute top-[20%] left-[-10%] w-[300px] h-[300px] bg-blue-200/20 rounded-full blur-[80px]" />
-      </div>
+      <div className="absolute inset-0 bg-slate-50" />
+      <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-indigo-100/40 rounded-full blur-[120px] opacity-60" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-amber-100/40 rounded-full blur-[100px] opacity-60" />
 
       {/* =========================================
           🌙 DARK MODE: Dangerous Dungeon 

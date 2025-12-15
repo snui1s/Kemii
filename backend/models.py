@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, Text
 
 class User(SQLModel, table=True):
     __table_args__ = {"extend_existing": True}
@@ -17,9 +17,8 @@ class User(SQLModel, table=True):
     ocean_agreeableness: int = Field(default=0)
     ocean_neuroticism: int = Field(default=0)
     
-    is_assessed: bool = Field(default=False)
     is_available: bool = Field(default=True)
-    
+    team_name: Optional[str] = Field(default=None)
     analysis_result: Optional[str] = Field(default=None)
     
     active_project_end_date: Optional[datetime] = Field(default=None)

@@ -1,110 +1,77 @@
 "use client";
+
 import Link from "next/link";
-import { MoveLeft, FlaskConical, Atom } from "lucide-react";
+import { Ghost, ArrowLeft, Home } from "lucide-react";
+import ThemeBackground from "@/components/ThemeBackground"; // เรียกใช้ Background ตัวเทพที่เราทำไว้
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 p-4 transition-colors relative overflow-hidden">
-      {/* --- Background Effect (ฟองอากาศลอยๆ) --- */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[10%] left-[10%] w-32 h-32 bg-purple-300/20 dark:bg-purple-900/10 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute bottom-[20%] right-[10%] w-40 h-40 bg-blue-300/20 dark:bg-blue-900/10 rounded-full blur-3xl animate-pulse-slow animation-delay-1000"></div>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center relative overflow-hidden font-sans text-slate-800 dark:text-slate-100">
+      {/* เรียก Background เพื่อให้ Theme ต่อเนื่อง (มีมอนสเตอร์ตาแดงโผล่ถ้าเป็น Dark Mode) */}
+      <ThemeBackground />
 
-        {/* Floating Icons */}
-        <FlaskConical
-          className="absolute top-20 left-20 text-slate-400 dark:text-slate-500 rotate-12 opacity-50"
-          size={64}
-        />
-        <Atom
-          className="absolute bottom-20 right-20 text-slate-400 dark:text-slate-500 -rotate-12 opacity-50"
-          size={80}
-        />
-      </div>
+      <div className="relative z-10 max-w-md w-full">
+        {/* 1. Animation Icon */}
+        <div className="relative w-32 h-32 mx-auto mb-8">
+          {/* วงเวทย์พื้นหลังหมุนๆ */}
+          <div className="absolute inset-0 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-full animate-[spin_10s_linear_infinite]"></div>
 
-      {/* --- Content --- */}
-      <div className="z-10 text-center flex flex-col items-center animate-fade-in-up">
-        {/* 404 Element Cards */}
-        <div className="flex gap-2 sm:gap-4 mb-8">
-          {/* Card: 4 */}
-          <ElementCard
-            number="4"
-            symbol="Err"
-            name="Error"
-            color="bg-red-100 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400"
-          />
-
-          {/* Card: 0 (ลูกแก้ว Void) */}
-          <div className="w-20 h-24 sm:w-28 sm:h-36 flex items-center justify-center">
-            <div className="relative w-16 h-16 sm:w-24 sm:h-24">
-              <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 rounded-full animate-ping opacity-20"></div>
-              <div className="relative w-full h-full bg-slate-100 dark:bg-slate-800 rounded-full border-4 border-slate-300 dark:border-slate-700 flex items-center justify-center shadow-inner">
-                <span className="text-4xl sm:text-6xl font-black text-slate-300 dark:text-slate-600">
-                  0
-                </span>
-              </div>
-            </div>
+          {/* ตัวละครหลัก: ผีน้อย (Ghost) ลอยไปมา */}
+          <div className="absolute inset-0 flex items-center justify-center animate-[bounce_2s_infinite]">
+            <Ghost size={64} className="text-slate-400 dark:text-slate-500" />
           </div>
 
-          {/* Card: 4 */}
-          <ElementCard
-            number="4"
-            symbol="Nf"
-            name="Not Found"
-            color="bg-red-100 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400"
-          />
+          {/* เครื่องหมายตกใจ */}
+          <div className="absolute top-0 right-0 bg-red-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold shadow-lg animate-ping">
+            !
+          </div>
+          <div className="absolute top-0 right-0 bg-red-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold shadow-lg">
+            ?
+          </div>
         </div>
 
-        {/* Text */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-          การทดลองล้มเหลว!
+        {/* 2. Headline RPG Style */}
+        <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-400 to-slate-600 dark:from-slate-200 dark:to-slate-500 mb-2">
+          404
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md">
-          ดูเหมือนคุณจะเผลอผสมสารเคมีผิดสูตร <br></br>
-          หรือหลงเข้ามาในมิติที่ไม่มีอยู่จริง (Page Not Found)
-        </p>
+        <h2 className="text-2xl font-bold text-slate-700 dark:text-white mb-4">
+          Area Not Discovered
+        </h2>
 
-        {/* Button */}
-        <Link
-          href="/"
-          className="group flex items-center gap-2 bg-slate-900 dark:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-lg transition-all dark:hover:bg-indigo-500"
-        >
-          <MoveLeft
-            size={20}
-            className="group-hover:-translate-x-1 transition-transform"
-          />
-          กลับสู่ห้องแล็บ (Home)
-        </Link>
+        {/* 3. Story Description */}
+        <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm mb-8">
+          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+            ดูเหมือนท่านจะเดินหลงทางเข้ามาใน{" "}
+            <span className="font-bold text-indigo-500">The Void</span>{" "}
+            พื้นที่นี้ยังไม่ได้ถูกเขียนลงในแผนที่โลก หรือบางที...
+            มันอาจจะถูกลบหายไปโดยเวทมนตร์โบราณ
+          </p>
+          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-center gap-4 text-xs font-mono text-slate-400 uppercase tracking-widest">
+            <span>Danger Lv. ???</span>
+            <span>•</span>
+            <span>No Loot Here</span>
+          </div>
+        </div>
+
+        {/* 4. Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/" className="group relative">
+            <div className="absolute inset-0 bg-indigo-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+            <button className="relative w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">
+              <Home size={18} />
+              Warp to Guild (Home)
+            </button>
+          </Link>
+
+          <button
+            onClick={() => window.history.back()}
+            className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+          >
+            <ArrowLeft size={18} />
+            Retreat (Back)
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
-
-// Component ย่อย: การ์ดธาตุ
-function ElementCard({
-  number,
-  symbol,
-  name,
-  color,
-}: {
-  number: string;
-  symbol: string;
-  name: string;
-  color: string;
-}) {
-  return (
-    <div
-      className={`w-20 h-24 sm:w-28 sm:h-36 ${color} border-2 rounded-xl p-2 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:-translate-y-1 transition-transform cursor-default`}
-    >
-      <span className="text-xs font-bold opacity-70">{number}</span>
-      <div className="text-center font-black text-3xl sm:text-5xl tracking-tighter self-center">
-        {symbol}
-      </div>
-      <span className="text-[10px] sm:text-xs font-medium text-center uppercase tracking-wide opacity-80">
-        {name}
-      </span>
-
-      {/* Shine Effect */}
-      <div className="absolute top-0 -left-full w-full h-full bg-linear-to-r from-transparent via-white/20 to-transparent group-hover:left-full transition-all duration-700 ease-in-out"></div>
     </div>
   );
 }

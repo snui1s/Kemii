@@ -138,26 +138,26 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
 
   // สร้างข้อมูลสำหรับ Radar Chart
   const statsData = [
-    { subject: `O ${scores.Openness}`, A: scores.Openness, fullMark: 20 },
+    { subject: `O ${scores.Openness}`, A: scores.Openness, fullMark: 50 },
     {
       subject: `C ${scores.Conscientiousness}`,
       A: scores.Conscientiousness,
-      fullMark: 20,
+      fullMark: 50,
     },
     {
       subject: `E ${scores.Extraversion}`,
       A: scores.Extraversion,
-      fullMark: 20,
+      fullMark: 50,
     },
     {
       subject: `A ${scores.Agreeableness}`,
       A: scores.Agreeableness,
-      fullMark: 20,
+      fullMark: 50,
     },
     {
       subject: `N ${scores.Neuroticism}`,
       A: scores.Neuroticism,
-      fullMark: 20,
+      fullMark: 50,
     },
   ];
 
@@ -165,7 +165,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
   const theme = getTheme(user.character_class);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-4 md:p-8 font-sans flex justify-center items-center relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900/20 text-slate-800 dark:text-slate-100 p-4 md:p-8 font-sans flex justify-center items-center relative overflow-hidden transition-colors duration-300">
       {/* Background FX */}
       <div
         className={`absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-br ${theme.color} opacity-10 blur-[100px] pointer-events-none`}
@@ -175,7 +175,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
         {/* --- LEFT: HERO CARD --- */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           <div
-            className={`relative p-[2px] rounded-3xl bg-gradient-to-b ${theme.color} shadow-2xl`}
+            className={`relative p-[2px] rounded-3xl bg-gradient-to-b ${theme.color} shadow-md`}
           >
             <div className="bg-white dark:bg-slate-900 rounded-[22px] p-6 flex flex-col items-center text-center h-full relative overflow-hidden">
               {/* Badge */}
@@ -222,7 +222,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
                     />
                     <PolarRadiusAxis
                       angle={30}
-                      domain={[0, 20]}
+                      domain={[0, 50]}
                       tick={false}
                       axisLine={false}
                     />
@@ -235,6 +235,40 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
                     />
                   </RadarChart>
                 </ResponsiveContainer>
+              </div>
+
+              {/* Legend */}
+              <div className="mt-6 grid grid-cols-1 gap-1 text-[12px] text-slate-500 dark:text-slate-400 text-left w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="flex justify-between">
+                  <span>
+                    <b>O</b>penness
+                  </span>{" "}
+                  <span className="opacity-70">เปิดรับ/จินตนาการ</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>
+                    <b>C</b>onscientiousness
+                  </span>{" "}
+                  <span className="opacity-70">ระเบียบ/เป้าหมาย</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>
+                    <b>E</b>xtraversion
+                  </span>{" "}
+                  <span className="opacity-70">สังคม/พลังงาน</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>
+                    <b>A</b>greeableness
+                  </span>{" "}
+                  <span className="opacity-70">เห็นใจ/ประนีประนอม</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>
+                    <b>N</b>euroticism
+                  </span>{" "}
+                  <span className="opacity-70">ความเสถียรทางอารมณ์</span>
+                </div>
               </div>
             </div>
           </div>

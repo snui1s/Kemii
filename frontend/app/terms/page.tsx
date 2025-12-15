@@ -19,10 +19,7 @@ export default function Terms() {
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
               1. ข้อตกลงการใช้งาน
             </h2>
-            <p>
-              ในการใช้งานเว็บไซต์ Kemii Team Chemistry
-              ท่านตกลงที่จะปฏิบัติตามกฎดังนี้:
-            </p>
+            <p>ในการใช้งานเว็บไซต์ Kemii ท่านตกลงที่จะปฏิบัติตามกฎดังนี้:</p>
             <ul className="list-disc list-inside mt-2 ml-4 space-y-2">
               <li>
                 <strong>ห้ามใช้ถ้อยคำรุนแรง:</strong> ห้ามตั้งชื่อ (Name)

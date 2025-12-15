@@ -88,7 +88,7 @@ export default function ResultPage() {
   // 1. กำลังเช็คสิทธิ์
   if (isChecking) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 transition-colors">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 transition-colors">
         <ElementalLoader />
       </div>
     );
@@ -97,7 +97,7 @@ export default function ResultPage() {
   // 2. กำลัง fetch ข้อมูล
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 transition-colors">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 transition-colors">
         <ElementalLoader />
       </div>
     );
@@ -107,13 +107,6 @@ export default function ResultPage() {
   if (!data || !data.user || !data.analysis) {
     return notFound();
   }
-
-  // 🐛 DEBUG: ดูข้อมูลที่ได้รับจาก Backend
-  console.log("[ResultPage] DATA RECEIVED:");
-  console.log("  - user.id:", data.user.id);
-  console.log("  - user.name:", data.user.name);
-  console.log("  - user.character_class:", data.user.character_class);
-  console.log("  - analysis.class_title:", data.analysis.class_title);
 
   // 4. ข้อมูลพร้อม -> แสดงผล
   return <ResultClient user={data.user} analysis={data.analysis} />;

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
+from datetime import datetime
 
 class OceanSubmission(BaseModel):
     name: str
@@ -17,7 +18,6 @@ class UserProfile(BaseModel):
     
     ocean_scores: Dict[str, int]  
     
-    is_assessed: bool
     access_token: Optional[str] = None
 
 class UserNameUpdate(BaseModel):
@@ -26,3 +26,27 @@ class UserNameUpdate(BaseModel):
 class MatchRequest(BaseModel):
     user1_id: int
     user2_id: int
+
+class TeamBuilderRequest(BaseModel):
+    leader_id: int
+    member_count: int
+    strategy: str 
+
+class ConfirmTeamRequest(BaseModel):
+    log_id: Optional[int] = None 
+    team_name: Optional[str] = None 
+    member_ids: Optional[List[int]] = None 
+    start_date: datetime 
+    end_date: datetime
+
+class TeamRecommendation(BaseModel):
+    strategy: str
+    team_name: str
+    reason: str
+    leader: Dict[str, Any]
+    members: List[Dict[str, Any]]
+    log_id: Optional[int] = None
+
+class ReviveRequest(BaseModel):
+    start_date: datetime
+    end_date: datetime

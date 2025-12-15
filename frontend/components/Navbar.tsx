@@ -178,7 +178,7 @@ export default function Navbar() {
           {/* LOGO AREA */}
           <Link
             href="/"
-            className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white hover:text-green-500 dark:hover:text-green-400 transition shrink-0"
+            className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white hover:text-indigo-400 transition shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -242,19 +242,6 @@ export default function Navbar() {
               >
                 {myData ? <UserPlus size={18} /> : <Lock size={18} />}
                 <span>สร้างทีม</span>
-              </Link>
-
-              <Link
-                href="/grouping"
-                onClick={(e) => handleProtectedLink(e, "/grouping")}
-                className={`flex items-center gap-1.5 transition text-base font-medium ${
-                  myData
-                    ? "hover:text-indigo-600 dark:hover:text-indigo-400"
-                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
-                }`}
-              >
-                {myData ? <Shuffle size={18} /> : <Lock size={18} />}
-                <span>จัดทีม AI</span>
               </Link>
             </div>
 

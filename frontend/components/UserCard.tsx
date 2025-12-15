@@ -1,5 +1,4 @@
-"use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   User,
   Wand,
@@ -9,28 +8,29 @@ import {
   Skull,
   Sparkles,
   Eye,
+  TrendingUp,
+  Plus,
 } from "lucide-react";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from "recharts";
 
 interface UserCardProps {
   name?: string;
-  animal?: string;
+  characterClass?: string;
   type?: string;
   id?: number;
   scores?: { [key: string]: number };
   onInspect?: () => void;
   allowFlip?: boolean;
+  compactMode?: boolean;
 }
 
-interface Particle {
-  id: number;
-  left: number;
-  top: number;
-  delay: number;
-  duration: number;
-  size: number;
-}
-
-// 🎨 Theme Config ตาม Class
 const CLASS_CONFIG = {
   Mage: {
     color: "#a855f7",
@@ -82,79 +82,304 @@ function getClassKey(className: string): ClassName {
   return "Novice";
 }
 
+function normalizeScores(scores?: { [key: string]: number }) {
+  if (!scores) return null;
+  const normalized: { [key: string]: number } = {
+    Openness: 0,
+    Conscientiousness: 0,
+    Extraversion: 0,
+    Agreeableness: 0,
+    Neuroticism: 0,
+  };
+  Object.keys(scores).forEach((key) => {
+    const k = key.toLowerCase();
+    const val = scores[key] || 0;
+    if (k.includes("openness") || k.includes("int")) normalized.Openness = val;
+    else if (k.includes("conscientiousness") || k.includes("vit"))
+      normalized.Conscientiousness = val;
+    else if (k.includes("extraversion") || k.includes("str"))
+      normalized.Extraversion = val;
+    else if (k.includes("agreeableness") || k.includes("fth"))
+      normalized.Agreeableness = val;
+    else if (k.includes("neuroticism") || k.includes("dex"))
+      normalized.Neuroticism = val;
+  });
+  return normalized;
+}
+
+function getTopStats(scores?: { [key: string]: number }) {
+  const normScores = normalizeScores(scores);
+  if (!normScores) return [];
+  const mapKey: { [key: string]: string } = {
+    Openness: "O",
+    Conscientiousness: "C",
+    Extraversion: "E",
+    Agreeableness: "A",
+    Neuroticism: "N",
+  };
+  return Object.entries(normScores)
+    .filter(([, val]) => val > 0)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2)
+    .map(([key]) => ({ key: mapKey[key] || key.charAt(0) }));
+}
+
+const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
+  if (classKey === "Mage") {
+    return (
+      <>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span
+            key={i}
+            className="mage-meteor"
+            style={{
+              top: `${10 + i * 8}%`,
+              right: `${-10 + i * 5}%`,
+              animationName: "meteorRain",
+              animationDuration: `${1 + i * 0.15}s`,
+              animationTimingFunction: "linear",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.3}s`,
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (classKey === "Paladin") {
+    return (
+      <div className="w-full h-full relative">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span
+            key={`beam-${i}`}
+            className="paladin-light-beam"
+            style={{
+              left: `${15 + i * 18}%`,
+              animationName: "holyBeamShine",
+              animationDuration: `${1.5 + i * 0.1}s`,
+              animationTimingFunction: "ease-in-out",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.2}s`,
+            }}
+          />
+        ))}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <span
+            key={`particle-${i}`}
+            className="paladin-particle"
+            style={{
+              left: `${10 + i * 10}%`,
+              bottom: `${5 + (i % 4) * 5}%`,
+              animationName: "holyParticleRise",
+              animationDuration: `${2 + i * 0.1}s`,
+              animationTimingFunction: "ease-out",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.25}s`,
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (classKey === "Warrior") {
+    return (
+      <>
+        <div
+          className="warrior-flame"
+          style={{
+            animationName: "flameFlicker",
+            animationDuration: "2s",
+            animationTimingFunction: "ease-in-out",
+            animationIterationCount: "infinite",
+          }}
+        />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <span
+            key={`ember-${i}`}
+            className="warrior-ember"
+            style={{
+              left: `${8 + i * 7}%`,
+              bottom: `${5 + (i % 6) * 5}%`,
+              animationName: "emberFloat",
+              animationDuration: `${1.5 + i * 0.1}s`,
+              animationTimingFunction: "ease-out",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.15}s`,
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (classKey === "Cleric") {
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Plus
+            key={i}
+            size={10 + i * 3}
+            className="cleric-heal-icon"
+            style={{
+              bottom: `${5 + i * 4}%`,
+              left: `${15 + i * 15}%`,
+              animationName: "floatingHeal",
+              animationDuration: `${2 + i * 0.2}s`,
+              animationTimingFunction: "ease-out",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.4}s`,
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (classKey === "Rogue") {
+    return (
+      <>
+        <div className="rogue-shimmer" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <span
+            key={`dagger-${i}`}
+            className="rogue-dagger"
+            style={{
+              top: `${15 + i * 20}%`,
+              left: `${10 + i * 15}%`,
+              animationName: "daggerStrike",
+              animationDuration: `${1.2 + i * 0.3}s`,
+              animationTimingFunction: "ease-out",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.5}s`,
+            }}
+          />
+        ))}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span
+            key={`smoke-${i}`}
+            className="rogue-smoke"
+            style={{
+              left: `${10 + i * 12}%`,
+              bottom: `${10 + (i % 4) * 10}%`,
+              width: `${30 + i * 5}px`,
+              height: `${30 + i * 5}px`,
+              animationName: "smokeDrift",
+              animationDuration: `${2 + i * 0.25}s`,
+              animationTimingFunction: "ease-out",
+              animationIterationCount: "infinite",
+              animationDelay: `${i * 0.3}s`,
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  return null;
+};
+
 export default function UserCard({
   name = "Unknown Hero",
-  animal = "Novice",
+  characterClass = "Novice",
   type = "Lv.1",
   id,
   scores,
   onInspect,
   allowFlip = false,
+  compactMode = false,
 }: UserCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const classKey = getClassKey(animal);
+  const classKey = getClassKey(characterClass);
   const config = CLASS_CONFIG[classKey];
   const IconComponent = config.icon;
 
-  useEffect(() => {
-    const generated = Array.from({ length: 8 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      delay: Math.random() * 2000,
-      duration: Math.random() * 1000 + 2000,
-      size: Math.random() * 4 + 2,
-    }));
-    setParticles(generated);
-  }, []);
+  const normScores = useMemo(() => normalizeScores(scores), [scores]);
+  const topStats = useMemo(() => getTopStats(scores), [scores]);
+
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 5 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 80 + 10,
+        top: Math.random() * 80 + 10,
+        delay: Math.random() * 2000,
+        size: Math.random() * 4 + 2,
+      })),
+    []
+  );
+
+  useEffect(() => setIsMounted(true), []);
 
   const handleClick = () => {
-    if (allowFlip) {
-      setIsFlipped(!isFlipped);
-    } else if (onInspect) {
-      onInspect();
-    } else if (id) {
-      window.location.href = `/assessment/result/${id}`;
-    }
+    if (allowFlip && !compactMode) setIsFlipped(!isFlipped);
+    else if (onInspect) onInspect();
+    else if (id) window.location.href = `/assessment/result/${id}`;
   };
+
+  const chartData = useMemo(
+    () =>
+      normScores
+        ? [
+            { subject: "O", A: normScores.Openness, fullMark: 50 },
+            { subject: "C", A: normScores.Conscientiousness, fullMark: 50 },
+            { subject: "E", A: normScores.Extraversion, fullMark: 50 },
+            { subject: "A", A: normScores.Agreeableness, fullMark: 50 },
+            { subject: "N", A: normScores.Neuroticism, fullMark: 50 },
+          ]
+        : [],
+    [normScores]
+  );
+
+  const cardHeight = compactMode ? "160px" : "240px";
+
+  if (!isMounted)
+    return (
+      <div
+        className="relative w-full bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"
+        style={{ height: cardHeight }}
+      />
+    );
 
   return (
     <div
-      className="relative w-full cursor-pointer group"
-      style={{ perspective: "1000px" }}
+      className="relative w-full cursor-pointer group user-card"
+      style={{ perspective: "1000px", height: cardHeight }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
       <div
-        className="relative w-full transition-all duration-500"
+        className="relative w-full h-full transition-all duration-500"
         style={{
           transformStyle: "preserve-3d",
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
-        {/* ========== FRONT SIDE ========== */}
         <div
-          className={`
-            relative w-full overflow-hidden rounded-xl sm:rounded-2xl
-            bg-white dark:bg-slate-900
-            border border-slate-200 dark:border-slate-700
-            shadow-lg ${isHovered ? config.glow : ""}
-            transition-all duration-300
-            ${isHovered ? "scale-[1.02]" : ""}
-          `}
+          className={`absolute inset-0 w-full h-full overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-xl ${
+            isHovered ? config.glow : ""
+          } transition-all duration-300 flex flex-col`}
           style={{ backfaceVisibility: "hidden" }}
         >
-          {/* Top Gradient Bar */}
           <div
-            className={`h-1.5 sm:h-2 w-full bg-gradient-to-r ${config.gradient}`}
+            className={`h-1.5 w-full bg-gradient-to-r ${config.gradient} shrink-0 relative z-20`}
           />
 
-          {/* Particle FX */}
-          {isHovered &&
+          <div className="absolute -right-6 -bottom-6 opacity-[0.15] dark:opacity-[0.2] transform rotate-12 pointer-events-none transition-transform group-hover:scale-110 duration-500 z-0">
+            <IconComponent size={140} color={config.color} />
+          </div>
+
+          <div className="effect-layer">
+            <ClassHoverEffect classKey={classKey} />
+          </div>
+
+          {classKey === "Novice" &&
+            isHovered &&
             particles.map((p) => (
               <div
                 key={p.id}
@@ -164,155 +389,393 @@ export default function UserCard({
                   top: `${p.top}%`,
                   color: config.color,
                   animationDelay: `${p.delay}ms`,
-                  animationDuration: `${p.duration}ms`,
+                  zIndex: 1,
                 }}
               >
-                <Sparkles size={p.size} />
+                <Sparkles size={p.size} className="opacity-60" />
               </div>
             ))}
 
-          {/* Content */}
-          <div className="p-3 sm:p-4">
-            <div className="flex items-start justify-between gap-2 sm:gap-3">
-              {/* Left: Info */}
-              <div className="flex-1 min-w-0">
-                <h3
-                  className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate transition-colors"
-                  style={{ color: isHovered ? config.color : undefined }}
-                >
-                  {name}
-                </h3>
-
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
-                  {/* Class Badge */}
-                  <span
-                    className="text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-md text-white"
-                    style={{ backgroundColor: config.color }}
-                  >
-                    {animal}
-                  </span>
-                  {/* Level */}
-                  <span className="text-[10px] sm:text-xs text-slate-400 font-mono">
-                    {type}
-                  </span>
-                </div>
-              </div>
-
-              {/* Right: Icon */}
+          <div className="p-5 flex-1 flex flex-col relative z-10">
+            <div className="flex items-start gap-4">
               <div
-                className={`
-                  p-2 sm:p-3 rounded-xl shrink-0
-                  transition-all duration-300
-                  ${isHovered ? "rotate-6 scale-110" : ""}
-                `}
+                className="p-3 rounded-xl shrink-0 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 shadow-sm"
                 style={{
                   backgroundColor: `${config.color}15`,
                   color: config.color,
                 }}
               >
-                <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
+                <IconComponent className="w-8 h-8" />
+              </div>
+              <div className="flex-1 min-w-0 pt-1">
+                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  {name}
+                </h3>
+                <div className="flex items-center gap-2 mt-2">
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm tracking-wide"
+                    style={{ backgroundColor: config.color }}
+                  >
+                    {characterClass}
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                    {type}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-[10px] sm:text-xs text-slate-400 flex items-center gap-1">
-                <Eye size={10} className="sm:w-3 sm:h-3" />
-                {allowFlip ? "คลิกดู Stats" : "คลิกเพื่อดูโปรไฟล์"}
-              </span>
-
-              {/* Mini power indicator */}
-              {scores && (
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
+            <div className="mt-auto pt-4">
+              <div className="flex flex-wrap gap-2">
+                {topStats.length > 0 ? (
+                  topStats.map((stat, i) => (
                     <div
                       key={i}
-                      className="w-1 sm:w-1.5 h-2 sm:h-3 rounded-full"
-                      style={{
-                        backgroundColor:
-                          i <
-                          Math.min(5, Math.floor(getTotalPower(scores) / 20))
-                            ? config.color
-                            : "#e2e8f0",
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ========== BACK SIDE (Stats) ========== */}
-        <div
-          className={`
-            absolute inset-0 w-full
-            overflow-hidden rounded-xl sm:rounded-2xl
-            bg-slate-50 dark:bg-slate-900
-            border border-slate-200 dark:border-slate-700
-            shadow-lg
-          `}
-          style={{
-            backfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-          }}
-        >
-          {/* Top Gradient Bar */}
-          <div
-            className={`h-1.5 sm:h-2 w-full bg-gradient-to-r ${config.gradient}`}
-          />
-
-          <div className="p-3 sm:p-4">
-            <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-                ⚔️ Battle Stats
-              </span>
-              <span className="text-[10px] sm:text-xs text-slate-400 font-mono">
-                {name}
-              </span>
-            </div>
-
-            {scores ? (
-              <div className="space-y-1.5 sm:space-y-2">
-                <StatBar
-                  label="INT"
-                  value={scores["INT"] || scores["Openness"] || 0}
-                  color="bg-purple-500"
-                />
-                <StatBar
-                  label="VIT"
-                  value={scores["VIT"] || scores["Conscientiousness"] || 0}
-                  color="bg-yellow-500"
-                />
-                <StatBar
-                  label="STR"
-                  value={scores["STR"] || scores["Extraversion"] || 0}
-                  color="bg-red-500"
-                />
-                <StatBar
-                  label="FTH"
-                  value={scores["FTH"] || scores["Agreeableness"] || 0}
-                  color="bg-green-500"
-                />
-                <StatBar
-                  label="DEX"
-                  value={scores["DEX"] || scores["Neuroticism"] || 0}
-                  color="bg-slate-500"
-                />
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
+                    >
+                      <TrendingUp size={12} className="text-emerald-500" />
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                        High {stat.key}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-dashed border-slate-200 w-full justify-center">
+                    <Sparkles size={12} /> <span>Awaiting Awakening...</span>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-4 text-slate-400">
-                <Sparkles size={20} className="mx-auto mb-2 opacity-50" />
-                <span className="text-[10px] sm:text-xs">
-                  ยังไม่ได้ปลุกพลัง
+            </div>
+
+            {!compactMode && (
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center opacity-60 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <Eye size={12} />{" "}
+                  {allowFlip ? "Click for Stats" : "View Profile"}
                 </span>
               </div>
             )}
           </div>
         </div>
+
+        {allowFlip && !compactMode && (
+          <div
+            className="absolute inset-0 w-full h-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col"
+            style={{
+              backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          >
+            <div
+              className={`h-1.5 w-full bg-gradient-to-r ${config.gradient} shrink-0`}
+            />
+            <div className="flex-1 flex flex-col p-2 relative z-10">
+              <div className="flex items-center justify-between px-3 pb-2 border-b border-slate-200 dark:border-slate-700 shrink-0 mt-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                  <TrendingUp size={12} /> Battle Stats
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {name}
+                </span>
+              </div>
+              <div className="flex-1 w-full min-h-0 relative mt-1">
+                {normScores ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                    <RadarChart
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="65%"
+                      data={chartData}
+                    >
+                      <PolarGrid stroke="#94a3b8" strokeOpacity={0.2} />
+                      <PolarAngleAxis
+                        dataKey="subject"
+                        tick={{
+                          fill: "#64748b",
+                          fontSize: 9,
+                          fontWeight: "bold",
+                        }}
+                      />
+                      <PolarRadiusAxis
+                        angle={30}
+                        domain={[0, 50]}
+                        tick={false}
+                        axisLine={false}
+                      />
+                      <Radar
+                        name={name}
+                        dataKey="A"
+                        stroke={config.color}
+                        strokeWidth={2}
+                        fill={config.color}
+                        fillOpacity={0.4}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <Sparkles size={20} className="opacity-50" />
+                    <span className="text-xs">No Stats Data</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <style jsx>{`
+      <style>{`
+        .user-card {
+          position: relative;
+          overflow: hidden;
+        }
+        .effect-layer {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s ease-in-out;
+          z-index: 5;
+        }
+        .user-card:hover .effect-layer {
+          opacity: 1;
+        }
+
+        .mage-meteor {
+          position: absolute;
+          width: 4px;
+          height: 4px;
+          background: #a855f7;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #a855f7, 0 0 20px #fff;
+        }
+        .mage-meteor::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(90deg, #a855f7, transparent);
+          right: 0;
+        }
+        @keyframes meteorRain {
+          0% {
+            transform: translateX(100px) translateY(-100px) rotate(-45deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-300px) translateY(300px) rotate(-45deg);
+            opacity: 0;
+          }
+        }
+
+        .paladin-light-beam {
+          position: absolute;
+          width: 2px;
+          height: 100%;
+          background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(234, 179, 8, 0.8) 30%,
+            rgba(255, 215, 0, 0.6) 50%,
+            transparent 100%
+          );
+          filter: blur(1px);
+          box-shadow: 0 0 20px rgba(234, 179, 8, 0.8);
+        }
+        .paladin-particle {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          background: #ffd700;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #ffd700, 0 0 20px #eab308;
+        }
+        @keyframes holyBeamShine {
+          0% {
+            opacity: 0;
+            transform: translateY(-100%) scaleY(0);
+          }
+          50% {
+            opacity: 1;
+            transform: translateY(0%) scaleY(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(100%) scaleY(0);
+          }
+        }
+        @keyframes holyParticleRise {
+          0% {
+            transform: translateY(20px) scale(0);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+            transform: translateY(-50px) scale(1);
+          }
+          100% {
+            transform: translateY(-120px) scale(0.5);
+            opacity: 0;
+          }
+        }
+
+        .warrior-flame {
+          position: absolute;
+          bottom: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            to top,
+            rgba(239, 68, 68, 0.4) 0%,
+            rgba(220, 38, 38, 0.3) 30%,
+            rgba(239, 68, 68, 0.2) 60%,
+            transparent 100%
+          );
+          mix-blend-mode: screen;
+        }
+        .warrior-ember {
+          position: absolute;
+          width: 4px;
+          height: 4px;
+          background: #ef4444;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #ef4444, 0 0 20px #dc2626;
+        }
+        .warrior-slash {
+          position: absolute;
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, #ef4444, transparent);
+          transform-origin: center;
+          filter: drop-shadow(0 0 5px #ef4444);
+        }
+        @keyframes flameFlicker {
+          0%, 100% {
+            transform: scaleY(1) translateY(0);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scaleY(1.1) translateY(-5px);
+            opacity: 1;
+          }
+        }
+        @keyframes emberFloat {
+          0% {
+            transform: translateY(0) translateX(0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-120px) translateX(30px) scale(0.2);
+            opacity: 0;
+          }
+        }
+        @keyframes slashEffect {
+          0% {
+            transform: translateX(-50px) rotate(-45deg) scaleX(0);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+            transform: translateX(0) rotate(-45deg) scaleX(1);
+          }
+          100% {
+            transform: translateX(50px) rotate(-45deg) scaleX(0);
+            opacity: 0;
+          }
+        }
+
+        .cleric-heal-icon {
+          position: absolute;
+          color: #22c55e;
+          filter: drop-shadow(0 0 5px #22c55e);
+          opacity: 0;
+        }
+        @keyframes floatingHeal {
+          0% {
+            transform: translateY(20px) scale(0.5);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-80px) scale(1.2);
+            opacity: 0;
+          }
+        }
+
+        .rogue-shimmer {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            135deg,
+            transparent 0%,
+            rgba(30, 58, 95, 0.3) 25%,
+            rgba(15, 23, 42, 0.5) 50%,
+            rgba(30, 58, 95, 0.3) 75%,
+            transparent 100%
+          );
+          background-size: 200% 200%;
+          animation: shimmerWave 3s ease-in-out infinite;
+        }
+        .rogue-dagger {
+          position: absolute;
+          width: 20px;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, #1e3a8a, #3b82f6, transparent);
+          filter: drop-shadow(0 0 8px #3b82f6);
+          transform-origin: left center;
+        }
+        .rogue-smoke {
+          position: absolute;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(30, 58, 95, 0.6), transparent);
+          filter: blur(8px);
+        }
+        @keyframes shimmerWave {
+          0% {
+            background-position: 0% 0%;
+            opacity: 0.4;
+          }
+          50% {
+            background-position: 100% 100%;
+            opacity: 0.8;
+          }
+          100% {
+            background-position: 0% 0%;
+            opacity: 0.4;
+          }
+        }
+        @keyframes daggerStrike {
+          0% {
+            transform: translateX(-30px) translateY(-30px) rotate(45deg) scale(0);
+            opacity: 0;
+          }
+          30% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(80px) translateY(80px) rotate(45deg) scale(1);
+            opacity: 0;
+          }
+        }
+        @keyframes smokeDrift {
+          0% {
+            transform: translate(0, 0) scale(0.5);
+            opacity: 0;
+          }
+          50% {
+            opacity: 0.6;
+          }
+          100% {
+            transform: translate(50px, -80px) scale(1.5);
+            opacity: 0;
+          }
+        }
+
         @keyframes float-up {
           0% {
             transform: translateY(10px) scale(0.5);
@@ -332,52 +795,4 @@ export default function UserCard({
       `}</style>
     </div>
   );
-}
-
-function StatBar({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
-  const percent = Math.min(100, (value / 20) * 100);
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-[9px] sm:text-[10px] font-bold w-6 sm:w-7 text-slate-400">
-        {label}
-      </span>
-      <div className="flex-1 h-1.5 sm:h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${color} rounded-full transition-all`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 w-4 text-right">
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function getTotalPower(scores: { [key: string]: number }): number {
-  const keys = [
-    "INT",
-    "VIT",
-    "STR",
-    "FTH",
-    "DEX",
-    "Openness",
-    "Conscientiousness",
-    "Extraversion",
-    "Agreeableness",
-    "Neuroticism",
-  ];
-  let total = 0;
-  keys.forEach((k) => {
-    if (scores[k]) total += scores[k];
-  });
-  return total;
 }

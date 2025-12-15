@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import axios from "axios"; // Added axios import
+import { useState, useMemo } from "react";
+import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import {
   History,
@@ -16,12 +16,17 @@ import {
   CalendarRange,
   PowerOff,
   PlayCircle,
+  Scroll,
+  Beer,
+  Wine,
 } from "lucide-react";
 import Link from "next/link";
 import ElementalLoader from "@/components/ElementalLoader";
 import toast from "react-hot-toast";
 import AuthGuard from "@/components/AuthGuard";
+import ThemeBackground from "@/components/ThemeBackground";
 
+// ✅ Interface เดิม
 interface TeamLog {
   id: number;
   team_name: string;
@@ -30,15 +35,23 @@ interface TeamLog {
   status: "generated" | "confirmed" | "disbanded";
   created_at: string;
   leader_id: number;
-  leader_name: string;
-  leader_animal: string;
+  leader_name?: string;
+  leader_class?: string;
   project_start_date?: string;
   project_end_date?: string;
   members_snapshot: {
     id: number;
     name: string;
-    animal: string;
-    dominant_type: string;
+    character_class?: string;
+    dominant_type?: string;
+    level?: number;
+    scores?: { [key: string]: number };
+    ocean_scores?: { [key: string]: number };
+    ocean_openness?: number;
+    ocean_conscientiousness?: number;
+    ocean_extraversion?: number;
+    ocean_agreeableness?: number;
+    ocean_neuroticism?: number;
   }[];
 }
 
@@ -47,7 +60,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function TeamHistoryPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  // ✅ ใช้ TanStack Query
   const {
     data: logs = [],
     isLoading: loading,
@@ -60,15 +72,97 @@ export default function TeamHistoryPage() {
     },
   });
 
-  // ✅ 2. ฟังก์ชัน Revive (ยืนยันทีมเก่า)
+  // --- Helpers ---
+  const getClassColor = (cls: string) => {
+    const s = (cls || "").toLowerCase();
+    if (s.includes("mage") || s.includes("เวทย์"))
+      return {
+        bg: "bg-purple-100 dark:bg-purple-900/30",
+        text: "text-purple-700 dark:text-purple-300",
+        border: "border-purple-200 dark:border-purple-700",
+        ring: "ring-purple-500",
+      };
+    if (s.includes("paladin") || s.includes("อัศวิน"))
+      return {
+        bg: "bg-yellow-100 dark:bg-yellow-900/30",
+        text: "text-yellow-700 dark:text-yellow-300",
+        border: "border-yellow-200 dark:border-yellow-700",
+        ring: "ring-yellow-500",
+      };
+    if (s.includes("warrior") || s.includes("นักรบ"))
+      return {
+        bg: "bg-red-100 dark:bg-red-900/30",
+        text: "text-red-700 dark:text-red-300",
+        border: "border-red-200 dark:border-red-700",
+        ring: "ring-red-500",
+      };
+    if (s.includes("cleric") || s.includes("นักบวช"))
+      return {
+        bg: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-700 dark:text-green-300",
+        border: "border-green-200 dark:border-green-700",
+        ring: "ring-green-500",
+      };
+    if (s.includes("rogue") || s.includes("โจร"))
+      return {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-300",
+        border: "border-blue-200 dark:border-blue-700",
+        ring: "ring-blue-500",
+      };
+    return {
+      bg: "bg-slate-100 dark:bg-slate-800",
+      text: "text-slate-600 dark:text-slate-400",
+      border: "border-slate-200 dark:border-slate-700",
+      ring: "ring-slate-400",
+    };
+  };
+
+  // --- Helper Logic ---
+  const getLeaderInfo = (log: TeamLog) => {
+    if (log.leader_name) {
+      return {
+        name: log.leader_name,
+        className: log.leader_class || "Novice",
+        type: "Leader",
+        scores: undefined,
+      };
+    }
+    const leaderInMembers = log.members_snapshot.find(
+      (m) => m.id === log.leader_id
+    );
+    if (leaderInMembers) {
+      return {
+        name: leaderInMembers.name,
+        className: leaderInMembers.character_class || "Novice",
+        type: "Leader",
+        scores: leaderInMembers.scores ||
+          leaderInMembers.ocean_scores || {
+            Openness: leaderInMembers.ocean_openness || 0,
+            Conscientiousness: leaderInMembers.ocean_conscientiousness || 0,
+            Extraversion: leaderInMembers.ocean_extraversion || 0,
+            Agreeableness: leaderInMembers.ocean_agreeableness || 0,
+            Neuroticism: leaderInMembers.ocean_neuroticism || 0,
+          },
+      };
+    }
+    return {
+      name: `Leader #${log.leader_id}`,
+      className: "Novice",
+      type: "Unknown",
+      scores: undefined,
+    };
+  };
+
+  // --- 🔥 Handlers (Updated from fake.tsx) ---
+
+  // 1. Revive (เซ็นสัญญาใหม่)
   const handleRevive = (id: number, teamName: string) => {
-    // กำหนดค่า Default วันที่ (วันนี้ - อีก 30 วัน)
     const today = new Date().toISOString().split("T")[0];
     const nextMonth = new Date();
     nextMonth.setDate(nextMonth.getDate() + 30);
     const nextMonthStr = nextMonth.toISOString().split("T")[0];
 
-    // ตัวแปรเก็บค่าชั่วคราว (ใช้ใน Toast)
     let tempStart = today;
     let tempEnd = nextMonthStr;
 
@@ -85,7 +179,6 @@ export default function TeamHistoryPage() {
             </p>
           </div>
 
-          {/* Date Inputs ใน Toast */}
           <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase">
@@ -115,7 +208,6 @@ export default function TeamHistoryPage() {
             <button
               onClick={async () => {
                 toast.dismiss(t.id);
-                // ยิง API
                 const toastId = toast.loading("กำลังตรวจสอบคิวงาน...");
                 try {
                   await axios.post(`${API_URL}/team-logs/${id}/revive`, {
@@ -125,9 +217,8 @@ export default function TeamHistoryPage() {
                   toast.success("ยืนยันทีมเรียบร้อย! ลุยงานได้เลย", {
                     id: toastId,
                   });
-                  refetchLogs(); // โหลดข้อมูลใหม่
+                  refetchLogs();
                 } catch (error) {
-                  // Handle Error กรณีคนไม่ว่าง
                   if (
                     axios.isAxiosError(error) &&
                     error.response?.status === 409
@@ -158,13 +249,14 @@ export default function TeamHistoryPage() {
       ),
       {
         id: "revive-toast",
-        duration: Infinity, // ให้ค้างไว้จนกว่าจะกดปุ่ม
+        duration: Infinity,
         className:
           "!bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl",
       }
     );
   };
 
+  // 2. Disband (ยุบทีม)
   const handleDisband = (id: number, teamName: string) => {
     toast.dismiss("disband-toast");
     toast(
@@ -212,6 +304,7 @@ export default function TeamHistoryPage() {
     );
   };
 
+  // 3. Delete (ลบประวัติ)
   const handleDelete = (id: number) => {
     toast.dismiss("delete-toast");
     toast(
@@ -255,6 +348,7 @@ export default function TeamHistoryPage() {
     );
   };
 
+  // 4. Clear All (ล้างทั้งหมด)
   const handleClearAll = () => {
     toast.dismiss("clear-all-toast");
     toast(
@@ -301,21 +395,6 @@ export default function TeamHistoryPage() {
     );
   };
 
-  const getElementStyle = (type: string) => {
-    switch (type) {
-      case "D":
-        return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
-      case "I":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800";
-      case "S":
-        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
-      case "C":
-        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800";
-      default:
-        return "bg-slate-100 text-slate-700 border-slate-200";
-    }
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("th-TH", {
@@ -325,89 +404,106 @@ export default function TeamHistoryPage() {
     });
   };
 
-  const filteredLogs = logs
-    .filter((log) => {
-      if (filterStatus === "all") return true;
-      return log.status === filterStatus;
-    })
-    .sort((a, b) => {
-      const priority: Record<string, number> = {
-        confirmed: 1,
-        generated: 2,
-        disbanded: 3,
-      };
-      const scoreA = priority[a.status] || 99;
-      const scoreB = priority[b.status] || 99;
+  const filteredLogs = useMemo(() => {
+    return logs
+      .filter((log) => filterStatus === "all" || log.status === filterStatus)
+      .sort((a, b) => {
+        const priority: Record<string, number> = {
+          confirmed: 1, // บนสุด
+          generated: 2, // กลาง
+          disbanded: 3, // ล่างสุด
+        };
 
-      if (scoreA !== scoreB) {
-        return scoreA - scoreB;
-      }
-      return (
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    });
+        const scoreA = priority[a.status] || 2;
+        const scoreB = priority[b.status] || 2;
+
+        if (scoreA !== scoreB) {
+          return scoreA - scoreB;
+        }
+
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+  }, [logs, filterStatus]);
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-800 p-6 transition-colors">
-        <div className="max-w-4xl mx-auto">
-          {/* Header Area */}
+      {/* Background: Clean White/Black Theme */}
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950/20 p-4 md:p-8 transition-colors font-sans relative overflow-hidden">
+        <ThemeBackground />
 
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="max-w-5xl mx-auto relative z-10">
+          {/* 🍺 Header: Tavern Style but Clean */}
+          <div className="flex flex-col gap-6 mb-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <Link
                   href="/build-team"
-                  className="text-sm text-slate-500 hover:text-blue-500 flex items-center gap-1 mb-2"
+                  className="text-xs font-medium text-slate-500 hover:text-amber-600 flex items-center gap-1 mb-2 transition-colors"
                 >
-                  <ArrowLeft size={16} /> กลับหน้าจัดทีม
+                  <ArrowLeft size={14} /> กลับสู่บาร์กิลด์
                 </Link>
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                  <History className="text-blue-600" /> ประวัติการจัดทีม
-                </h1>
+                <div className="flex items-center gap-4">
+                  {/* Icon Box: สีส้มอำพัน (Tavern vibe) */}
+                  <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600 dark:text-amber-500 shadow-sm rotate-3">
+                    <Beer size={32} />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
+                      หอจดหมายเหตุกิลด์
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
+                      บันทึกภารกิจและวงเหล้าในอดีต{" "}
+                      <Wine size={12} className="opacity-50" />
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-none">
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full appearance-none pl-9 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              {/* Filter Tools */}
+              <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="bg-transparent text-sm font-bold px-2 py-1.5 outline-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                >
+                  <option value="all" className="bg-white dark:bg-slate-900">
+                    📜 ดูคัมภีร์ทั้งหมด
+                  </option>
+                  <option
+                    value="confirmed"
+                    className="bg-white dark:bg-slate-900"
                   >
-                    <option value="all">แสดงทั้งหมด</option>
-                    <option value="confirmed">
-                      ✅ ทีมที่เลือกจริง (Confirmed)
-                    </option>
-                    <option value="generated">🤖 ทีมจาก AI (Generated)</option>
-                    <option value="disbanded">
-                      ❌ ทีมที่ยุบแล้ว (Disbanded)
-                    </option>
-                  </select>
-                  <Filter
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  />
-                </div>
-
-                <div className="flex gap-2">
+                    ✅ ภารกิจต่อเนื่อง
+                  </option>
+                  <option
+                    value="generated"
+                    className="bg-white dark:bg-slate-900"
+                  >
+                    🍺 ร่างแผนงาน
+                  </option>
+                  <option
+                    value="disbanded"
+                    className="bg-white dark:bg-slate-900"
+                  >
+                    ❌ วงแตก (ยุบทีม)
+                  </option>
+                </select>
+                <button
+                  onClick={() => refetchLogs()}
+                  className="p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-slate-500 hover:text-amber-600 rounded-lg transition-colors"
+                >
+                  <RefreshCcw size={18} />
+                </button>
+                {logs.length > 0 && (
                   <button
-                    onClick={() => refetchLogs()}
-                    className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
-                    title="รีเฟรชข้อมูล"
+                    onClick={handleClearAll}
+                    className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
                   >
-                    <RefreshCcw size={20} />
+                    <Trash2 size={18} />
                   </button>
-
-                  {logs.length > 0 && (
-                    <button
-                      onClick={handleClearAll}
-                      className="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800 transition-colors"
-                      title="ล้างทั้งหมด"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -418,197 +514,214 @@ export default function TeamHistoryPage() {
               <ElementalLoader />
             </div>
           ) : filteredLogs.length === 0 ? (
-            <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-2">
-              <History size={48} className="opacity-20" />
-              <span>ไม่พบข้อมูลตามเงื่อนไขที่เลือก</span>
+            <div className="flex flex-col items-center justify-center py-24 text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-white/50 dark:bg-slate-900/50">
+              <Beer size={48} className="mb-4 opacity-50" />
+              <span className="font-bold">โรงเตี๊ยมเงียบเหงา...</span>
+              <span className="text-xs">ยังไม่มีใครตั้งปาร์ตี้เลย</span>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="grid gap-8">
               {filteredLogs.map((log) => {
                 const isConfirmed = log.status === "confirmed";
                 const isDisbanded = log.status === "disbanded";
-                const isGenerated = log.status === "generated";
+                const leaderInfo = getLeaderInfo(log);
+                const leaderColor = getClassColor(leaderInfo.className);
 
+                // 🎨 UI Logic: Tavern Clean Theme
                 let cardClass =
-                  "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 opacity-80 hover:opacity-100";
-                if (isConfirmed)
+                  "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"; // Default (Draft)
+
+                if (isConfirmed) {
+                  // Active: สีเขียวมรกต/ทอง (ดูขลัง)
                   cardClass =
-                    "bg-white dark:bg-slate-800 border-green-500 shadow-lg ring-1 ring-green-500/20 order-first";
-                if (isDisbanded)
+                    "bg-white dark:bg-slate-900 border-emerald-400 ring-2 ring-emerald-400/20 shadow-xl shadow-emerald-500/5";
+                }
+                if (isDisbanded) {
+                  // 🔴 Disbanded: สีแดง (ตามรีเควส)
                   cardClass =
-                    "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-75 grayscale-[0.3] hover:grayscale-0 hover:opacity-100";
+                    "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50 opacity-90";
+                }
 
                 return (
                   <div
                     key={log.id}
-                    className={`relative p-6 rounded-2xl border-2 transition-all duration-300 ${cardClass} group`}
+                    className={`relative p-6 sm:p-8 rounded-2xl border transition-all duration-300 group ${cardClass} overflow-hidden`}
                   >
-                    {/* Badge Status */}
+                    {/* 🍺 Watermark: แก้วเบียร์จางๆ ตกแต่งพื้นหลัง */}
+                    <div className="absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.05] pointer-events-none transform rotate-12 group-hover:scale-110 transition-transform duration-700">
+                      <Beer size={200} />
+                    </div>
+
+                    {/* Badge */}
                     <div className="absolute top-4 right-4 z-10">
-                      {isConfirmed && (
-                        <span
-                          className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-800 shadow-sm"
-                          title="ใช้งานอยู่"
-                        >
-                          <CheckCircle2 size={14} />{" "}
-                          <span className="hidden sm:inline">ใช้งานอยู่</span>
-                        </span>
-                      )}
-                      {isDisbanded && (
-                        <span
-                          className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full border border-red-200 dark:border-red-800 shadow-sm"
-                          title="เลิกใช้งานแล้ว"
-                        >
-                          <XCircle size={14} />{" "}
-                          <span className="hidden sm:inline">
-                            เลิกใช้งานแล้ว
-                          </span>
-                        </span>
-                      )}
-                      {isGenerated && (
-                        <span
-                          className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-full border border-slate-300 dark:border-slate-700"
-                          title="รอใช้งาน"
-                        >
-                          <Clock size={14} />{" "}
-                          <span className="hidden sm:inline">รอใช้งาน</span>
-                        </span>
+                      {isConfirmed ? (
+                        <div className="flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-500/30">
+                          <CheckCircle2 size={14} /> ภารกิจต่อเนื่อง
+                        </div>
+                      ) : isDisbanded ? (
+                        // 🔴 Badge แดง
+                        <div className="flex items-center gap-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-200 dark:border-red-800">
+                          <XCircle size={14} /> ยุบทีมแล้ว
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-500/30">
+                          <Clock size={14} /> แบบร่าง (Draft)
+                        </div>
                       )}
                     </div>
 
-                    {/* 1. ชื่อทีม & เวลา */}
-                    <div className="mb-6">
-                      <h3
-                        className={`text-2xl font-black mb-1 break-words ${
-                          isDisbanded
-                            ? "text-red-800 dark:text-red-300 line-through decoration-2 decoration-red-400"
-                            : "text-slate-800 dark:text-white"
-                        }`}
-                      >
-                        {log.team_name}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-slate-500 dark:text-slate-400">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-medium whitespace-nowrap">
-                          แผน: {log.strategy}
-                        </span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="whitespace-nowrap">
-                          {new Date(log.created_at).toLocaleString("th-TH")}
-                        </span>
-
-                        {log.project_start_date && log.project_end_date && (
-                          <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800 whitespace-nowrap mt-1 sm:mt-0">
-                            <CalendarRange size={14} />
-                            {formatDate(log.project_start_date)} -{" "}
-                            {formatDate(log.project_end_date)}
+                    <div className="relative z-10">
+                      {/* 1. Header */}
+                      <div className="mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+                        <h3
+                          className={`text-2xl font-black mb-2 text-slate-800 dark:text-white ${
+                            isDisbanded
+                              ? "line-through decoration-4 decoration-red-400/50 text-red-800 dark:text-red-400"
+                              : ""
+                          }`}
+                        >
+                          {log.team_name}
+                        </h3>
+                        <div className="flex flex-wrap gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                          <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+                            <Scroll size={14} /> กลยุทธ์: {log.strategy}
                           </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 2. Leader Section */}
-                    <div
-                      className={`
-                    mb-4 p-4 rounded-xl border flex items-center gap-4
-                    ${
-                      isDisbanded
-                        ? "bg-red-100/50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-                        : "bg-linear-to-r from-amber-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-700"
-                    }
-                  `}
-                    >
-                      <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm shrink-0">
-                        <Crown
-                          size={24}
-                          className="text-yellow-500 fill-yellow-500"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">
-                          Team Leader
-                        </p>
-                        <p className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                          {log.leader_name}
-                          <span className="px-2 py-0.5 text-xs bg-white/50 dark:bg-black/20 rounded-full border border-amber-200 dark:border-amber-800/50">
-                            {log.leader_animal}
+                          <span className="flex items-center gap-1.5">
+                            <Clock size={14} />{" "}
+                            {new Date(log.created_at).toLocaleString("th-TH")}
                           </span>
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1 font-mono">
-                          ID: {log.leader_id}
-                        </p>
+                          {log.project_start_date && (
+                            <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                              <CalendarRange size={14} />{" "}
+                              {formatDate(log.project_start_date)} -{" "}
+                              {formatDate(log.project_end_date)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* 3. Member List */}
-                    <div className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-3 uppercase tracking-wide">
-                        <Users size={14} /> สมาชิก (
-                        {log.members_snapshot.length} คน)
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {log.members_snapshot.map((m) => (
+                      {/* 2. Custom Roster UI */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        {/* Leader Section (Orange Box) */}
+                        <div className="lg:col-span-4 flex flex-col gap-3">
+                          <h4 className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase flex items-center gap-2">
+                            <Crown size={14} /> Party Leader
+                          </h4>
+
                           <div
-                            key={m.id}
                             className={`
-                            px-3 py-1.5 rounded-lg border text-sm font-semibold flex items-center gap-2 shadow-sm
-                            ${getElementStyle(m.dominant_type)}
+                            p-5 rounded-xl border-l-4 shadow-sm relative overflow-hidden
+                            bg-gradient-to-br from-amber-50 to-white dark:from-slate-800 dark:to-slate-900
+                            border-amber-400 ring-1 ring-amber-400/20
                           `}
                           >
-                            <span>{m.name}</span>
-                            <span className="opacity-70 text-xs">
-                              ({m.animal})
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                            {/* Decoration */}
+                            <div className="absolute right-2 top-2 opacity-10 text-amber-500 pointer-events-none">
+                              <Crown size={64} />
+                            </div>
 
-                    {/* Reason & Actions */}
-                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                      {!isDisbanded ? (
-                        <details className="group">
-                          <summary className="text-xs font-bold text-blue-500 cursor-pointer hover:underline flex items-center gap-1 w-fit select-none">
-                            💡 ดูเหตุผลการจัดทีมของ AI
-                          </summary>
-                          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm leading-relaxed animate-fade-in max-w-2xl">
-                            {log.reason}
-                          </p>
-                        </details>
-                      ) : (
-                        <div className="text-xs text-red-400 italic">
-                          ทีมนี้ถูกยุบแล้ว
+                            <div className="relative z-10">
+                              <div className="text-amber-600 dark:text-amber-500 text-xs font-bold mb-1 uppercase tracking-wider flex items-center gap-1">
+                                {leaderInfo.className}
+                              </div>
+                              <div className="text-lg font-bold text-slate-800 dark:text-white truncate pr-2">
+                                {leaderInfo.name}
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <span
+                                  className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${leaderColor.bg} ${leaderColor.text} ${leaderColor.border}`}
+                                >
+                                  Lv. Leader
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Member Section (Badges) */}
+                        <div className="lg:col-span-8 flex flex-col gap-3">
+                          <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+                            <Users size={14} /> Party Members (
+                            {log.members_snapshot.length})
+                          </h4>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {log.members_snapshot.map((m) => {
+                              const memberClass = m.character_class || "Novice";
+                              const colors = getClassColor(memberClass);
+
+                              return (
+                                <div
+                                  key={m.id}
+                                  className={`
+                                    flex items-center gap-3 p-3 rounded-lg border
+                                    bg-white dark:bg-slate-800 hover:shadow-md transition-shadow
+                                    ${
+                                      colors.border
+                                    } border-l-4 ${colors.bg.replace(
+                                    "bg-",
+                                    "border-l-"
+                                  )}
+                                  `}
+                                >
+                                  {/* Icon Circle */}
+                                  <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${colors.bg} ${colors.text}`}
+                                  >
+                                    {memberClass.charAt(0)}
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-bold text-slate-700 dark:text-slate-200 truncate text-sm">
+                                      {m.name}
+                                    </div>
+                                    <div
+                                      className={`text-xs ${colors.text} opacity-80 flex items-center gap-1`}
+                                    >
+                                      {memberClass} •{" "}
+                                      {m.dominant_type ||
+                                        (m.level ? `Lv.${m.level}` : "Lv.1")}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3. Reason & Footer */}
+                      {!isDisbanded && (
+                        <div className="mt-8 bg-slate-50 dark:bg-slate-950 p-5 rounded-xl border border-slate-100 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300 relative italic">
+                          <div className="absolute left-0 top-6 w-1 h-6 bg-amber-400 rounded-r-full"></div>
+                          <strong className="block mb-1 text-slate-800 dark:text-white not-italic flex items-center gap-2">
+                            📜 บันทึกจากกุนซือ:
+                          </strong>
+                          "{log.reason}"
                         </div>
                       )}
 
-                      {/* ✅ 3. ปุ่ม Actions */}
-                      <div className="flex gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
-                        {/* 1. ปุ่ม Revive/Confirm (โชว์เฉพาะถ้ายังไม่ confirm) */}
+                      <div className="mt-6 flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                         {!isConfirmed && (
                           <button
                             onClick={() => handleRevive(log.id, log.team_name)}
-                            className="flex-1 sm:flex-none p-2 text-green-600 hover:text-white hover:bg-green-500 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-lg transition-all shadow-sm flex justify-center"
-                            title="ยืนยันทีมนี้ (ใช้งาน)"
+                            className="text-sm bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 font-bold shadow-sm flex items-center gap-2 transition-all hover:-translate-y-0.5"
                           >
-                            <PlayCircle size={18} />
+                            <PlayCircle size={16} /> เซ็นสัญญา
                           </button>
                         )}
-
-                        {/* 2. ปุ่ม Disband (โชว์เฉพาะถ้า confirmed) */}
                         {isConfirmed && (
                           <button
                             onClick={() => handleDisband(log.id, log.team_name)}
-                            className="flex-1 sm:flex-none p-2 text-orange-400 hover:text-white hover:bg-orange-500 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-lg transition-all shadow-sm flex justify-center"
-                            title="ยุบทีม (คืนค่าสมาชิก)"
+                            className="text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 border border-slate-200 dark:border-slate-700 font-bold flex items-center gap-2 transition-colors"
                           >
-                            <PowerOff size={18} />
+                            <PowerOff size={16} /> ยุบทีม
                           </button>
                         )}
-
-                        {/* 3. ปุ่ม Delete */}
                         <button
                           onClick={() => handleDelete(log.id)}
-                          className="flex-1 sm:flex-none p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex justify-center"
-                          title="ลบรายการนี้"
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+                          title="ลบถาวร"
                         >
                           <Trash2 size={18} />
                         </button>

@@ -102,8 +102,8 @@ for i, user in enumerate(all_users):
         
         if response.status_code == 200:
             res_data = response.json()
-            animal = res_data.get('animal', '?')
-            print(f"✅ สำเร็จ! (ได้เป็น: {animal})")
+            character_class = res_data.get('character_class', '?')
+            print(f"✅ สำเร็จ! (ได้เป็น: {character_class})")
             success_count += 1
         else:
             print(f"❌ ล้มเหลว: {response.text}")
