@@ -6,7 +6,9 @@ services:
     environment:
       - DATABASE_URL=sqlite:///elements.db
     volumes:
-      - ./backend/elements.db:/app/elements.db
+      - ./backend:/app
+    # Ensure uvicorn reloads on file changes
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build: ./frontend
