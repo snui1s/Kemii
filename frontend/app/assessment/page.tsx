@@ -234,73 +234,6 @@ export default function AssessmentPage() {
     setAnswers((prev) => ({ ...prev, [questionId]: score }));
   };
 
-  // --- DEBUG TOOL ---
-  const handleDebugFill = (
-    targetType: number | "random",
-    namePrefix: string
-  ) => {
-    const newAnswers: Record<number, number> = {};
-
-    questions.forEach((q) => {
-      let baseScore;
-
-      if (targetType === "random") {
-        // Random 1-5
-        baseScore = Math.floor(Math.random() * 5) + 1;
-      } else if (q.type === targetType) {
-        // Target: High score (4 or 5)
-        const high = Math.random() > 0.3 ? 5 : 4;
-        // Adjust for Math direction to get the desired *Result*
-        // If Math is +, answer high. If Math is -, answer low (1 or 2).
-        baseScore = q.math === "+" ? high : 6 - high;
-      } else {
-        // Others: Medium score (2, 3, or 4)
-        const mid = Math.floor(Math.random() * 3) + 2;
-        baseScore = q.math === "+" ? mid : 6 - mid;
-      }
-
-      newAnswers[q.id] = baseScore;
-    });
-
-    setAnswers(newAnswers);
-    if (!name)
-      setName(targetType === "random" ? "Random Guy" : `Test ${namePrefix}`);
-    toast.success(`Debug: Filled for ${namePrefix}`);
-  };
-
-  const debugButtons = [
-    {
-      label: "Mage (O)",
-      type: 5,
-      color: "text-purple-400 border-purple-500/50",
-    },
-    {
-      label: "Paladin (C)",
-      type: 3,
-      color: "text-yellow-400 border-yellow-500/50",
-    },
-    {
-      label: "Warrior (E)",
-      type: 1,
-      color: "text-red-400 border-red-500/50",
-    },
-    {
-      label: "Cleric (A)",
-      type: 2,
-      color: "text-green-400 border-green-500/50",
-    },
-    {
-      label: "Rogue (N)",
-      type: 4,
-      color: "text-blue-400 border-blue-500/50",
-    },
-    {
-      label: "🎲 Random",
-      type: "random",
-      color: "text-slate-500 border-slate-500/50",
-    },
-  ];
-
   const handleSubmit = async () => {
     if (!name.trim()) {
       toast.error("กรุณากรอกชื่อเล่นก่อนนะครับ");
@@ -503,29 +436,6 @@ export default function AssessmentPage() {
 
       {/* --- Main Content --- */}
       <div className="max-w-2xl mx-auto py-10 px-4 relative z-10">
-        {/* Debug Tools */}
-        <div className="mb-6 p-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur">
-          <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
-            🚧 DEV DEBUG
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {debugButtons.map((btn) => (
-              <button
-                key={btn.label}
-                onClick={() =>
-                  handleDebugFill(
-                    btn.type as number | "random",
-                    btn.label.split(" ")[0]
-                  )
-                }
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition ${btn.color}`}
-              >
-                {btn.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold mb-4">
