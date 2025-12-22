@@ -84,6 +84,39 @@ Kemii is an AI-powered team management and personality assessment platform desig
    The application will be available at http://localhost:3000.
    ```
 
+### Docker Setup (Recommended)
+
+You can run the entire application (frontend + backend) using Docker Compose.
+
+1. Create a `.env` file in the `backend` directory with your API key:
+   ```bash
+   GOOGLE_API_KEY=your_gemini_api_key
+   ```
+2. Run docker-compose:
+   ```bash
+   docker-compose up --build
+   ```
+   - Frontend: http://localhost:3000
+   - Backend: http://localhost:8000
+
+### Testing
+
+To run the backend tests:
+
+```bash
+cd backend
+# Make sure dependencies are installed
+pip install -r requirements.txt
+# Run tests
+pytest
+```
+
+### CI/CD
+
+This project uses GitHub Actions for Continuous Integration.
+- **Backend Tests**: Runs `pytest` on every push and pull request.
+- **Frontend Checks**: Runs linting and build checks on every push and pull request.
+
 ### Usage
 
 - **Assessment**: Users complete the assessment to identify their dominant element (Fire, Water, Wind, Earth).
