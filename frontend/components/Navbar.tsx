@@ -245,16 +245,29 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/profile"
-                onClick={(e) => handleProtectedLink(e, "/profile")}
+                href="/quests"
+                onClick={(e) => handleProtectedLink(e, "/quests")}
+                className={`flex items-center gap-1.5 transition text-base font-medium ${
+                  myData
+                    ? "hover:text-amber-600 dark:hover:text-amber-400"
+                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                }`}
+              >
+                {myData ? <Scroll size={18} /> : <Lock size={18} />}
+                <span>เควส</span>
+              </Link>
+
+              <Link
+                href="/users"
+                onClick={(e) => handleProtectedLink(e, "/users")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
                   myData
                     ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <UserIcon size={18} /> : <Lock size={18} />}
-                <span>โปรไฟล์</span>
+                {myData ? <Users size={18} /> : <Lock size={18} />}
+                <span>สมาชิกกิลด์</span>
               </Link>
             </div>
 
@@ -275,7 +288,10 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center">
               {myData ? (
                 <div className="flex items-center gap-2 pl-2">
-                  <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm min-w-[120px]">
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm min-w-[120px] hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+                  >
                     {/* Icon Class */}
                     <div className="p-1 bg-slate-100 dark:bg-slate-700 rounded-full">
                       {getClassIcon(myData.character_class)}
@@ -289,7 +305,7 @@ export default function Navbar() {
                         Lv.{myData.level}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-colors shrink-0"
@@ -336,7 +352,11 @@ export default function Navbar() {
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-xl p-4 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
             {myData && (
               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
-                <div className="flex items-center gap-3">
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 flex-1"
+                >
                   <div className="p-2 bg-white dark:bg-slate-700 rounded-full shadow-sm">
                     {getClassIcon(myData.character_class)}
                   </div>
@@ -348,7 +368,7 @@ export default function Navbar() {
                       {myData.character_class} (Lv.{myData.level})
                     </span>
                   </div>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="p-2 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition"
@@ -392,25 +412,25 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/grouping"
+                href="/quests"
                 onClick={(e) => {
-                  handleProtectedLink(e, "/grouping");
+                  handleProtectedLink(e, "/quests");
                   setIsMenuOpen(false);
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
                   myData
-                    ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    ? "hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-300"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Shuffle size={20} /> : <Lock size={20} />}
-                จัดทีม AI
+                {myData ? <Scroll size={20} /> : <Lock size={20} />}
+                เควส
               </Link>
 
               <Link
-                href="/profile"
+                href="/users"
                 onClick={(e) => {
-                  handleProtectedLink(e, "/profile");
+                  handleProtectedLink(e, "/users");
                   setIsMenuOpen(false);
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
@@ -419,8 +439,8 @@ export default function Navbar() {
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <UserIcon size={20} /> : <Lock size={20} />}
-                โปรไฟล์
+                {myData ? <Users size={20} /> : <Lock size={20} />}
+                สมาชิกกิลด์
               </Link>
             </div>
 

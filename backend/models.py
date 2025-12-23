@@ -36,3 +36,22 @@ class TeamLog(SQLModel, table=True):
     status: str = Field(default="generated") 
     project_start_date: Optional[datetime] = Field(default=None)
     project_end_date: Optional[datetime] = Field(default=None)
+
+class Quest(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str
+    description: str = Field(sa_column=Column(Text))
+    rank: str = Field(default="C")  # D, C, B, A, S
+    required_skills: str = Field(default="[]")  # JSON: [{"name": "Python", "level": 3}]
+    optional_skills: str = Field(default="[]")  # JSON: [{"name": "Docker", "level": 2}]
+    ocean_preference: str = Field(default="{}")  # JSON: {"C": "high", "N": "low"}
+    team_size: int = Field(default=1)
+    leader_id: int = Field(foreign_key="user.id")
+    status: str = Field(default="open")  # open, in_progress, completed, cancelled
+    applicants: str = Field(default="[]")  # JSON: [user_ids]
+    accepted_members: str = Field(default="[]")  # JSON: [user_ids]
+    start_date: Optional[datetime] = Field(default=None)
+    deadline: Optional[datetime] = Field(default=None)
+    project_end_date: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)

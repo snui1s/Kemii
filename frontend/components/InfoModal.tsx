@@ -177,7 +177,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               <p className="font-bold text-slate-800 dark:text-slate-100">
                 Barrick & Mount (1991)
               </p>
-              <p>
+              <p className="text-slate-800 dark:text-slate-100">
                 พิสูจน์ว่า <b>Conscientiousness</b>{" "}
                 คือตัวทำนายความสำเร็จในการทำงานที่แม่นยำที่สุดในทุกอาชีพ [cite:
                 880, 881]
@@ -188,7 +188,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               <p className="font-bold text-slate-800 dark:text-slate-100">
                 Tett et al. (1991)
               </p>
-              <p>
+              <p className="text-slate-800 dark:text-slate-100">
                 ยืนยันว่าการล็อคเป้าหมายนิสัยให้ตรงกับงาน (Confirmatory)
                 แม่นยำกว่าการสุ่มตรวจทั่วไป [cite: 998, 999]
               </p>
@@ -198,7 +198,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               <p className="font-bold text-slate-800 dark:text-slate-100">
                 Peeters et al. (2006)
               </p>
-              <p>
+              <p className="text-slate-800 dark:text-slate-100">
                 พบว่าทีมที่ <b>Agreeableness</b> และ <b>Conscientiousness</b>{" "}
                 สูงและคล้ายกัน จะทำงานได้ดีที่สุด [cite: 491, 974, 975]
               </p>
@@ -208,7 +208,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               <p className="font-bold text-slate-800 dark:text-slate-100">
                 Peeters (Satisfaction Study)
               </p>
-              <p>
+              <p className="text-slate-800 dark:text-slate-100">
                 คน <b>Introvert</b>{" "}
                 จะพึงพอใจน้อยลงมากหากต้องอยู่ในทีมที่มีระดับการเข้าสังคมต่างจากตนมากไป
                 [cite: 497, 801, 805]
@@ -219,7 +219,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               <p className="font-bold text-slate-800 dark:text-slate-100">
                 Curşeu et al. (2019)
               </p>
-              <p>
+              <p className="text-slate-800 dark:text-slate-100">
                 เตือนเรื่อง <b>TMGT Effect</b>: นิสัยดีๆ
                 หากมีสูงสุดโต่งเกินไปอาจส่งผลลบต่อการทำงานเป็นทีม
               </p>

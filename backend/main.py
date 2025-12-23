@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from sqlmodel import Session, select
+from sqlmodel import Session, select, SQLModel
 from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -15,9 +15,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from database import create_db_and_tables, get_session
-from models import User, TeamLog
-from schemas import OceanSubmission, UserProfile, MatchRequest, TeamBuilderRequest, ConfirmTeamRequest, TeamRecommendation, ReviveRequest, UpdateSkillsRequest
+from models import User, TeamLog, Quest
+from schemas import (
+    OceanSubmission, UserProfile, MatchRequest, TeamBuilderRequest, 
+    ConfirmTeamRequest, TeamRecommendation, ReviveRequest, UpdateSkillsRequest,
+    CreateQuestRequest, QuestResponse, ApplyQuestRequest, MatchScoreResponse
+)
 from skills_data import DEPARTMENTS
+from quest_ai import generate_quest, calculate_match_score, find_best_candidates
 from auth import create_access_token
 
 
@@ -27,7 +32,6 @@ load_dotenv()
 if not os.getenv("GOOGLE_API_KEY"):
     print("GOOGLE_API_KEY not found in .env")
 
-# ใช้ Gemini Flash เพื่อความไวและราคาถูก
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.5)
 
 @asynccontextmanager
@@ -88,6 +92,31 @@ def update_user_skills(user_id: int, req: UpdateSkillsRequest, session: Session 
     session.refresh(user)
     
     return {"message": "Skills updated", "skills": skills_data}
+
+# NOTE: /users/roster MUST appear BEFORE /users/{user_id} to avoid routing conflict
+@app.get("/users/roster")
+def get_user_roster(session: Session = Depends(get_session)):
+    """Get user roster for team building"""
+    check_and_release_users(session)
+    users = session.exec(select(User).order_by(User.is_available.desc(), User.id)).all()
+    results = []
+    for u in users:
+        results.append({
+            "id": u.id,
+            "name": u.name,
+            "character_class": u.character_class, 
+            "dominant_type": f"Lv.{u.level}",
+            "scores": {
+                "Openness": u.ocean_openness or 0,           
+                "Conscientiousness": u.ocean_conscientiousness or 0,
+                "Extraversion": u.ocean_extraversion or 0,   
+                "Agreeableness": u.ocean_agreeableness or 0,
+                "Neuroticism": u.ocean_neuroticism or 0      
+            },
+            "is_available": u.is_available,
+            "active_project_end_date": u.active_project_end_date
+        })
+    return results
 
 @app.get("/users/{user_id}/skills")
 def get_user_skills(user_id: int, session: Session = Depends(get_session)):
@@ -285,25 +314,78 @@ async def get_user_analysis(user_id: int, session: Session = Depends(get_session
         "analysis": ai_data
     }
 
-@app.get("/users", response_model=List[UserProfile])
+# === GLOBAL HELPERS & CONSTANTS ===
+TAU = 0.625
+LAMBDA = 2.0
+
+def get_stats(u):
+    return {
+        "O": u.ocean_openness or 0,
+        "C": u.ocean_conscientiousness or 0,
+        "E": u.ocean_extraversion or 0,
+        "A": u.ocean_agreeableness or 0,
+        "N": u.ocean_neuroticism or 0
+    }
+
+def calculate_academic_cost(team_stats_list):
+    """
+    Calculate team cost using the academic formula:
+    Cost = 1.5×Var*(C) + 1.5×Var*(A) + 1×Var*(E) + 1×Var*(O) + 1×N̄* + λ×max(0, τ - Ā*)
+    """
+    if len(team_stats_list) < 2:
+        return float('inf')  # Can't calculate variance with < 2 members
+    
+    C_values = [s["C"] for s in team_stats_list]
+    A_values = [s["A"] for s in team_stats_list]
+    E_values = [s["E"] for s in team_stats_list]
+    O_values = [s["O"] for s in team_stats_list]
+    N_values = [s["N"] for s in team_stats_list]
+    
+    def variance(values):
+        n = len(values)
+        mean_val = sum(values) / n
+        return sum((x - mean_val) ** 2 for x in values) / n
+    
+    def var_star(values):
+        return variance(values) / 400
+    
+    def xbar_star(values):
+        mean_val = sum(values) / len(values)
+        return (mean_val - 10) / 40
+    
+    N_bar_star = xbar_star(N_values)
+    A_bar_star = xbar_star(A_values)
+    
+    cost = (
+        1.5 * var_star(C_values) +
+        1.5 * var_star(A_values) +
+        1.0 * var_star(E_values) +
+        1.0 * var_star(O_values) +
+        1.0 * N_bar_star +
+        LAMBDA * max(0, TAU - A_bar_star)
+    )
+    return cost
+
+@app.get("/users")
 def get_users(session: Session = Depends(get_session)):
     # ดึงข้อมูลทั้งหมด เรียงตาม ID ล่าสุด
     users = session.exec(select(User).order_by(User.id.desc())).all()
     
     results = []
     for u in users:
+        skills = json.loads(u.skills) if u.skills else []
         results.append({
             "id": u.id,
             "name": u.name,
             "character_class": u.character_class,
             "level": u.level,
-            "ocean_scores": {
-                "Openness": u.ocean_openness or 0,
-                "Conscientiousness": u.ocean_conscientiousness or 0,
-                "Extraversion": u.ocean_extraversion or 0,
-                "Agreeableness": u.ocean_agreeableness or 0,
-                "Neuroticism": u.ocean_neuroticism or 0
-            }
+            "ocean_openness": u.ocean_openness or 0,
+            "ocean_conscientiousness": u.ocean_conscientiousness or 0,
+            "ocean_extraversion": u.ocean_extraversion or 0,
+            "ocean_agreeableness": u.ocean_agreeableness or 0,
+            "ocean_neuroticism": u.ocean_neuroticism or 0,
+            "skills": skills,
+            "is_available": u.is_available
         })
     return results
 
@@ -317,58 +399,13 @@ async def match_users_ai(request: Request, req: MatchRequest, session: Session =
     if not u1 or not u2:
         raise HTTPException(status_code=404, detail="Heroes not found")
         
-    def get_stats(u):
-        return {
-            "O": u.ocean_openness or 0,
-            "C": u.ocean_conscientiousness or 0,
-            "E": u.ocean_extraversion or 0,
-            "A": u.ocean_agreeableness or 0,
-            "N": u.ocean_neuroticism or 0
-        }
-        
+    # === NEW FORMULA ===
+    # === NEW FORMULA ===
+    # Use global helper
     s1 = get_stats(u1)
     s2 = get_stats(u2)
-    
-    # === NEW FORMULA ===
-    # Constants
-    TAU = 0.625
-    LAMBDA = 2.0
-    
-    # Helper functions
-    def variance(values):
-        """Var(X) = (1/n) × Σ(Xi - X̄)²"""
-        n = len(values)
-        mean_val = sum(values) / n
-        return sum((x - mean_val) ** 2 for x in values) / n
-
-    def var_star(values):
-        """Var*(X) = Var(X) / 400"""
-        return variance(values) / 400
-
-    def xbar_star(values):
-        """X̄* = (mean(X) - 10) / 40"""
-        mean_val = sum(values) / len(values)
-        return (mean_val - 10) / 40
-
-    # Collect values for each trait
-    C_values = [s1["C"], s2["C"]]
-    A_values = [s1["A"], s2["A"]]
-    E_values = [s1["E"], s2["E"]]
-    O_values = [s1["O"], s2["O"]]
-    N_values = [s1["N"], s2["N"]]
-
-    # Cost = 1.5×Var*(C) + 1.5×Var*(A) + 1×Var*(E) + 1×Var*(O) + 1×N̄* + λ×max(0, τ - Ā*)
-    N_bar_star = xbar_star(N_values)
-    A_bar_star = xbar_star(A_values)
-    
-    cost = (
-        1.5 * var_star(C_values) +
-        1.5 * var_star(A_values) +
-        1.0 * var_star(E_values) +
-        1.0 * var_star(O_values) +
-        1.0 * N_bar_star +
-        LAMBDA * max(0, TAU - A_bar_star)
-    )
+    stats = [s1, s2]
+    cost = calculate_academic_cost(stats)
 
     # Score = 100 × (1 - (Cost / (6 + λ×τ)))
     denominator = 6 + LAMBDA * TAU  # = 7.25
@@ -391,9 +428,6 @@ async def match_users_ai(request: Request, req: MatchRequest, session: Session =
     team_rating = get_team_rating(final_score)
     
     # Debug log
-    print(f"📊 DEBUG: C={C_values}, A={A_values}, E={E_values}, O={O_values}, N={N_values}")
-    print(f"📊 DEBUG: Var*(C)={var_star(C_values):.4f}, Var*(A)={var_star(A_values):.4f}, Var*(E)={var_star(E_values):.4f}, Var*(O)={var_star(O_values):.4f}")
-    print(f"📊 DEBUG: N_bar*={N_bar_star:.4f}, A_bar*={A_bar_star:.4f}, penalty={LAMBDA * max(0, TAU - A_bar_star):.4f}")
     print(f"📊 DEBUG: cost={cost:.4f}, score={score:.2f}")
     print(f"⚔️ Soul Link: {u1.name} ({u1.character_class}) x {u2.name} ({u2.character_class}) = {final_score}% [{team_rating}]")
 
@@ -468,33 +502,6 @@ async def match_users_ai(request: Request, req: MatchRequest, session: Session =
         "team_rating": team_rating
     }
 
-@app.get("/users/roster")
-def get_user_roster(session: Session = Depends(get_session)):
-    # 1. เช็คปลดล็อคคน
-    check_and_release_users(session)
-    
-    # 2. ดึงข้อมูล
-    users = session.exec(select(User).order_by(User.is_available.desc(), User.id)).all()
-    
-    results = []
-    for u in users:
-        results.append({
-            "id": u.id,
-            "name": u.name,
-            "character_class": u.character_class, 
-            "dominant_type": f"Lv.{u.level}",
-            "scores": {
-                "Openness": u.ocean_openness or 0,           
-                "Conscientiousness": u.ocean_conscientiousness or 0,
-                "Extraversion": u.ocean_extraversion or 0,   
-                "Agreeableness": u.ocean_agreeableness or 0,
-                "Neuroticism": u.ocean_neuroticism or 0      
-            },
-            "is_available": u.is_available,
-            "active_project_end_date": u.active_project_end_date
-        })
-    return results
-
 @app.post("/recommend-team-members", response_model=TeamRecommendation)
 async def recommend_team_members(req: TeamBuilderRequest, session: Session = Depends(get_session)):
     # 1. ดึงหัวหน้า
@@ -510,58 +517,7 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
     if len(candidates) < req.member_count:
         raise HTTPException(status_code=400, detail=f"Not enough heroes available! Need {req.member_count}, found {len(candidates)}")
 
-    # === HEADHUNTER ALGORITHM ===
-    # Constants
-    TAU = 0.625
-    LAMBDA = 2.0
-    
-    def get_ocean_stats(user):
-        return {
-            "O": user.ocean_openness or 0,
-            "C": user.ocean_conscientiousness or 0,
-            "E": user.ocean_extraversion or 0,
-            "A": user.ocean_agreeableness or 0,
-            "N": user.ocean_neuroticism or 0
-        }
-    
-    def calculate_academic_cost(team_stats_list):
-        """
-        Calculate team cost using the academic formula:
-        Cost = 1.5×Var*(C) + 1.5×Var*(A) + 1×Var*(E) + 1×Var*(O) + 1×N̄* + λ×max(0, τ - Ā*)
-        """
-        if len(team_stats_list) < 2:
-            return float('inf')  # Can't calculate variance with < 2 members
-        
-        C_values = [s["C"] for s in team_stats_list]
-        A_values = [s["A"] for s in team_stats_list]
-        E_values = [s["E"] for s in team_stats_list]
-        O_values = [s["O"] for s in team_stats_list]
-        N_values = [s["N"] for s in team_stats_list]
-        
-        def variance(values):
-            n = len(values)
-            mean_val = sum(values) / n
-            return sum((x - mean_val) ** 2 for x in values) / n
-        
-        def var_star(values):
-            return variance(values) / 400
-        
-        def xbar_star(values):
-            mean_val = sum(values) / len(values)
-            return (mean_val - 10) / 40
-        
-        N_bar_star = xbar_star(N_values)
-        A_bar_star = xbar_star(A_values)
-        
-        cost = (
-            1.5 * var_star(C_values) +
-            1.5 * var_star(A_values) +
-            1.0 * var_star(E_values) +
-            1.0 * var_star(O_values) +
-            1.0 * N_bar_star +
-            LAMBDA * max(0, TAU - A_bar_star)
-        )
-        return cost
+    # Use global helpers
     
     def calculate_team_score(cost):
         """Convert cost to score (0-100)"""
@@ -571,7 +527,7 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
     
     # Start with leader
     selected_team = [leader]
-    selected_stats = [get_ocean_stats(leader)]
+    selected_stats = [get_stats(leader)]
     remaining_candidates = list(candidates)
     
     print(f"🎯 Headhunter: Starting with Leader [{leader.name}]")
@@ -583,16 +539,38 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
         
         for candidate in remaining_candidates:
             # Try adding this candidate to the team
-            test_stats = selected_stats + [get_ocean_stats(candidate)]
-            cost = calculate_academic_cost(test_stats)
+            test_stats = selected_stats + [get_stats(candidate)]
+            real_cost = calculate_academic_cost(test_stats)
             
-            if cost < best_cost:
-                best_cost = cost
+            # Apply Strategy Bias (Heuristic)
+            heuristic_cost = real_cost
+            
+            # Helper to get mean of a trait
+            def get_mean(trait, stats_list):
+                 return sum(s[trait] for s in stats_list) / len(stats_list)
+            
+            BIAS_WEIGHT = 0.5  # Adjust weight as needed
+            
+            if req.strategy == "Aggressive":
+                # Favor High Extraversion
+                heuristic_cost -= (get_mean("E", test_stats) / 10.0) * BIAS_WEIGHT
+            elif req.strategy == "Creative":
+                # Favor High Openness
+                heuristic_cost -= (get_mean("O", test_stats) / 10.0) * BIAS_WEIGHT
+            elif req.strategy == "Supportive":
+                # Favor High Agreeableness + Conscientiousness
+                score = (get_mean("A", test_stats) + get_mean("C", test_stats)) / 2
+                heuristic_cost -= (score / 10.0) * BIAS_WEIGHT
+            
+            # Balanced uses purely real_cost (no bias)
+            
+            if heuristic_cost < best_cost:
+                best_cost = heuristic_cost
                 best_candidate = candidate
         
         if best_candidate:
             selected_team.append(best_candidate)
-            selected_stats.append(get_ocean_stats(best_candidate))
+            selected_stats.append(get_stats(best_candidate))
             remaining_candidates.remove(best_candidate)
             
             current_score = calculate_team_score(best_cost)
@@ -915,6 +893,656 @@ def clear_all_logs(session: Session = Depends(get_session)):
         session.add(user)
     session.commit()
     return {"message": "All history cleared"}
+
+
+# === QUEST BOARD ENDPOINTS ===
+
+@app.get("/quests")
+def get_quests(status: str = None, session: Session = Depends(get_session)):
+    """Get all quests, optionally filtered by status"""
+    if status:
+        quests = session.exec(select(Quest).where(Quest.status == status)).all()
+    else:
+        # Show all quests (Frontend handles filtering active/history)
+        quests = session.exec(select(Quest)).all()
+    
+    result = []
+    for q in quests:
+        leader = session.get(User, q.leader_id)
+        applicants = json.loads(q.applicants) if q.applicants else []
+        
+        quest_dict = {
+            "id": q.id,
+            "title": q.title,
+            "description": q.description,
+            "rank": q.rank,
+            "required_skills": json.loads(q.required_skills),
+            "optional_skills": json.loads(q.optional_skills),
+            "ocean_preference": json.loads(q.ocean_preference),
+            "team_size": q.team_size,
+            "leader_id": q.leader_id,
+            "leader_name": leader.name if leader else "Unknown",
+            "leader_class": leader.character_class if leader else "Novice",
+            "status": q.status,
+            "applicant_count": len(applicants),
+            "start_date": q.start_date.isoformat() if q.start_date else None,
+            "deadline": q.deadline.isoformat() if q.deadline else None,
+            "created_at": q.created_at.isoformat(),
+            "harmony_score": 0
+        }
+        
+        # Calculate Harmony Score (Lightweight)
+        accepted_ids = json.loads(q.accepted_members) if q.accepted_members else []
+        if accepted_ids and leader:
+            team_users = [leader]
+            for uid in accepted_ids:
+                 u = session.get(User, uid)
+                 if u: team_users.append(u)
+            
+            if len(team_users) >= 2:
+                stats = [get_stats(u) for u in team_users]
+                cost = calculate_academic_cost(stats)
+                quest_dict["harmony_score"] = max(0, 100 - int(cost))
+                
+        result.append(quest_dict)
+    
+    return {"quests": result}
+
+
+@app.post("/quests")
+def create_quest(req: CreateQuestRequest, session: Session = Depends(get_session)):
+    """Create a new quest using AI to parse the prompt"""
+    # Verify leader exists
+    leader = session.get(User, req.leader_id)
+    if not leader:
+        raise HTTPException(status_code=404, detail="Leader not found")
+    
+    # Generate quest details using AI (AI recommends team_size)
+    quest_data = generate_quest(req.prompt, req.deadline_days)
+    
+    # Create quest in database - use AI-recommended team_size
+    quest = Quest(
+        title=quest_data["title"],
+        description=quest_data["description"],
+        rank=quest_data["rank"],
+        required_skills=json.dumps(quest_data["required_skills"], ensure_ascii=False),
+        optional_skills=json.dumps(quest_data["optional_skills"], ensure_ascii=False),
+        ocean_preference=json.dumps(quest_data["ocean_preference"], ensure_ascii=False),
+        team_size=quest_data.get("team_size", 3),  # AI-recommended
+        leader_id=req.leader_id,
+        start_date=req.start_date,
+        deadline=req.deadline,
+        status="open"
+    )
+    
+    session.add(quest)
+    session.commit()
+    session.refresh(quest)
+    
+    return {
+        "id": quest.id,
+        "title": quest.title,
+        "description": quest.description,
+        "rank": quest.rank,
+        "required_skills": quest_data["required_skills"],
+        "optional_skills": quest_data["optional_skills"],
+        "ocean_preference": quest_data["ocean_preference"],
+        "team_size": quest.team_size,
+        "leader_id": quest.leader_id,
+        "leader_name": leader.name,
+        "leader_class": leader.character_class,
+        "status": quest.status,
+        "applicant_count": 0,
+        "start_date": quest.start_date.isoformat() if quest.start_date else None,
+        "deadline": quest.deadline.isoformat() if quest.deadline else None,
+        "created_at": quest.created_at.isoformat()
+    }
+
+
+@app.get("/quests/{quest_id}")
+def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
+    """Get quest details including applicants"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    leader = session.get(User, quest.leader_id)
+    applicant_ids = json.loads(quest.applicants) if quest.applicants else []
+    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+    
+    # Get applicant details
+    applicants = []
+    for uid in applicant_ids:
+        user = session.get(User, uid)
+        if user:
+            applicants.append({
+                "id": user.id,
+                "name": user.name,
+                "character_class": user.character_class,
+                "level": user.level
+            })
+    
+    # Get accepted members details
+    accepted_members = []
+    req_skills = json.loads(quest.required_skills)
+    opt_skills = json.loads(quest.optional_skills)
+    
+    for uid in accepted_ids:
+        user = session.get(User, uid)
+        if user:
+            user_skills = json.loads(user.skills) if user.skills else []
+            user_skill_map = {s['name']: s['level'] for s in user_skills}
+            
+            matching = []
+            # Check against required skills
+            for req in req_skills:
+                if req['name'] in user_skill_map:
+                    matching.append({
+                        "name": req['name'],
+                        "level": user_skill_map[req['name']],
+                        "type": "required"
+                    })
+            
+            # Check against optional skills
+            for opt in opt_skills:
+                if opt['name'] in user_skill_map:
+                    matching.append({
+                        "name": opt['name'],
+                        "level": user_skill_map[opt['name']],
+                        "type": "optional"
+                    })
+            
+            # Sort by level desc
+            matching.sort(key=lambda x: x['level'], reverse=True)
+            
+            accepted_members.append({
+                "id": user.id,
+                "name": user.name,
+                "character_class": user.character_class,
+                "level": user.level,
+                "matching_skills": matching
+            })
+    
+    return {
+        "id": quest.id,
+        "title": quest.title,
+        "description": quest.description,
+        "rank": quest.rank,
+        "required_skills": json.loads(quest.required_skills),
+        "optional_skills": json.loads(quest.optional_skills),
+        "ocean_preference": json.loads(quest.ocean_preference),
+        "team_size": quest.team_size,
+        "leader_id": quest.leader_id,
+        "leader_name": leader.name if leader else "Unknown",
+        "leader_class": leader.character_class if leader else "Novice",
+        "status": quest.status,
+        "applicants": applicants,
+        "accepted_members": accepted_members,
+        "accepted_member_ids": accepted_ids,
+        "start_date": quest.start_date.isoformat() if quest.start_date else None,
+        "deadline": quest.deadline.isoformat() if quest.deadline else None,
+        "created_at": quest.created_at.isoformat()
+    }
+
+
+@app.patch("/quests/{quest_id}/team-size")
+def update_quest_team_size(quest_id: int, team_size: int, session: Session = Depends(get_session)):
+    """Update quest team size (leader only)"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status not in ["open", "filled"]:
+        raise HTTPException(status_code=400, detail="Cannot change team size for started/completed quests")
+    
+    # Validate team_size
+    accepted_count = len(json.loads(quest.accepted_members)) if quest.accepted_members else 0
+    if team_size < accepted_count:
+        raise HTTPException(status_code=400, detail=f"Cannot reduce below {accepted_count} accepted members")
+    
+    if team_size < 1 or team_size > 10:
+        raise HTTPException(status_code=400, detail="Team size must be between 1 and 10")
+    
+    quest.team_size = team_size
+    
+    # Update status based on new team size
+    if accepted_count >= team_size:
+        quest.status = "filled"
+    else:
+        quest.status = "open"
+    
+    session.add(quest)
+    session.commit()
+    session.refresh(quest)
+    
+    return {
+        "message": f"Team size updated to {team_size}",
+        "team_size": quest.team_size,
+        "status": quest.status
+    }
+
+
+@app.get("/quests/{quest_id}/team-analysis")
+def get_team_analysis(quest_id: int, session: Session = Depends(get_session)):
+    """Analyze team compatibility and skill coverage"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+    if not accepted_ids:
+        return {"has_team": False}
+    
+    # Get required skills
+    required_skills = json.loads(quest.required_skills) if isinstance(quest.required_skills, str) else quest.required_skills
+    
+    # Build team skill inventory
+    team_skills = {}
+    team_ocean = {"O": [], "C": [], "E": [], "A": [], "N": []}
+    
+    for uid in accepted_ids:
+        user = session.get(User, uid)
+        if user:
+            user_skills = json.loads(user.skills) if user.skills else []
+            for s in user_skills:
+                skill_name = s.get("name", "")
+                skill_level = s.get("level", 0)
+                if skill_name not in team_skills or skill_level > team_skills[skill_name]:
+                    team_skills[skill_name] = skill_level
+            
+            # Collect OCEAN scores
+            team_ocean["O"].append(user.ocean_openness or 25)
+            team_ocean["C"].append(user.ocean_conscientiousness or 25)
+            team_ocean["E"].append(user.ocean_extraversion or 25)
+            team_ocean["A"].append(user.ocean_agreeableness or 25)
+            team_ocean["N"].append(user.ocean_neuroticism or 25)
+    
+    # Calculate skill coverage
+    covered_skills = []
+    missing_skills = []
+    partial_skills = []
+    
+    for req in required_skills:
+        skill_name = req["name"]
+        required_level = req["level"]
+        team_level = team_skills.get(skill_name, 0)
+        
+        if team_level >= required_level:
+            covered_skills.append({"name": skill_name, "required": required_level, "has": team_level})
+        elif team_level > 0:
+            partial_skills.append({"name": skill_name, "required": required_level, "has": team_level})
+        else:
+            missing_skills.append({"name": skill_name, "required": required_level})
+    
+    total_skills = len(required_skills)
+    coverage_percent = int((len(covered_skills) / max(total_skills, 1)) * 100)
+    
+    # Calculate OCEAN compatibility (low variance = good chemistry)
+    def variance(values):
+        if len(values) < 2:
+            return 0
+        mean = sum(values) / len(values)
+        return sum((x - mean) ** 2 for x in values) / len(values)
+    
+    # Lower variance = better team harmony
+    c_var = variance(team_ocean["C"])
+    a_var = variance(team_ocean["A"])
+    avg_neuroticism = sum(team_ocean["N"]) / len(team_ocean["N"]) if team_ocean["N"] else 25
+    
+    # Team harmony score (higher is better, out of 100)
+    # Low C variance + Low A variance + Low avg N = good
+    harmony_score = 100 - int((c_var / 200) * 30 + (a_var / 200) * 30 + (avg_neuroticism / 50) * 40)
+    harmony_score = max(0, min(100, harmony_score))
+    
+    return {
+        "has_team": True,
+        "member_count": len(accepted_ids),
+        "skill_coverage": {
+            "covered": covered_skills,
+            "partial": partial_skills,
+            "missing": missing_skills,
+            "coverage_percent": coverage_percent,
+            "all_covered": len(missing_skills) == 0 and len(partial_skills) == 0
+        },
+        "harmony_score": harmony_score,
+        "team_ocean": {
+            "O": int(sum(team_ocean["O"]) / len(team_ocean["O"])) if team_ocean["O"] else 0,
+            "C": int(sum(team_ocean["C"]) / len(team_ocean["C"])) if team_ocean["C"] else 0,
+            "E": int(sum(team_ocean["E"]) / len(team_ocean["E"])) if team_ocean["E"] else 0,
+            "A": int(sum(team_ocean["A"]) / len(team_ocean["A"])) if team_ocean["A"] else 0,
+            "N": int(sum(team_ocean["N"]) / len(team_ocean["N"])) if team_ocean["N"] else 0
+        }
+    }
+
+@app.get("/quests/{quest_id}/match/{user_id}")
+def get_quest_match_score(quest_id: int, user_id: int, session: Session = Depends(get_session)):
+    """Calculate how well a user matches a quest"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's skills
+    user_skills = json.loads(user.skills) if user.skills else []
+    
+    # Get user's OCEAN scores
+    user_ocean = {
+        "ocean_openness": user.ocean_openness,
+        "ocean_conscientiousness": user.ocean_conscientiousness,
+        "ocean_extraversion": user.ocean_extraversion,
+        "ocean_agreeableness": user.ocean_agreeableness,
+        "ocean_neuroticism": user.ocean_neuroticism
+    }
+    
+    # Calculate match score
+    match_result = calculate_match_score(user_skills, user_ocean, quest)
+    
+    return match_result
+
+
+@app.get("/quests/{quest_id}/candidates")
+def get_quest_candidates(quest_id: int, session: Session = Depends(get_session)):
+    """AI finds best matching candidates for a quest using Dynamic Gap Scoring"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    # Get all users
+    all_users = session.exec(select(User)).all()
+    
+    # Exclude the quest leader
+    available_users = [u for u in all_users if u.id != quest.leader_id]
+    
+    # Get current team members (to calculate skill gaps)
+    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+    current_members = [session.get(User, uid) for uid in accepted_ids if session.get(User, uid)]
+    
+    # Find best candidates using Dynamic Gap Scoring
+    candidates = find_best_candidates(quest, available_users, quest.team_size * 2, current_members)
+    
+    return {"candidates": candidates}
+
+
+@app.post("/quests/{quest_id}/kick/{user_id}")
+def kick_member(quest_id: int, user_id: int, session: Session = Depends(get_session)):
+    """Remove a member from the quest team (leader only)"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status not in ["open", "filled"]:
+        raise HTTPException(status_code=400, detail="Cannot kick members from started/completed quests")
+    
+    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+    
+    if user_id not in accepted_ids:
+        raise HTTPException(status_code=400, detail="User is not a team member")
+    
+    # Remove user from accepted_members
+    accepted_ids.remove(user_id)
+    quest.accepted_members = json.dumps(accepted_ids)
+    
+    # Make user available again
+    user = session.get(User, user_id)
+    if user:
+        user.is_available = True
+        user.active_project_end_date = None
+        session.add(user)
+    
+    # Update quest status
+    if len(accepted_ids) < quest.team_size:
+        quest.status = "open"
+    
+    session.add(quest)
+    session.commit()
+    
+    return {"message": f"ปลดสมาชิกแล้ว", "remaining_members": len(accepted_ids)}
+
+
+@app.post("/quests/{quest_id}/auto-assign")
+def auto_assign_team(quest_id: int, session: Session = Depends(get_session)):
+    """AI automatically assigns best matching candidates to the quest team"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status not in ["open", "filled"]:
+        raise HTTPException(status_code=400, detail="Quest is not open for team assignment")
+    
+    # Get all users
+    all_users = session.exec(select(User)).all()
+    
+    # Exclude the quest leader and already accepted members
+    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+    available_users = [u for u in all_users if u.id != quest.leader_id and u.id not in accepted_ids]
+    
+    # Calculate how many more members we need
+    current_count = len(accepted_ids)
+    needed = quest.team_size - current_count
+    
+    if needed <= 0:
+        return {"message": "ทีมครบแล้ว", "assigned": [], "total_members": current_count}
+    
+    # Find best candidates
+    candidates = find_best_candidates(quest, available_users, needed)
+    
+    # Auto-assign top candidates
+    assigned = []
+    for candidate in candidates:
+        user = session.get(User, candidate["user_id"])
+        if user and user.is_available:
+            # Add to accepted members
+            accepted_ids.append(user.id)
+            # Mark user as unavailable
+            user.is_available = False
+            session.add(user)
+            assigned.append({
+                "user_id": user.id,
+                "name": user.name,
+                "character_class": user.character_class,
+                "level": user.level,
+                "match_score": candidate["match_score"],
+                "skill_score": candidate["skill_score"],
+                "ocean_score": candidate["ocean_score"],
+                "matching_skills": candidate["matching_skills"]
+            })
+    
+    # Update quest
+    quest.accepted_members = json.dumps(accepted_ids)
+    if len(accepted_ids) >= quest.team_size:
+        quest.status = "filled"
+    
+    session.add(quest)
+    session.commit()
+    
+    return {
+        "message": f"จัดทีมสำเร็จ! เพิ่ม {len(assigned)} คน",
+        "assigned": assigned,
+        "total_members": len(accepted_ids)
+    }
+
+
+@app.post("/quests/{quest_id}/apply")
+def apply_to_quest(quest_id: int, req: ApplyQuestRequest, session: Session = Depends(get_session)):
+    """Apply to a quest"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status != "open":
+        raise HTTPException(status_code=400, detail="Quest is not open for applications")
+    
+    user = session.get(User, req.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.is_available:
+        raise HTTPException(status_code=400, detail="User is not available")
+    
+    # Add to applicants list
+    applicants = json.loads(quest.applicants) if quest.applicants else []
+    if req.user_id in applicants:
+        raise HTTPException(status_code=400, detail="Already applied")
+    
+    applicants.append(req.user_id)
+    quest.applicants = json.dumps(applicants)
+    
+    session.add(quest)
+    session.commit()
+    
+    return {"message": "Applied successfully", "applicant_count": len(applicants)}
+
+
+class UpdateStatusRequest(SQLModel):
+    user_id: int
+    status: str
+
+@app.post("/quests/{quest_id}/status")
+def update_quest_status(quest_id: int, req: UpdateStatusRequest, session: Session = Depends(get_session)):
+    """Update quest status (e.g. start, complete, fail)"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+        
+    if quest.leader_id != req.user_id:
+        raise HTTPException(status_code=403, detail="Only leader can update status")
+        
+    # Validate transition
+    if req.status not in ["open", "filled", "in_progress", "completed", "failed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+        
+    quest.status = req.status
+    
+    # Handle side effects
+    if req.status in ["completed", "failed"]:
+        quest.project_end_date = datetime.utcnow()
+        # Free up members when quest ends
+        accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+        for uid in accepted_ids:
+            user = session.get(User, uid)
+            if user:
+                user.is_available = True
+                user.active_project_end_date = None
+                session.add(user)
+                
+    elif req.status == "in_progress":
+        quest.start_date = datetime.utcnow()
+        
+    session.add(quest)
+    session.commit()
+    
+    return {"message": "Status updated", "status": quest.status}
+
+
+@app.post("/quests/{quest_id}/accept/{user_id}")
+def accept_applicant(quest_id: int, user_id: int, session: Session = Depends(get_session)):
+    """Leader accepts an applicant"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Add to accepted members
+    accepted = json.loads(quest.accepted_members) if quest.accepted_members else []
+    if user_id not in accepted:
+        accepted.append(user_id)
+        quest.accepted_members = json.dumps(accepted)
+    
+    # Check if team is full
+    if len(accepted) >= quest.team_size:
+        quest.status = "filled"
+    
+    # Update user availability
+    user.is_available = False
+    
+    session.add(quest)
+    session.add(user)
+    session.commit()
+    
+    return {"message": "Applicant accepted", "accepted_count": len(accepted)}
+
+
+@app.post("/quests/{quest_id}/complete")
+def complete_quest(quest_id: int, session: Session = Depends(get_session)):
+    """Mark quest as completed - releases members' availability"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status == "completed":
+        raise HTTPException(status_code=400, detail="Quest already completed")
+    
+    if quest.status == "cancelled":
+        raise HTTPException(status_code=400, detail="Quest was cancelled")
+    
+    # Update quest status
+    quest.status = "completed"
+    
+    # Release accepted members
+    accepted = json.loads(quest.accepted_members) if quest.accepted_members else []
+    for uid in accepted:
+        user = session.get(User, uid)
+        if user:
+            user.is_available = True
+            session.add(user)
+    
+    session.add(quest)
+    session.commit()
+    
+    return {"message": "Quest completed!", "status": "completed"}
+
+
+@app.post("/quests/{quest_id}/cancel")
+def cancel_quest(quest_id: int, session: Session = Depends(get_session)):
+    """Cancel a quest - releases all applicants and members"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status == "completed":
+        raise HTTPException(status_code=400, detail="Cannot cancel completed quest")
+    
+    if quest.status == "cancelled":
+        raise HTTPException(status_code=400, detail="Quest already cancelled")
+    
+    # Update quest status
+    quest.status = "cancelled"
+    
+    # Release accepted members
+    accepted = json.loads(quest.accepted_members) if quest.accepted_members else []
+    for uid in accepted:
+        user = session.get(User, uid)
+        if user:
+            user.is_available = True
+            session.add(user)
+    
+    session.add(quest)
+    session.commit()
+    
+    return {"message": "Quest cancelled", "status": "cancelled"}
+
+
+@app.post("/quests/{quest_id}/start")
+def start_quest(quest_id: int, session: Session = Depends(get_session)):
+    """Start working on a quest - changes status to in_progress"""
+    quest = session.get(Quest, quest_id)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.status not in ["open", "filled"]:
+        raise HTTPException(status_code=400, detail="Quest cannot be started")
+    
+    quest.status = "in_progress"
+    session.add(quest)
+    session.commit()
+    
+    return {"message": "Quest started!", "status": "in_progress"}
 
 
 if __name__ == "__main__":

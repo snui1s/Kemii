@@ -96,7 +96,7 @@ export default function Home() {
       case "Mage":
         return <Wand size={40} color="purple" />;
       case "Paladin":
-        return <Shield size={40} color="yellow" />;
+        return <Shield size={40} color="#f59e0b" />;
       case "Warrior":
         return <Sword size={40} color="red" />;
       case "Cleric":
@@ -176,7 +176,7 @@ export default function Home() {
                 <div className="text-xs font-bold uppercase tracking-widest opacity-70 text-slate-800 dark:text-slate-200">
                   Character Status
                 </div>
-                <div className="text-4xl drop-shadow-md mt-1 text-slate-800 dark:text-slate-200">
+                <div className="bg-white dark:bg-slate-700 p-4 rounded-full shadow-inner mt-2">
                   {getClassIcon(myClass)}
                 </div>
                 <div className="text-center mb-2">

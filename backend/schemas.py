@@ -59,3 +59,44 @@ class SkillItem(BaseModel):
 
 class UpdateSkillsRequest(BaseModel):
     skills: List[SkillItem]
+
+# Quest schemas
+class CreateQuestRequest(BaseModel):
+    prompt: str  # Natural language description
+    deadline_days: int = 7  # Number of days for the quest
+    leader_id: int
+    start_date: datetime
+    deadline: datetime
+
+class QuestSkill(BaseModel):
+    name: str
+    level: int
+
+class QuestResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    rank: str
+    required_skills: List[QuestSkill]
+    optional_skills: List[QuestSkill]
+    ocean_preference: Dict[str, Any]
+    team_size: int
+    leader_id: int
+    leader_name: Optional[str] = None
+    leader_class: Optional[str] = None
+    status: str
+    applicant_count: int = 0
+    start_date: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    created_at: datetime
+
+class ApplyQuestRequest(BaseModel):
+    user_id: int
+
+class MatchScoreResponse(BaseModel):
+    skill_score: int  # 0-100
+    ocean_score: int  # 0-100
+    total_score: int  # 0-100
+    match_level: str  # "perfect", "good", "moderate", "risky"
+    missing_skills: List[str]
+    skill_gaps: List[Dict[str, Any]]  # {"name": "Python", "required": 4, "has": 2}
