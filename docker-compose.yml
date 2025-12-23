@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    container_name: kemii-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # Mount for hot reloading
+    env_file:
+      - ./backend/.env
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DATABASE_URL=sqlite:///elements.db
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: kemii-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: always
