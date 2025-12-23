@@ -100,3 +100,7 @@ class MatchScoreResponse(BaseModel):
     match_level: str  # "perfect", "good", "moderate", "risky"
     missing_skills: List[str]
     skill_gaps: List[Dict[str, Any]]  # {"name": "Python", "required": 4, "has": 2}
+
+class UpdateStatusRequest(BaseModel):
+    user_id: int
+    status: str
