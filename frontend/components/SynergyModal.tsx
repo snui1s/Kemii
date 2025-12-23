@@ -41,6 +41,7 @@ interface SynergyData {
   user1: UserBase;
   user2: UserBase;
   ai_analysis: AIAnalysis;
+  team_rating: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -156,17 +157,21 @@ export default function SynergyModal({
                 {data.ai_analysis.synergy_name}
               </h2>
 
-              <div className="flex items-center justify-center mt-2 sm:mt-3">
+              <div className="flex items-center justify-center gap-2 mt-2 sm:mt-3">
                 <div
                   className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${
-                    data.ai_analysis.synergy_score > 80
+                    data.team_rating === "Excellent"
+                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/30"
+                      : data.team_rating === "Good"
                       ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-300 dark:border-green-500/30"
-                      : data.ai_analysis.synergy_score > 50
+                      : data.team_rating === "Acceptable"
                       ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-500/30"
+                      : data.team_rating === "Risky"
+                      ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-500/30"
                       : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30"
                   }`}
                 >
-                  Resonance: {data.ai_analysis.synergy_score}%
+                  {data.team_rating} ({data.ai_analysis.synergy_score}%)
                 </div>
               </div>
             </div>
@@ -190,7 +195,8 @@ export default function SynergyModal({
 
               {/* VS Icon */}
               <div className="w-1/5 flex justify-center">
-                {data.ai_analysis.synergy_score > 70 ? (
+                {data.team_rating === "Excellent" ||
+                data.team_rating === "Good" ? (
                   <Handshake
                     size={20}
                     className="sm:w-6 sm:h-6 text-green-500 animate-pulse"

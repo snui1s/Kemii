@@ -16,7 +16,8 @@ from langchain_core.output_parsers import StrOutputParser
 
 from database import create_db_and_tables, get_session
 from models import User, TeamLog
-from schemas import OceanSubmission, UserProfile, MatchRequest,TeamBuilderRequest, ConfirmTeamRequest, TeamRecommendation, ReviveRequest
+from schemas import OceanSubmission, UserProfile, MatchRequest, TeamBuilderRequest, ConfirmTeamRequest, TeamRecommendation, ReviveRequest, UpdateSkillsRequest
+from skills_data import DEPARTMENTS
 from auth import create_access_token
 
 
@@ -65,6 +66,46 @@ def check_and_release_users(session: Session):
 @app.head("/")
 def read_root():
     return {"status": "I am awake!", "service": "Kemii API"}
+
+# === SKILLS ENDPOINTS ===
+@app.get("/skills")
+def get_skills():
+    """Get all skill departments and skills"""
+    return {"departments": DEPARTMENTS}
+
+@app.put("/users/{user_id}/skills")
+def update_user_skills(user_id: int, req: UpdateSkillsRequest, session: Session = Depends(get_session)):
+    """Update user's skills"""
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Convert to JSON and save
+    skills_data = [{"name": s.name, "level": s.level} for s in req.skills]
+    user.skills = json.dumps(skills_data, ensure_ascii=False)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    
+    return {"message": "Skills updated", "skills": skills_data}
+
+@app.get("/users/{user_id}/skills")
+def get_user_skills(user_id: int, session: Session = Depends(get_session)):
+    """Get user's skills"""
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    skills = json.loads(user.skills) if user.skills else []
+    return {"user_id": user_id, "skills": skills}
+
+@app.get("/users/{user_id}")
+def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
+    """Get user by ID"""
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 @app.post("/submit-assessment", response_model=UserProfile)
 def submit_assessment(data: OceanSubmission, session: Session = Depends(get_session)):
@@ -288,29 +329,73 @@ async def match_users_ai(request: Request, req: MatchRequest, session: Session =
     s1 = get_stats(u1)
     s2 = get_stats(u2)
     
-    # Base Score เริ่มต้น 60%
-    score = 60
+    # === NEW FORMULA ===
+    # Constants
+    TAU = 0.625
+    LAMBDA = 2.0
     
-    # Logic: Agreeableness (FTH) คือกาวใจ
-    avg_A = (s1["A"] + s2["A"]) / 2
-    score += (avg_A / 20) * 15  # สูงสุด +15%
+    # Helper functions
+    def variance(values):
+        """Var(X) = (1/n) × Σ(Xi - X̄)²"""
+        n = len(values)
+        mean_val = sum(values) / n
+        return sum((x - mean_val) ** 2 for x in values) / n
+
+    def var_star(values):
+        """Var*(X) = Var(X) / 400"""
+        return variance(values) / 400
+
+    def xbar_star(values):
+        """X̄* = (mean(X) - 10) / 40"""
+        mean_val = sum(values) / len(values)
+        return (mean_val - 10) / 40
+
+    # Collect values for each trait
+    C_values = [s1["C"], s2["C"]]
+    A_values = [s1["A"], s2["A"]]
+    E_values = [s1["E"], s2["E"]]
+    O_values = [s1["O"], s2["O"]]
+    N_values = [s1["N"], s2["N"]]
+
+    # Cost = 1.5×Var*(C) + 1.5×Var*(A) + 1×Var*(E) + 1×Var*(O) + 1×N̄* + λ×max(0, τ - Ā*)
+    N_bar_star = xbar_star(N_values)
+    A_bar_star = xbar_star(A_values)
     
-    # Logic: Neuroticism (DEX/Sensitivity) สูงทั้งคู่คือระเบิดเวลา
-    avg_N = (s1["N"] + s2["N"]) / 2
-    if avg_N > 15: score -= 10
+    cost = (
+        1.5 * var_star(C_values) +
+        1.5 * var_star(A_values) +
+        1.0 * var_star(E_values) +
+        1.0 * var_star(O_values) +
+        1.0 * N_bar_star +
+        LAMBDA * max(0, TAU - A_bar_star)
+    )
+
+    # Score = 100 × (1 - (Cost / (6 + λ×τ)))
+    denominator = 6 + LAMBDA * TAU  # = 7.25
+    score = 100 * (1 - (cost / denominator))
+    final_score = max(0, min(100, int(round(score))))  # Clamp to 0-100
     
-    # Logic: Extraversion (STR) ต่างกันเติมเต็มกัน (คนนึงพูด คนนึงฟัง)
-    diff_E = abs(s1["E"] - s2["E"])
-    if diff_E > 10: score += 10 # ต่างกันเยอะ = ดี (Balance)
+    # Team Rating
+    def get_team_rating(s):
+        if s >= 80:
+            return "Excellent"
+        elif s >= 65:
+            return "Good"
+        elif s >= 50:
+            return "Acceptable"
+        elif s >= 35:
+            return "Risky"
+        else:
+            return "Not Recommended"
     
-    # Logic: Conscientiousness (VIT) ใกล้กันทำงานง่าย
-    diff_C = abs(s1["C"] - s2["C"])
-    if diff_C < 5: score += 10 # ใกล้กัน = ดี
+    team_rating = get_team_rating(final_score)
     
-    # Cap Score 0-100
-    final_score = max(10, min(99, int(score)))
-    
-    print(f"⚔️ Soul Link: {u1.name} ({u1.character_class}) x {u2.name} ({u2.character_class}) = {final_score}%")
+    # Debug log
+    print(f"📊 DEBUG: C={C_values}, A={A_values}, E={E_values}, O={O_values}, N={N_values}")
+    print(f"📊 DEBUG: Var*(C)={var_star(C_values):.4f}, Var*(A)={var_star(A_values):.4f}, Var*(E)={var_star(E_values):.4f}, Var*(O)={var_star(O_values):.4f}")
+    print(f"📊 DEBUG: N_bar*={N_bar_star:.4f}, A_bar*={A_bar_star:.4f}, penalty={LAMBDA * max(0, TAU - A_bar_star):.4f}")
+    print(f"📊 DEBUG: cost={cost:.4f}, score={score:.2f}")
+    print(f"⚔️ Soul Link: {u1.name} ({u1.character_class}) x {u2.name} ({u2.character_class}) = {final_score}% [{team_rating}]")
 
     # --- 2. เรียก AI ให้วิเคราะห์ (Roleplay) ---
    # Prompt จับคู่ (ฉบับความยาวกำลังดี มีเนื้อหา RPG)
@@ -379,7 +464,8 @@ async def match_users_ai(request: Request, req: MatchRequest, session: Session =
     return {
         "user1": u1,
         "user2": u2,
-        "ai_analysis": analysis_json
+        "ai_analysis": analysis_json,
+        "team_rating": team_rating
     }
 
 @app.get("/users/roster")
@@ -424,50 +510,132 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
     if len(candidates) < req.member_count:
         raise HTTPException(status_code=400, detail=f"Not enough heroes available! Need {req.member_count}, found {len(candidates)}")
 
-    # 3. เตรียมข้อมูลส่ง AI
-    roster_text = ""
-    for u in candidates:
-        roster_text += f"- ID:{u.id} | {u.name} | Class:{u.character_class} | Stats(O{u.ocean_openness},C{u.ocean_conscientiousness},E{u.ocean_extraversion},A{u.ocean_agreeableness},N{u.ocean_neuroticism})\n"
-
-    # 4. Prompt: Strategy Logic
-    strategy_guide = {
-        "Balanced": "Mix of all classes to cover weaknesses (Tank, DPS, Support, Brain).",
-        "Aggressive": "Focus on High Extraversion (Warrior) & High Neuroticism (Rogue) for speed/impact.",
-        "Creative": "Focus on High Openness (Mage) for innovation and solutions.",
-        "Supportive": "Focus on High Agreeableness (Cleric) & Conscientiousness (Paladin) for stability."
-    }
-
+    # === HEADHUNTER ALGORITHM ===
+    # Constants
+    TAU = 0.625
+    LAMBDA = 2.0
+    
+    def get_ocean_stats(user):
+        return {
+            "O": user.ocean_openness or 0,
+            "C": user.ocean_conscientiousness or 0,
+            "E": user.ocean_extraversion or 0,
+            "A": user.ocean_agreeableness or 0,
+            "N": user.ocean_neuroticism or 0
+        }
+    
+    def calculate_academic_cost(team_stats_list):
+        """
+        Calculate team cost using the academic formula:
+        Cost = 1.5×Var*(C) + 1.5×Var*(A) + 1×Var*(E) + 1×Var*(O) + 1×N̄* + λ×max(0, τ - Ā*)
+        """
+        if len(team_stats_list) < 2:
+            return float('inf')  # Can't calculate variance with < 2 members
+        
+        C_values = [s["C"] for s in team_stats_list]
+        A_values = [s["A"] for s in team_stats_list]
+        E_values = [s["E"] for s in team_stats_list]
+        O_values = [s["O"] for s in team_stats_list]
+        N_values = [s["N"] for s in team_stats_list]
+        
+        def variance(values):
+            n = len(values)
+            mean_val = sum(values) / n
+            return sum((x - mean_val) ** 2 for x in values) / n
+        
+        def var_star(values):
+            return variance(values) / 400
+        
+        def xbar_star(values):
+            mean_val = sum(values) / len(values)
+            return (mean_val - 10) / 40
+        
+        N_bar_star = xbar_star(N_values)
+        A_bar_star = xbar_star(A_values)
+        
+        cost = (
+            1.5 * var_star(C_values) +
+            1.5 * var_star(A_values) +
+            1.0 * var_star(E_values) +
+            1.0 * var_star(O_values) +
+            1.0 * N_bar_star +
+            LAMBDA * max(0, TAU - A_bar_star)
+        )
+        return cost
+    
+    def calculate_team_score(cost):
+        """Convert cost to score (0-100)"""
+        denominator = 6 + LAMBDA * TAU  # = 7.25
+        score = 100 * (1 - (cost / denominator))
+        return max(0, min(100, int(round(score))))
+    
+    # Start with leader
+    selected_team = [leader]
+    selected_stats = [get_ocean_stats(leader)]
+    remaining_candidates = list(candidates)
+    
+    print(f"🎯 Headhunter: Starting with Leader [{leader.name}]")
+    
+    # Greedy selection: pick best candidate each round
+    for round_num in range(req.member_count):
+        best_candidate = None
+        best_cost = float('inf')
+        
+        for candidate in remaining_candidates:
+            # Try adding this candidate to the team
+            test_stats = selected_stats + [get_ocean_stats(candidate)]
+            cost = calculate_academic_cost(test_stats)
+            
+            if cost < best_cost:
+                best_cost = cost
+                best_candidate = candidate
+        
+        if best_candidate:
+            selected_team.append(best_candidate)
+            selected_stats.append(get_ocean_stats(best_candidate))
+            remaining_candidates.remove(best_candidate)
+            
+            current_score = calculate_team_score(best_cost)
+            print(f"   Round {round_num + 1}: Added [{best_candidate.name}] -> Cost={best_cost:.4f}, Score={current_score}%")
+    
+    # Calculate final team score
+    final_cost = calculate_academic_cost(selected_stats)
+    final_score = calculate_team_score(final_cost)
+    
+    def get_team_rating(s):
+        if s >= 80: return "Excellent"
+        elif s >= 65: return "Good"
+        elif s >= 50: return "Acceptable"
+        elif s >= 35: return "Risky"
+        else: return "Not Recommended"
+    
+    team_rating = get_team_rating(final_score)
+    print(f"✅ Headhunter Complete: Final Score={final_score}% [{team_rating}]")
+    
+    # Get selected members (excluding leader)
+    selected_members_users = selected_team[1:]  # Exclude leader
+    
+    # 3. ใช้ AI สร้างชื่อทีมและเหตุผล (แค่ตรงนี้)
+    member_names = ", ".join([u.name for u in selected_members_users])
+    
     prompt = ChatPromptTemplate.from_template("""
-    Role: You are the "Grand Guild Master" acting as a Strategic HR Consultant.
-    Task: Form a raiding party of {count} heroes from the "Candidates" list to join the "Party Leader".
+    Role: You are the "Grand Guild Master" naming a newly formed party.
     
     **Party Leader:** {leader_name} (Class: {leader_class})
-    **Quest Strategy:** {strategy}
+    **Members:** {member_names}
+    **Team Score:** {score}% ({rating})
+    **Strategy:** {strategy}
     
-    **Strategy Guide (OCEAN x RPG Mode):**
-    - **Balanced (สมดุล):** The "Classic Adventure Party". Mix diverse stats: High **C** (Structure), High **E** (Action), and High **A** (Harmony) to handle any situation.
-    - **Aggressive (สายลุย):** The "Vanguard Rush". Focus on High **Extraversion (E)** (Warrior energy) to drive execution, close deals, and crush deadlines fast.
-    - **Creative (สายไอเดีย):** The "Arcane Council". Focus on High **Openness (O)** (Mage energy) to cast "Brainstorm", innovate solutions, and find new paths.
-    - **Supportive (สายซัพ):** The "Iron Fortress". Focus on High **Agreeableness (A)** (Cleric energy) and High **Conscientiousness (C)** (Paladin energy) to ensure stability, support, and zero errors.
+    **TASK:** Create an epic Thai team name and explain why this team works well together.
     
-    **Candidates (Available Heroes):**
-    {roster}
-    
-    **CRITICAL OUTPUT RULES:**
-    1. **JSON ONLY:** Return strictly valid JSON.
-    2. **"reason" Field Format:**
-       - Write in **PLAIN THAI TEXT** only.
-       - **Blend RPG metaphors with Real Work benefits.**
-       - Example: "เลือก [Name] (High O) มาเป็นจอมเวทย์เพื่อเสกไอเดียใหม่ๆ และให้ [Name] (High C) เป็นป้อมปราการคอยตรวจสอบความถูกต้อง ทำให้งานมีความคิดสร้างสรรค์แต่ยังคงเป๊ะตามระบบ"
-       - ❌ DO NOT use Markdown (No bold `**`, No italics `*`, No headers `#`).
-       - ❌ DO NOT use bullet points (`-` or `•`).
-       - Keep it concise (Max 2-3 sentences).
+    **OUTPUT RULES:**
+    - team_name: Creative Thai name (e.g. "ภาคีพิทักษ์เดดไลน์", "กองหน้าล่าโปรเจกต์")
+    - reason: 2-3 sentences in Thai explaining the team synergy. NO MARKDOWN.
     
     **JSON OUTPUT:**
     {{
-      "selected_ids": [id1, id2, ...],
-      "team_name": "Epic Thai Team Name (e.g. ภาคีพิทักษ์เดดไลน์, กองหน้าล่าโปรเจกต์)",
-      "reason": "Plain Thai text explaining the synergy without markdown..."
+      "team_name": "...",
+      "reason": "..."
     }}
     """)
     
@@ -475,78 +643,84 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
     
     try:
         raw = await chain.ainvoke({
-            "strategy": req.strategy,
-            "guide": strategy_guide.get(req.strategy, "Balanced"),
             "leader_name": leader.name,
             "leader_class": leader.character_class,
-            "count": req.member_count,
-            "roster": roster_text
+            "member_names": member_names,
+            "score": final_score,
+            "rating": team_rating,
+            "strategy": req.strategy
         })
         
         res_json = json.loads(raw.replace("```json", "").replace("```", "").strip())
+        team_name = res_json.get('team_name', f"ทีมของ {leader.name}")
+        reason = res_json.get('reason', f"ทีมนี้มีคะแนนความเข้ากัน {final_score}% ({team_rating})")
         
-        # 5. แปลง ID กลับเป็น Object
-        selected_members = []
-        member_snapshot = [] # สำหรับบันทึกลง Log
-        
-        for uid in res_json.get('selected_ids', []):
-            u = next((c for c in candidates if c.id == uid), None)
-            if u:
-                u_dict = {
-                    "id": u.id, "name": u.name, "character_class": u.character_class, "dominant_type": f"Lv.{u.level}",
-                    "scores": {
-                    "Openness": u.ocean_openness or 0,
-                    "Conscientiousness": u.ocean_conscientiousness or 0,
-                    "Extraversion": u.ocean_extraversion or 0,
-                    "Agreeableness": u.ocean_agreeableness or 0,
-                    "Neuroticism": u.ocean_neuroticism or 0
-                }
-            }
-                selected_members.append(u_dict)
-                member_snapshot.append({
-                    "id": u.id, 
-                    "name": u.name, 
-                    "character_class": u.character_class,
-                    "dominant_type": f"Lv.{u.level}",
-                    "scores": u_dict["scores"]
-                })
-
-        # 6. (Optional) บันทึก Draft ลง Log ไว้ก่อน (สถานะ generated)
-        # ถ้าอยากให้กด Confirm แล้วค่อย save ก็ข้าม step นี้ หรือ save ไว้ก่อนก็ได้
-        new_log = TeamLog(
-            leader_id=leader.id,
-            team_name=res_json['team_name'],
-            strategy=req.strategy,
-            reason=res_json['reason'],
-            members_snapshot=member_snapshot,
-            status="generated"
-        )
-        session.add(new_log)
-        session.commit()
-        session.refresh(new_log)
-
-        # 7. ส่งกลับ Frontend
-        return {
-            "strategy": req.strategy,
-            "team_name": res_json['team_name'],
-            "reason": res_json['reason'],
-            "leader": {
-                "id": leader.id, "name": leader.name, "character_class": leader.character_class, "dominant_type": f"Lv.{leader.level}",
-                "scores": {
-                    "Openness": leader.ocean_openness or 0,
-                    "Conscientiousness": leader.ocean_conscientiousness or 0,
-                    "Extraversion": leader.ocean_extraversion or 0,
-                    "Agreeableness": leader.ocean_agreeableness or 0,
-                    "Neuroticism": leader.ocean_neuroticism or 0
-                }
-            },
-            "members": selected_members,
-            "log_id": new_log.id
-        }
-
     except Exception as e:
-        print(f"AI Error: {e}")
-        raise HTTPException(status_code=500, detail="The Oracle is confused (AI Error).")
+        print(f"AI Naming Error: {e}")
+        team_name = f"ทีมของ {leader.name}"
+        reason = f"ทีมนี้ถูกคัดเลือกด้วย Headhunter Algorithm คะแนนความเข้ากัน {final_score}% ({team_rating})"
+    
+    # 4. สร้าง Response
+    selected_members = []
+    member_snapshot = []
+    
+    for u in selected_members_users:
+        u_dict = {
+            "id": u.id, "name": u.name, "character_class": u.character_class, "dominant_type": f"Lv.{u.level}",
+            "scores": {
+                "Openness": u.ocean_openness or 0,
+                "Conscientiousness": u.ocean_conscientiousness or 0,
+                "Extraversion": u.ocean_extraversion or 0,
+                "Agreeableness": u.ocean_agreeableness or 0,
+                "Neuroticism": u.ocean_neuroticism or 0
+            }
+        }
+        selected_members.append(u_dict)
+        member_snapshot.append({
+            "id": u.id, 
+            "name": u.name, 
+            "character_class": u.character_class,
+            "dominant_type": f"Lv.{u.level}",
+            "scores": u_dict["scores"]
+        })
+
+    # 5. บันทึก Log
+    new_log = TeamLog(
+        leader_id=leader.id,
+        team_name=team_name,
+        strategy=req.strategy,
+        reason=reason,
+        members_snapshot=member_snapshot,
+        status="generated"
+    )
+    session.add(new_log)
+    session.commit()
+    session.refresh(new_log)
+
+    print("team_score", final_score)
+    print("team_rating", team_rating)
+
+    # 6. ส่งกลับ Frontend
+    return {
+        "strategy": req.strategy,
+        "team_name": team_name,
+        "reason": reason,
+        "leader": {
+            "id": leader.id, "name": leader.name, "character_class": leader.character_class, "dominant_type": f"Lv.{leader.level}",
+            "scores": {
+                "Openness": leader.ocean_openness or 0,
+                "Conscientiousness": leader.ocean_conscientiousness or 0,
+                "Extraversion": leader.ocean_extraversion or 0,
+                "Agreeableness": leader.ocean_agreeableness or 0,
+                "Neuroticism": leader.ocean_neuroticism or 0
+            }
+        },
+        "members": selected_members,
+        "log_id": new_log.id,
+        "team_score": final_score,
+        "team_rating": team_rating
+    }
+
     
 @app.post("/confirm-team")
 def confirm_team(req: ConfirmTeamRequest, session: Session = Depends(get_session)):

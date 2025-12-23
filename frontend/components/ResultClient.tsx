@@ -273,9 +273,20 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
             </div>
           </div>
 
+          {/* Skills Button */}
+          <Link href={`/assessment/skills?userId=${user.id}`} className="block">
+            <button
+              className={`w-full bg-gradient-to-r ${theme.color} hover:opacity-90 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg`}
+            >
+              <Star size={18} />
+              ถัดไป: เลือก Skills ของคุณ
+              <ChevronRight size={18} />
+            </button>
+          </Link>
+
           <Link href="/" className="block">
             <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md">
-              <ChevronRight size={18} /> Back to Guild
+              <ChevronRight size={18} /> ข้ามไปหน้าหลัก
             </button>
           </Link>
         </div>

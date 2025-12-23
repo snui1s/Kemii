@@ -11,8 +11,8 @@ import {
   Lock,
   HelpCircle,
   Menu,
+  Scroll,
   X,
-  // ✅ เพิ่มไอคอนสำหรับ RPG Class
   Wand, // Mage
   Shield, // Paladin
   Sword, // Warrior
@@ -243,6 +243,19 @@ export default function Navbar() {
                 {myData ? <UserPlus size={18} /> : <Lock size={18} />}
                 <span>สร้างทีม</span>
               </Link>
+
+              <Link
+                href="/profile"
+                onClick={(e) => handleProtectedLink(e, "/profile")}
+                className={`flex items-center gap-1.5 transition text-base font-medium ${
+                  myData
+                    ? "hover:text-indigo-600 dark:hover:text-indigo-400"
+                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                }`}
+              >
+                {myData ? <UserIcon size={18} /> : <Lock size={18} />}
+                <span>โปรไฟล์</span>
+              </Link>
             </div>
 
             {/* DIVIDER & THEME */}
@@ -392,6 +405,22 @@ export default function Navbar() {
               >
                 {myData ? <Shuffle size={20} /> : <Lock size={20} />}
                 จัดทีม AI
+              </Link>
+
+              <Link
+                href="/profile"
+                onClick={(e) => {
+                  handleProtectedLink(e, "/profile");
+                  setIsMenuOpen(false);
+                }}
+                className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
+                  myData
+                    ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                }`}
+              >
+                {myData ? <UserIcon size={20} /> : <Lock size={20} />}
+                โปรไฟล์
               </Link>
             </div>
 

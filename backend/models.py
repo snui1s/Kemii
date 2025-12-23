@@ -20,6 +20,7 @@ class User(SQLModel, table=True):
     is_available: bool = Field(default=True)
     team_name: Optional[str] = Field(default=None)
     analysis_result: Optional[str] = Field(default=None)
+    skills: Optional[str] = Field(default=None)  # JSON: [{"name": "Python", "level": 4}, ...]
     
     active_project_end_date: Optional[datetime] = Field(default=None)
 

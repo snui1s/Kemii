@@ -196,7 +196,7 @@ export default function Home() {
                   }
                   className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 shadow-sm hover:text-indigo-500 transition"
                 >
-                  ดูสเตตัสของฉัน
+                  ดูคำทำนายของคุณ
                 </button>
               </div>
             ) : (

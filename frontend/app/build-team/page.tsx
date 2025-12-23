@@ -47,6 +47,8 @@ interface TeamResult {
   team_name: string;
   log_id?: number;
   strategy: string;
+  team_score?: number;
+  team_rating?: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -147,8 +149,14 @@ export default function BuildTeamPage() {
             strategy: strategy,
           }
         );
+        // Debug: log the full response
+        console.log(
+          `🔍 [${strategy}] FULL res.data:`,
+          JSON.stringify(res.data, null, 2)
+        );
         return { ...res.data, strategy };
       } catch (error) {
+        console.error(`❌ [${strategy}] Error:`, error);
         return null;
       }
     });
@@ -448,6 +456,32 @@ export default function BuildTeamPage() {
                             <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-tight">
                               {allResults[activeStrategy]?.team_name}
                             </h2>
+                            {/* Team Score Badge */}
+                            {allResults[activeStrategy]?.team_score !==
+                              undefined && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                                    allResults[activeStrategy]?.team_rating ===
+                                    "Excellent"
+                                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/30"
+                                      : allResults[activeStrategy]
+                                          ?.team_rating === "Good"
+                                      ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-300 dark:border-green-500/30"
+                                      : allResults[activeStrategy]
+                                          ?.team_rating === "Acceptable"
+                                      ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-500/30"
+                                      : allResults[activeStrategy]
+                                          ?.team_rating === "Risky"
+                                      ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-500/30"
+                                      : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30"
+                                  }`}
+                                >
+                                  ⚡ {allResults[activeStrategy]?.team_rating} (
+                                  {allResults[activeStrategy]?.team_score}%)
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <button
                             onClick={handleConfirm}

@@ -46,6 +46,8 @@ Kemii is an AI-powered team management and personality assessment platform desig
 2. Create a virtual environment and activate it:
    ```bash
     python -m venv venv
+    #or
+    uv venv
     # Windows:
     venv\Scripts\activate
     # macOS/Linux:
@@ -54,6 +56,8 @@ Kemii is an AI-powered team management and personality assessment platform desig
 3. Install dependencies:
    ```bash
    pip install -r requirements.txt
+   #or
+   uv pip install -r requirements.txt
    ```
 4. Create a .env file in the backend directory:
    ```bash
@@ -62,7 +66,9 @@ Kemii is an AI-powered team management and personality assessment platform desig
    ```
 5. Run the server:
    ```bash
-   uvicorn main:app --reload
+   python -u main.py
+   #or
+   uv run main.py
    The backend will start at http://localhost:8000.
    ```
 

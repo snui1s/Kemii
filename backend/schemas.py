@@ -46,7 +46,16 @@ class TeamRecommendation(BaseModel):
     leader: Dict[str, Any]
     members: List[Dict[str, Any]]
     log_id: Optional[int] = None
+    team_score: Optional[int] = None
+    team_rating: Optional[str] = None
 
 class ReviveRequest(BaseModel):
     start_date: datetime
     end_date: datetime
+
+class SkillItem(BaseModel):
+    name: str
+    level: int  # 1-5
+
+class UpdateSkillsRequest(BaseModel):
+    skills: List[SkillItem]
