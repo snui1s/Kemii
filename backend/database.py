@@ -5,7 +5,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///elements.db")
+# Determine the base directory (where database.py is located)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = "elements.db"
+
+# Check if DATABASE_URL is set in environment, else default to absolute path sqlite
+env_db_url = os.environ.get("DATABASE_URL")
+
+if env_db_url:
+    DATABASE_URL = env_db_url
+else:
+    # Use absolute path for SQLite to avoid CWD issues
+    db_path = os.path.join(BASE_DIR, DB_NAME)
+    DATABASE_URL = f"sqlite:///{db_path}"
+
 connect_args = {}
 if "sqlite" in DATABASE_URL:
     connect_args = {"check_same_thread": False}

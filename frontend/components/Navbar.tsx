@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 import {
   Users,
   ClipboardList,
@@ -19,59 +20,22 @@ import {
   Heart, // Cleric
   Skull, // Rogue
   User as UserIcon,
+  LogIn,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ThemeToggle } from "./ThemeToggle";
 import InfoModal from "./InfoModal";
 
-// Interface สำหรับข้อมูล User ใน Navbar
-interface UserData {
-  name: string;
-  character_class: string;
-  level: number;
-}
-
 export default function Navbar() {
   const router = useRouter();
-
-  // ✅ 1. เปลี่ยน State ให้เก็บ Class และ Level
-  const [myData, setMyData] = useState<UserData | null>(null);
+  const { user, logout } = useAuth();
 
   const [mounted, setMounted] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const checkUser = () => {
-      // ✅ 2. อ่าน Key ใหม่จาก LocalStorage
-      const name = localStorage.getItem("myName");
-      const character_class = localStorage.getItem("myClass");
-      const level = localStorage.getItem("myLevel");
-
-      if (name && character_class) {
-        setMyData({
-          name,
-          character_class,
-          level: level ? parseInt(level) : 1,
-        });
-      } else {
-        setMyData(null);
-      }
-    };
-
-    const timer = setTimeout(() => {
-      setMounted(true);
-      checkUser();
-    }, 0);
-
-    window.addEventListener("user-updated", checkUser);
-    window.addEventListener("storage", checkUser);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("user-updated", checkUser);
-      window.removeEventListener("storage", checkUser);
-    };
+    setMounted(true);
   }, []);
 
   const handleLogout = () => {
@@ -83,7 +47,7 @@ export default function Navbar() {
               จะหนีไปแล้วเหรอ? <span className="text-2xl">🥺</span>
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              ข้อมูลประวัติในเครื่องจะหายไปนะ
+              ยังไม่ได้ทำเควสเลยนะ
             </p>
           </div>
 
@@ -98,17 +62,8 @@ export default function Navbar() {
             <button
               onClick={() => {
                 toast.dismiss(t.id);
-                // ✅ 3. ลบ Key ใหม่ทิ้ง
-                localStorage.removeItem("myUserId");
-                localStorage.removeItem("myName");
-                localStorage.removeItem("myClass"); // RPG Class
-                localStorage.removeItem("myLevel"); // RPG Level
-                localStorage.removeItem("myToken");
-
-                setMyData(null);
-                window.dispatchEvent(new Event("user-updated"));
+                logout();
                 toast.success("บ๊ายบาย! ไว้เจอกันใหม่ครับ 👋");
-                router.push("/");
               }}
               className="px-4 py-2 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition transform active:scale-95"
             >
@@ -148,7 +103,7 @@ export default function Navbar() {
   const toastCooldown = useRef(false);
 
   const handleProtectedLink = (e: React.MouseEvent, href: string) => {
-    if (!myData) {
+    if (!user) {
       e.preventDefault();
 
       if (toastCooldown.current) return;
@@ -222,12 +177,12 @@ export default function Navbar() {
                 href="/team-history"
                 onClick={(e) => handleProtectedLink(e, "/team-history")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
-                  myData
+                  user
                     ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Users size={18} /> : <Lock size={18} />}
+                {user ? <Users size={18} /> : <Lock size={18} />}
                 <span>ทีม</span>
               </Link>
 
@@ -235,12 +190,12 @@ export default function Navbar() {
                 href="/build-team"
                 onClick={(e) => handleProtectedLink(e, "/build-team")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
-                  myData
+                  user
                     ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <UserPlus size={18} /> : <Lock size={18} />}
+                {user ? <UserPlus size={18} /> : <Lock size={18} />}
                 <span>สร้างทีม</span>
               </Link>
 
@@ -248,12 +203,12 @@ export default function Navbar() {
                 href="/quests"
                 onClick={(e) => handleProtectedLink(e, "/quests")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
-                  myData
+                  user
                     ? "hover:text-amber-600 dark:hover:text-amber-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Scroll size={18} /> : <Lock size={18} />}
+                {user ? <Scroll size={18} /> : <Lock size={18} />}
                 <span>เควส</span>
               </Link>
 
@@ -261,12 +216,12 @@ export default function Navbar() {
                 href="/users"
                 onClick={(e) => handleProtectedLink(e, "/users")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
-                  myData
+                  user
                     ? "hover:text-indigo-600 dark:hover:text-indigo-400"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Users size={18} /> : <Lock size={18} />}
+                {user ? <Users size={18} /> : <Lock size={18} />}
                 <span>สมาชิกกิลด์</span>
               </Link>
             </div>
@@ -286,7 +241,7 @@ export default function Navbar() {
 
             {/* USER PROFILE - Desktop */}
             <div className="hidden lg:flex items-center">
-              {myData ? (
+              {user ? (
                 <div className="flex items-center gap-2 pl-2">
                   <Link
                     href="/profile"
@@ -294,15 +249,15 @@ export default function Navbar() {
                   >
                     {/* Icon Class */}
                     <div className="p-1 bg-slate-100 dark:bg-slate-700 rounded-full">
-                      {getClassIcon(myData.character_class)}
+                      {getClassIcon(user.character_class)}
                     </div>
 
                     <div className="flex flex-col leading-none">
                       <span className="font-bold text-slate-700 dark:text-indigo-300 text-sm truncate max-w-[80px]">
-                        {myData.name}
+                        {user.name}
                       </span>
                       <span className="text-[10px] text-slate-400">
-                        Lv.{myData.level}
+                        Lv.{user.level}
                       </span>
                     </div>
                   </Link>
@@ -314,13 +269,21 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Link
-                  href="/assessment"
-                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-full text-sm font-bold transition shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95 ml-2 whitespace-nowrap"
-                >
-                  <ClipboardList size={18} />
-                  <span>ปลุกพลัง</span>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  >
+                    เข้าสู่ระบบ
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-md shadow-indigo-500/20 active:scale-95"
+                  >
+                    <UserPlus size={18} />
+                    <span>สมัครสมาชิก</span>
+                  </Link>
+                </div>
               )}
             </div>
 
@@ -328,12 +291,12 @@ export default function Navbar() {
             <div className="flex lg:hidden items-center gap-3">
               <ThemeToggle />
 
-              {!myData && (
+              {!user && (
                 <Link
-                  href="/assessment"
-                  className="flex items-center justify-center bg-indigo-600 text-white w-8 h-8 rounded-full shadow-md"
+                  href="/login"
+                  className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition"
                 >
-                  <ClipboardList size={16} />
+                  <LogIn size={24} />
                 </Link>
               )}
 
@@ -350,7 +313,7 @@ export default function Navbar() {
         {/* MOBILE MENU DROPDOWN */}
         {isMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-xl p-4 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
-            {myData && (
+            {user && (
               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
                 <Link
                   href="/profile"
@@ -358,14 +321,14 @@ export default function Navbar() {
                   className="flex items-center gap-3 flex-1"
                 >
                   <div className="p-2 bg-white dark:bg-slate-700 rounded-full shadow-sm">
-                    {getClassIcon(myData.character_class)}
+                    {getClassIcon(user.character_class)}
                   </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-slate-700 dark:text-slate-200">
-                      {myData.name}
+                      {user.name}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {myData.character_class} (Lv.{myData.level})
+                      {user.character_class} (Lv.{user.level})
                     </span>
                   </div>
                 </Link>
@@ -386,12 +349,12 @@ export default function Navbar() {
                   setIsMenuOpen(false);
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
-                  myData
+                  user
                     ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Users size={20} /> : <Lock size={20} />}
+                {user ? <Users size={20} /> : <Lock size={20} />}
                 ประวัติทีม
               </Link>
               {/* ... ลิงก์อื่นๆ เหมือนเดิม ... */}
@@ -402,12 +365,12 @@ export default function Navbar() {
                   setIsMenuOpen(false);
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
-                  myData
+                  user
                     ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <UserPlus size={20} /> : <Lock size={20} />}
+                {user ? <UserPlus size={20} /> : <Lock size={20} />}
                 สร้างทีม
               </Link>
 
@@ -418,12 +381,12 @@ export default function Navbar() {
                   setIsMenuOpen(false);
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
-                  myData
+                  user
                     ? "hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-300"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Scroll size={20} /> : <Lock size={20} />}
+                {user ? <Scroll size={20} /> : <Lock size={20} />}
                 เควส
               </Link>
 
@@ -434,12 +397,12 @@ export default function Navbar() {
                   setIsMenuOpen(false);
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
-                  myData
+                  user
                     ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 }`}
               >
-                {myData ? <Users size={20} /> : <Lock size={20} />}
+                {user ? <Users size={20} /> : <Lock size={20} />}
                 สมาชิกกิลด์
               </Link>
             </div>
@@ -457,15 +420,24 @@ export default function Navbar() {
               คู่มือคลาส
             </button>
 
-            {!myData && (
-              <Link
-                href="/assessment"
-                onClick={() => setIsMenuOpen(false)}
-                className="mt-2 flex items-center justify-center gap-2 w-full bg-indigo-600 text-white p-3 rounded-xl font-bold shadow-indigo-900/20 shadow-lg active:scale-95 transition"
-              >
-                <ClipboardList size={20} />
-                เริ่มทำพิธีปลุกพลัง
-              </Link>
+            {!user && (
+              <div className="mt-2 flex flex-col gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex justify-center w-full py-3 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+                >
+                  เข้าสู่ระบบ
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex justify-center items-center gap-2 w-full py-3 rounded-xl font-bold bg-indigo-600 text-white"
+                >
+                  <UserPlus size={18} />
+                  สมัครสมาชิก
+                </Link>
+              </div>
             )}
           </div>
         )}

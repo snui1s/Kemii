@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ElementalLoader from "@/components/ElementalLoader";
+import { useAuth } from "@/context/AuthContext";
 
 const questions = [
   // --- Extraversion (E) ---
@@ -212,7 +213,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function AssessmentPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const { token, user, refreshUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -263,8 +264,6 @@ export default function AssessmentPage() {
     });
 
     setAnswers(newAnswers);
-    if (!name)
-      setName(targetType === "random" ? "Random Guy" : `Test ${namePrefix}`);
     toast.success(`Debug: Filled for ${namePrefix}`);
   };
 
@@ -302,10 +301,6 @@ export default function AssessmentPage() {
   ];
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      toast.error("กรุณากรอกชื่อเล่นก่อนนะครับ");
-      return;
-    }
     if (Object.keys(answers).length < questions.length) {
       toast.error(
         `ตอบให้ครบ ${questions.length} ข้อก่อนนะ (ตอนนี้ ${
@@ -339,7 +334,6 @@ export default function AssessmentPage() {
     });
 
     const payload = {
-      name: name,
       extraversion: scores[1],
       agreeableness: scores[2],
       conscientiousness: scores[3],
@@ -348,16 +342,22 @@ export default function AssessmentPage() {
     };
 
     try {
-      const res = await axios.post(`${API_URL}/submit-assessment`, payload);
-      const newUser = res.data;
+      let res;
+      if (token && user) {
+        // Authenticated Submission
+        res = await axios.post(`${API_URL}/users/me/assessment`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        // Guest Submission (Fallback)
+        res = await axios.post(`${API_URL}/submit-assessment`, payload);
+      }
 
-      if (newUser.access_token) {
-        localStorage.setItem("myToken", newUser.access_token);
-        localStorage.setItem("myUserId", newUser.id.toString());
-        localStorage.setItem("myName", newUser.name);
-        localStorage.setItem("myClass", newUser.character_class);
-        localStorage.setItem("myLevel", newUser.level.toString());
-        window.dispatchEvent(new Event("user-updated"));
+      const newUser = res.data;
+      // No token setting here anymore!
+
+      if (token) {
+        await refreshUser();
       }
 
       toast.success(`ปลุกพลังสำเร็จ! ยินดีต้อนรับคุณ ${newUser.name}`);
@@ -370,7 +370,7 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950/20 relative overflow-hidden transition-colors">
       {/* Ambient Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-200/30 dark:bg-indigo-900/20 rounded-full blur-[120px]" />
@@ -537,20 +537,6 @@ export default function AssessmentPage() {
           <p className="text-slate-500">
             ตอบคำถาม 50 ข้อ เพื่อค้นหาอาชีพและสเตตัสที่แท้จริงของคุณ
           </p>
-        </div>
-
-        {/* Name Input Card */}
-        <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 mb-10 shadow-sm">
-          <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2 tracking-wide">
-            ชื่อเล่น
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="กรอกชื่อเล่นของคุณ..."
-            className="w-full p-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition"
-          />
         </div>
 
         {/* Questions */}

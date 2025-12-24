@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 import ResultClient from "@/components/ResultClient";
 import ElementalLoader from "@/components/ElementalLoader";
@@ -15,37 +16,34 @@ export default function ResultPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params?.id as string;
+  const { user, token, loading: authLoading } = useAuth();
 
-  // State สำหรับเช็คสิทธิ์
+  // State สำหรับเช็คสิทธิ์ (อาจจะไม่ต้องใช้ state แล้ว ถ้าใช้ user.id check ตรงๆ แต่เก็บไว้ก่อนเพื่อความชัวร์)
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
 
   // เช็คสิทธิ์การเข้าถึง
   useEffect(() => {
-    const myId = localStorage.getItem("myUserId");
-    const token = localStorage.getItem("myToken");
+    if (authLoading) return;
 
-    if (!token) {
+    if (!token || !user) {
       toast.error("ไม่พบข้อมูลยืนยันตัวตน");
       router.push("/");
       return;
     }
 
-    if (myId !== userId) {
+    if (user.id.toString() !== userId) {
       toast.error("ไม่สามารถดูข้อมูลของคนอื่นได้ครับ", { id: "auth-error" });
       router.replace("/");
       return;
     }
 
     setIsAuthorized(true);
-    setIsChecking(false);
-  }, [userId, router]);
+  }, [userId, router, user, token, authLoading]);
 
   // Fetch ข้อมูลจาก Backend
   const { data, isLoading, error } = useQuery({
     queryKey: ["analysis", userId],
     queryFn: async () => {
-      const token = localStorage.getItem("myToken");
       if (!token) throw new Error("No token");
 
       const res = await fetch(`${API_URL}/users/${userId}/analysis`, {
@@ -60,7 +58,7 @@ export default function ResultPage() {
 
       return res.json();
     },
-    enabled: isAuthorized, // รอจนกว่าจะ authorized แล้วค่อย fetch
+    enabled: isAuthorized && !!token,
     retry: false,
     staleTime: 0,
     gcTime: 0,
@@ -86,7 +84,8 @@ export default function ResultPage() {
   // --- LOADING STATES ---
 
   // 1. กำลังเช็คสิทธิ์
-  if (isChecking) {
+  // 1. Loading State (Auth or Data or Check)
+  if (authLoading || isLoading || !isAuthorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 transition-colors">
         <ElementalLoader />

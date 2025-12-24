@@ -1,5 +1,10 @@
 import random
 import statistics
+import sys
+import os
+
+# Add parent directory to path so we can import from backend
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import copy
 
 # --- Core Logic: Academic Formula ---

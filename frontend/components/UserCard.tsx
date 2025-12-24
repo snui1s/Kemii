@@ -110,6 +110,11 @@ function normalizeScores(scores?: { [key: string]: number }) {
 function getTopStats(scores?: { [key: string]: number }) {
   const normScores = normalizeScores(scores);
   if (!normScores) return [];
+
+  // If all scores are 0, return empty to trigger "Awaiting Awakening"
+  const total = Object.values(normScores).reduce((acc, curr) => acc + curr, 0);
+  if (total === 0) return [];
+
   const mapKey: { [key: string]: string } = {
     Openness: "O",
     Conscientiousness: "C",
@@ -128,21 +133,36 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
   if (classKey === "Mage") {
     return (
       <>
-        {Array.from({ length: 6 }).map((_, i) => (
+        {/* Meteor Shower: Large Stream */}
+        {Array.from({ length: 12 }).map((_, i) => (
           <span
-            key={i}
-            className="mage-meteor"
+            key={`meteor-l-${i}`}
+            className="mage-meteor-large"
             style={{
-              top: `${10 + i * 8}%`,
-              right: `${-10 + i * 5}%`,
-              animationName: "meteorRain",
-              animationDuration: `${1 + i * 0.15}s`,
-              animationTimingFunction: "linear",
-              animationIterationCount: "infinite",
-              animationDelay: `${i * 0.3}s`,
+              top: `${Math.random() * -20}%`, // Start above
+              left: `${Math.random() * 120 - 10}%`, // Spread across width
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${1 + Math.random()}s`,
             }}
           />
         ))}
+
+        {/* Meteor Shower: Small Sparkles */}
+        {Array.from({ length: 20 }).map((_, i) => (
+          <span
+            key={`meteor-s-${i}`}
+            className="mage-meteor-small"
+            style={{
+              top: `${Math.random() * -50}%`,
+              left: `${Math.random() * 120}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${1.5 + Math.random() * 1.5}s`,
+            }}
+          />
+        ))}
+
+        {/* Background Glow Pulse */}
+        <div className="mage-glow-pulse" />
       </>
     );
   }
@@ -541,33 +561,59 @@ export default function UserCard({
           opacity: 1;
         }
 
-        .mage-meteor {
+        /* --- Mage Meteor Shower (Enhanced) --- */
+        .mage-meteor-large {
           position: absolute;
-          width: 4px;
-          height: 4px;
-          background: #a855f7;
-          border-radius: 50%;
-          box-shadow: 0 0 10px #a855f7, 0 0 20px #fff;
+          width: 3px;
+          height: 80px; /* Long tail */
+          background: linear-gradient(180deg, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 1) 50%, #fff 100%);
+          border-radius: 50% 50% 2px 2px;
+          opacity: 0;
+          filter: drop-shadow(0 0 5px #d8b4fe);
+          transform: rotate(20deg); /* Angle of fall */
+          animation: meteorFall ease-in infinite;
+          z-index: 5;
         }
-        .mage-meteor::before {
-          content: "";
+
+        .mage-meteor-small {
           position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 60px;
-          height: 2px;
-          background: linear-gradient(90deg, #a855f7, transparent);
-          right: 0;
+          width: 1.5px;
+          height: 40px;
+          background: linear-gradient(180deg, rgba(192, 132, 252, 0) 0%, rgba(192, 132, 252, 0.8) 100%);
+          opacity: 0;
+          transform: rotate(20deg);
+          animation: meteorFall ease-in infinite;
+          z-index: 4;
         }
-        @keyframes meteorRain {
+
+        .mage-glow-pulse {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at 50% 30%, rgba(168, 85, 247, 0.2), transparent 70%);
+          animation: glowPulse 3s ease-in-out infinite;
+          z-index: 1;
+        }
+
+        @keyframes meteorFall {
           0% {
-            transform: translateX(100px) translateY(-100px) rotate(-45deg);
+            transform: translateY(-50px) translateX(0px) rotate(20deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          80% {
             opacity: 1;
           }
           100% {
-            transform: translateX(-300px) translateY(300px) rotate(-45deg);
+            transform: translateY(300px) translateX(-50px) rotate(20deg); /* Fall down and slightly left */
             opacity: 0;
           }
+        }
+
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.1); }
         }
 
         .paladin-light-beam {

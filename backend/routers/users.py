@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from database import get_session
 from models import User
 from schemas import OceanSubmission, UserProfile, UpdateSkillsRequest
-from auth import create_access_token
+from auth import create_access_token, verify_token
 from services.ai import analyze_user_profile
 from datetime import datetime
 import json
@@ -120,7 +120,7 @@ def submit_assessment(data: OceanSubmission, session: Session = Depends(get_sess
     best_class = max(scores, key=scores.get)
 
     new_hero = User(
-        name=data.name,
+        name=data.name or f"Guest Hero {datetime.now().strftime('%M%S')}",
         character_class=best_class,
         level=1,
         ocean_openness=data.openness,
@@ -154,6 +154,7 @@ def submit_assessment(data: OceanSubmission, session: Session = Depends(get_sess
 @router.get("/users/{user_id}/analysis")
 async def get_user_analysis(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
+    print(f"DEBUG: Analyzing user {user_id}. Found? {user is not None}")
     if not user:
         raise HTTPException(status_code=404, detail="Hero not found")
 
@@ -194,7 +195,51 @@ async def get_user_analysis(user_id: int, session: Session = Depends(get_session
     session.add(user)
     session.commit()
 
+    # ... existing code ...
     return {
         "user": user_data,
         "analysis": ai_data
+    }
+
+@router.post("/users/me/assessment", response_model=UserProfile)
+def submit_my_assessment(data: OceanSubmission, user_id: int = Depends(verify_token), session: Session = Depends(get_session)):
+    scores = {
+        "Mage": data.openness,
+        "Paladin": data.conscientiousness,
+        "Warrior": data.extraversion,
+        "Cleric": data.agreeableness,
+        "Rogue": data.neuroticism
+    }
+    best_class = max(scores, key=scores.get)
+    
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Update Stats
+    user.ocean_openness = data.openness
+    user.ocean_conscientiousness = data.conscientiousness
+    user.ocean_extraversion = data.extraversion
+    user.ocean_agreeableness = data.agreeableness
+    user.ocean_neuroticism = data.neuroticism
+    user.character_class = best_class
+    user.analysis_result = None # Clear old analysis
+    
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    
+    return {
+        "id": user.id,
+        "name": user.name,
+        "character_class": user.character_class,
+        "level": user.level,
+        "ocean_scores": {
+            "Openness": user.ocean_openness,
+            "Conscientiousness": user.ocean_conscientiousness,
+            "Extraversion": user.ocean_extraversion,
+            "Agreeableness": user.ocean_agreeableness,
+            "Neuroticism": user.ocean_neuroticism
+        },
+        "access_token": "" # No new token needed, consumer ignores or optional
     }

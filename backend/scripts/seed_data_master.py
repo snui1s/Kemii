@@ -2,6 +2,11 @@ import requests
 import random
 import json
 import time
+import sys
+import os
+
+# Add parent directory to path so we can import from backend
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ⚠️⚠️ แก้บรรทัดนี้: ใส่ URL ของ Render ที่คุณได้มา ⚠️⚠️
 # ตัวอย่าง: API_URL = "https://4elements-api.onrender.com/submit-assessment"

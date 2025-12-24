@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import {
   Users,
@@ -141,7 +142,7 @@ export default function QuestDetailPage({
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
-  const [userId, setUserId] = useState<number | null>(null);
+  const { user } = useAuth();
   const [teamAnalysis, setTeamAnalysis] = useState<any>(null);
 
   const [filterSkill, setFilterSkill] = useState<string | null>(null);
@@ -192,13 +193,6 @@ export default function QuestDetailPage({
   };
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("myUserId");
-    let currentUserId = null;
-    if (storedUserId) {
-      currentUserId = parseInt(storedUserId);
-      setUserId(currentUserId);
-    }
-
     axios
       .get(`${API_URL}/quests/${id}`)
       .then((res) => {
@@ -270,7 +264,7 @@ export default function QuestDetailPage({
   const handleStatusChange = async (newStatus: string) => {
     try {
       await axios.post(`${API_URL}/quests/${id}/status`, {
-        user_id: userId,
+        user_id: user?.id,
         status: newStatus,
       });
       if (newStatus === "completed") {
@@ -295,7 +289,7 @@ export default function QuestDetailPage({
   }
 
   const rankStyle = RANK_COLORS[quest.rank] || RANK_COLORS.C;
-  const isLeader = userId === quest.leader_id;
+  const isLeader = user?.id === quest.leader_id;
   const acceptedCount = quest.accepted_member_ids.length;
   const needsMore = acceptedCount < quest.team_size;
 
@@ -926,7 +920,7 @@ export default function QuestDetailPage({
             {!isLeader && (
               <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-xl text-center">
                 <p className="text-slate-600 dark:text-slate-300">
-                  {quest.accepted_member_ids.includes(userId || 0)
+                  {quest.accepted_member_ids.includes(user?.id || 0)
                     ? "✓ คุณได้รับเลือกเข้าทีมแล้ว!"
                     : "รอ Quest Leader เลือกสมาชิก"}
                 </p>

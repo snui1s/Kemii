@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import {
   Scroll,
@@ -18,6 +19,7 @@ import {
   Skull,
   ChevronRight,
   Crown,
+  Sparkles,
   Check,
   X,
   History,
@@ -135,22 +137,17 @@ const STATUS_LABELS: Record<
 
 export default function QuestBoardPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRank, setFilterRank] = useState<string | null>(null);
 
-  const [userId, setUserId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"active" | "history">("active");
 
   // Fetch quests
   useEffect(() => {
-    const storedUserId = localStorage.getItem("myUserId");
-    if (storedUserId) {
-      setUserId(parseInt(storedUserId));
-    }
-
     axios
       .get(`${API_URL}/quests`)
       .then((res) => {
@@ -240,31 +237,21 @@ export default function QuestBoardPage() {
             />
           </div>
 
-          {/* Rank Filter */}
-          <div className="flex gap-2 flex-wrap">
-            {["S", "A", "B", "C", "D"].map((rank) => (
+          {user && (
+            <div className="flex gap-2">
               <button
-                key={rank}
-                onClick={() => setFilterRank(filterRank === rank ? null : rank)}
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition flex-1 sm:flex-none ${
-                  filterRank === rank
-                    ? `bg-gradient-to-r ${RANK_COLORS[rank].bg} ${RANK_COLORS[rank].text}`
-                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                }`}
+                onClick={() => router.push("/quests/smart")}
+                className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:shadow-lg transition"
               >
-                {rank}
+                <Plus size={18} /> สร้างเควส
               </button>
-            ))}
-          </div>
-
-          {/* Create Quest Button */}
-          {userId && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:shadow-lg transition"
-            >
-              <Plus size={18} /> สร้างเควส
-            </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+              >
+                <Sparkles size={18} /> Classic Quest
+              </button>
+            </div>
           )}
         </div>
 
@@ -423,7 +410,7 @@ export default function QuestBoardPage() {
       {/* Create Quest Modal */}
       {showCreateModal && (
         <CreateQuestModal
-          userId={userId!}
+          userId={user!.id}
           onClose={() => setShowCreateModal(false)}
           onCreated={(newQuest) => {
             setQuests([newQuest, ...quests]);

@@ -2,6 +2,11 @@ import random
 import statistics
 import copy
 import math
+import sys
+import os
+
+# Add parent directory to path so we can import from backend
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- 1. Class และ สูตรคำนวณ (Core Logic: Kemii Golden Formula) ---
 

@@ -3,12 +3,18 @@ Seed Script - Generate 65 users (5 per department)
 Each department has 5 people with different OCEAN profiles (5 character classes)
 Run: uv run python seed_users.py
 """
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import random
 import json
 from sqlmodel import Session
 from database import engine, create_db_and_tables
 from models import User
-from skills_data import DEPARTMENTS, get_all_skills
+from skills_data import DEPARTMENTS
+from auth import get_password_hash
 
 # Thai first names
 FIRST_NAMES = [
@@ -38,7 +44,6 @@ def get_random_in_range(range_tuple):
 
 def seed_users():
     create_db_and_tables()
-    all_skills = get_all_skills()
     
     with Session(engine) as session:
         user_count = 0
@@ -60,46 +65,25 @@ def seed_users():
                 
                 character_class = profile["class"]
                 
-                # Generate skills with EXPERTISE
-                # At least 2-3 expert skills (level 4-5) from own department
-                # Plus 2-3 intermediate skills (level 3-4)
-                # Plus 1-2 from other departments
-                
-                num_expert_skills = random.randint(2, 3)  # Expert level 4-5
-                num_intermediate_skills = random.randint(2, 3)  # Level 3-4
-                num_other_skills = random.randint(1, 2)  # From other depts
-                
-                # Shuffle dept skills and pick for expert/intermediate
-                shuffled_dept_skills = random.sample(dept_skills, len(dept_skills))
-                expert_skills = shuffled_dept_skills[:num_expert_skills]
-                intermediate_skills = shuffled_dept_skills[num_expert_skills:num_expert_skills + num_intermediate_skills]
-                
-                # Get skills from other departments
-                other_skills = [s for s in all_skills if s not in dept_skills]
-                other_selected = random.sample(other_skills, min(num_other_skills, len(other_skills)))
-                
-                # Build skills with appropriate levels
-                skills_json = []
-                
-                # Expert skills - Level 4-5
-                for skill in expert_skills:
-                    skills_json.append({"name": skill, "level": random.randint(4, 5)})
-                
-                # Intermediate skills - Level 3-4
-                for skill in intermediate_skills:
-                    skills_json.append({"name": skill, "level": random.randint(3, 4)})
-                
-                # Other department skills - Level 2-3
-                for skill in other_selected:
-                    skills_json.append({"name": skill, "level": random.randint(2, 3)})
+                # Generate skills (Now using Department Name directly)
+                # Format: [{"name": "Department Name", "level": 1}]
+                skills_json = [{"name": dept_name, "level": 1}]
                 
                 # Generate name with dept suffix to ensure uniqueness
                 name = random.choice(FIRST_NAMES)
                 dept_code = dept_id[:3].upper()
                 full_name = f"{name} ({dept_code}-{i+1})"
                 
+                # Default password for all seed users: "1234"
+                # We calculate it once efficiently if we could, but here we can just call it (or move it out of loop)
+                # But to avoid moving out of loop for simple replace, I'll just call it or cleaner: define it before loop.
+                # However, replace_file_content targets this block.
+                # Let's rely on the import.
+                
                 user = User(
                     name=full_name,
+                    email=f"user{user_count+1}@kemii.com",
+                    hashed_password=get_password_hash("1234"),
                     character_class=character_class,
                     level=random.randint(1, 5),
                     ocean_openness=o,

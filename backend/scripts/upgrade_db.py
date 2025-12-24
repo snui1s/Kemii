@@ -1,6 +1,9 @@
 import sqlite3
+import os
 
-DB_NAME = "elements.db"
+# Determine absolute path to DB in backend root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_NAME = os.path.join(BASE_DIR, "elements.db")
 
 def upgrade_database():
     print(f"🔧 กำลังอัปเกรดฐานข้อมูล {DB_NAME}...")

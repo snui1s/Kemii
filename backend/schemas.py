@@ -2,8 +2,18 @@ from pydantic import BaseModel
 from typing import Optional, Dict, List, Any
 from datetime import datetime
 
-class OceanSubmission(BaseModel):
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class RegisterRequest(BaseModel):
     name: str
+    email: str
+    password: str
+    departments: List[str] = []
+
+class OceanSubmission(BaseModel):
+    name: Optional[str] = None
     openness: int
     conscientiousness: int
     extraversion: int
@@ -102,5 +112,22 @@ class MatchScoreResponse(BaseModel):
     skill_gaps: List[Dict[str, Any]]  # {"name": "Python", "required": 4, "has": 2}
 
 class UpdateStatusRequest(BaseModel):
+    status: str
     user_id: int
+
+# Smart Quest (Quest 2) Schemas
+class SmartQuestRequirement(BaseModel):
+    department_id: str
+    count: int
+
+class PreviewSmartTeamRequest(BaseModel):
+    requirements: List[SmartQuestRequirement]
+
+class ConfirmSmartTeamRequest(BaseModel):
+    title: str
+    deadline: datetime
+    start_date: datetime
+    leader_id: int
+    requirements: List[SmartQuestRequirement]
+    member_ids: List[int]
     status: str

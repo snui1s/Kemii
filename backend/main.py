@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import create_db_and_tables
-from routers import skills, users, teams, quests
+from routers import users, teams, quests, smart_quest, auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,10 +24,11 @@ app.add_middleware(
 def read_root():
     return {"status": "I am awake!", "service": "Kemii API"}
 
-app.include_router(skills.router)
+app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(teams.router)
 app.include_router(quests.router)
+app.include_router(smart_quest.router)
 
 if __name__ == "__main__":
     import uvicorn

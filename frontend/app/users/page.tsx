@@ -53,34 +53,260 @@ const CLASS_COLORS: Record<string, string> = {
 };
 
 const DEPARTMENTS = [
-  { id: "all", name: "ทั้งหมด" },
-  { id: "swp", name: "SWP & OD" },
-  { id: "hrb", name: "HRBP" },
-  { id: "tot", name: "Total Rewards" },
-  { id: "er", name: "ER" },
-  { id: "eng", name: "Engagement" },
-  { id: "tal", name: "Talent Mgmt" },
-  { id: "peo", name: "People Services" },
-  { id: "com", name: "Compliance" },
-  { id: "l_a", name: "L&D" },
-  { id: "hr_", name: "HR AI" },
-  { id: "suc", name: "SuccessFactors" },
-  { id: "hr_d", name: "Dashboards" },
-  { id: "pro", name: "Project Manager" },
+  {
+    id: "swp_od",
+    name: "SWP & Organization Development",
+    label: "SWP & OD",
+    skills: [
+      "Organization Design",
+      "Workforce Forecasting",
+      "Strategic Planning",
+      "Change Management",
+      "Competency Modeling",
+      "Manpower Budgeting",
+      "Gap Analysis",
+      "Culture Transformation",
+      "Job Analysis & Job Description",
+      "Organizational Effectiveness",
+    ],
+  },
+  {
+    id: "hrbp",
+    name: "HR Business Partner (HRBP)",
+    label: "HRBP",
+    skills: [
+      "Strategic Partnering",
+      "Stakeholder Management",
+      "Performance Management",
+      "Labor Law & Regulations",
+      "Consulting Skills",
+      "Business Acumen",
+      "Conflict Resolution",
+      "Headcount Planning",
+      "Talent Review Facilitation",
+      "Exit Interview Analysis",
+    ],
+  },
+  {
+    id: "total_rewards",
+    name: "Total Rewards (Comp & Ben)",
+    label: "Total Rewards",
+    skills: [
+      "Payroll Management",
+      "Salary Structure Design",
+      "Job Grading (Hay/Mercer)",
+      "Tax & Social Security",
+      "Benefits Administration",
+      "Compensation Benchmarking",
+      "Annual Merit Planning",
+      "Bonus Calculation",
+      "Expat Compensation",
+      "Insurance Renewal Negotiation",
+    ],
+  },
+  {
+    id: "er",
+    name: "Employee Relations (ER)",
+    label: "ER",
+    skills: [
+      "Labor Law (Advanced)",
+      "Disciplinary Action",
+      "Union Management",
+      "Employee Grievance Handling",
+      "Investigation Techniques",
+      "Labor Court Proceedings",
+      "Welfare Committee Management",
+      "Termination Process",
+      "Employee Handbook Drafting",
+      "Conflict Mediation",
+    ],
+  },
+  {
+    id: "engagement",
+    name: "Employee Engagement & Internal Comm",
+    label: "Engagement",
+    skills: [
+      "Internal Communication Strategy",
+      "Event Management (Townhall/Outing)",
+      "Content Writing & Storytelling",
+      "Graphic Design (Canva/Photoshop)",
+      "Video Editing Basic",
+      "Engagement Survey Design",
+      "Crisis Communication",
+      "Employer Branding",
+      "CSR Activity Planning",
+      "Social Media Management",
+    ],
+  },
+  {
+    id: "talent_mgmt",
+    name: "Talent Management",
+    label: "Talent Mgmt",
+    skills: [
+      "Succession Planning",
+      "High Potential (HiPo) Identification",
+      "Career Path Design",
+      "Assessment Center Design",
+      "Leadership Development Program",
+      "9-Box Grid Analysis",
+      "Mentoring & Coaching Program",
+      "Individual Development Plan (IDP)",
+      "Talent Retention Strategy",
+      "Skill Mapping",
+    ],
+  },
+  {
+    id: "people_services",
+    name: "People Services (HR Ops)",
+    label: "People Services",
+    skills: [
+      "Onboarding & Offboarding",
+      "HRIS Administration",
+      "Visa & Work Permit",
+      "Document Management System",
+      "SLA Management",
+      "Time & Attendance Management",
+      "Personal Data Maintenance",
+      "Ticketing System (e.g., Zendesk)",
+      "Employee Verification",
+      "Vendor Management",
+    ],
+  },
+  {
+    id: "compliance",
+    name: "HR Compliance & Assurance",
+    label: "HR Compliance",
+    skills: [
+      "PDPA / Data Privacy Law",
+      "Internal Audit",
+      "Risk Management",
+      "Policy Writing & Review",
+      "ISO Standards (HR)",
+      "Code of Conduct Enforcement",
+      "Background Check Process",
+      "Health, Safety & Environment (HSE)",
+      "Process Control",
+      "SOP Development",
+    ],
+  },
+  {
+    id: "l_and_d",
+    name: "Learning & Development (L&D)",
+    label: "L&D",
+    skills: [
+      "Training Needs Analysis (TNA)",
+      "Instructional Design",
+      "Facilitation Skills",
+      "LMS Administration",
+      "Training Evaluation (ROI/Kirkpatrick)",
+      "E-Learning Development",
+      "Virtual Training Delivery",
+      "Training Budget Management",
+      "On-the-Job Training (OJT) Design",
+      "Knowledge Management",
+    ],
+  },
+  {
+    id: "hr_ai",
+    name: "HR AI & Automation",
+    label: "HR AI",
+    skills: [
+      "Python Programming",
+      "Prompt Engineering",
+      "Machine Learning Concepts",
+      "RPA (Robotic Process Automation)",
+      "API Integration",
+      "Natural Language Processing (NLP)",
+      "Data Cleaning & Preprocessing",
+      "AI Ethics & Governance",
+      "Chatbot Flow Design",
+      "Automated Screening Tools",
+    ],
+  },
+  {
+    id: "success_factors",
+    name: "HR SuccessFactors Specialist",
+    label: "SuccessFactors",
+    skills: [
+      "SAP SuccessFactors Overview",
+      "Employee Central (EC) Module",
+      "Performance & Goals (PMGM)",
+      "Recruiting Management (RCM)",
+      "Learning Management (LMS)",
+      "System Configuration",
+      "Role-Based Permission (RBP)",
+      "Integration Center",
+      "UAT Planning & Execution",
+      "Data Migration",
+    ],
+  },
+  {
+    id: "hr_dashboards",
+    name: "HR Dashboards & Analytics",
+    label: "HR Dashboards",
+    skills: [
+      "Power BI / Tableau",
+      "SQL Querying",
+      "Data Storytelling",
+      "Excel VBA / Macros",
+      "KPI Dashboard Design",
+      "Statistical Analysis",
+      "Database Management",
+      "Google Looker Studio",
+      "People Analytics Strategy",
+      "Data Quality Management",
+    ],
+  },
+  {
+    id: "project_manager",
+    name: "Project Manager",
+    label: "Project Manager",
+    skills: [
+      "Agile & Scrum Methodology",
+      "Waterfall / Traditional PM",
+      "Project Planning (Gantt/Timeline)",
+      "Risk Management",
+      "Budget Tracking",
+      "Resource Allocation",
+      "Stakeholder Communication",
+      "Jira / Asana / Trello",
+      "Scope Management",
+      "Meeting Facilitation",
+    ],
+  },
 ];
 
 function UserCard({ user }: { user: User }) {
-  const [expanded, setExpanded] = useState(false);
-  const visibleSkills = expanded ? user.skills : user.skills?.slice(0, 4);
+  // Determine Departments
+  const userDepts = Array.from(
+    new Set(
+      user.skills
+        .map((s) => {
+          // Find which dept this skill belongs to
+          const found = DEPARTMENTS.find((d) => d.skills.includes(s.name));
+          if (found) return found.label;
+
+          // Also check if the skill name IS the department name
+          const isDept = DEPARTMENTS.find((d) => d.name === s.name);
+          if (isDept) return isDept.label;
+
+          return null;
+        })
+        .filter(Boolean)
+    )
+  );
+
+  // If no dept found (custom skills), fall back or show nothing?
+  // User said "remove skills", so we only show depts.
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         <div
           className={`w-12 h-12 rounded-full bg-gradient-to-br ${
             CLASS_COLORS[user.character_class] || "from-slate-400 to-slate-500"
-          } flex items-center justify-center text-white`}
+          } flex items-center justify-center text-white shadow-sm`}
         >
           {CLASS_ICONS[user.character_class] || <Star size={20} />}
         </div>
@@ -95,74 +321,64 @@ function UserCard({ user }: { user: User }) {
       </div>
 
       {/* OCEAN */}
-      <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-        <p className="text-xs text-slate-400 mb-1">OCEAN</p>
-        <div className="flex gap-1 text-xs">
-          <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
-            O:{user.ocean_openness}
-          </span>
-          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
-            C:{user.ocean_conscientiousness}
-          </span>
-          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">
-            E:{user.ocean_extraversion}
-          </span>
-          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded">
-            A:{user.ocean_agreeableness}
-          </span>
-          <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded">
-            N:{user.ocean_neuroticism}
-          </span>
+      <div className="mb-4 p-2.5 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700/50">
+        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider">
+          OCEAN Score
+        </p>
+        <div className="flex justify-between items-center text-xs">
+          <div className="flex flex-col items-center">
+            <span className="text-purple-600 font-bold">
+              {user.ocean_openness}
+            </span>
+            <span className="text-[9px] text-slate-400">O</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-blue-600 font-bold">
+              {user.ocean_conscientiousness}
+            </span>
+            <span className="text-[9px] text-slate-400">C</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-amber-600 font-bold">
+              {user.ocean_extraversion}
+            </span>
+            <span className="text-[9px] text-slate-400">E</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-emerald-600 font-bold">
+              {user.ocean_agreeableness}
+            </span>
+            <span className="text-[9px] text-slate-400">A</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-rose-600 font-bold">
+              {user.ocean_neuroticism}
+            </span>
+            <span className="text-[9px] text-slate-400">N</span>
+          </div>
         </div>
       </div>
 
-      {/* Skills */}
+      {/* Departments (Replaces Skills) */}
       <div>
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-xs text-slate-400">
-            Skills ({user.skills?.length || 0})
-          </p>
-          {user.skills?.length > 4 && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-xs text-indigo-500 hover:text-indigo-600 flex items-center gap-0.5"
-            >
-              {expanded ? (
-                <>
-                  ซ่อน <ChevronUp size={14} />
-                </>
-              ) : (
-                <>
-                  ดูทั้งหมด <ChevronDown size={14} />
-                </>
-              )}
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {visibleSkills?.map((skill, idx) => {
-            // Different colors for each level
-            const levelColors: Record<number, string> = {
-              5: "bg-gradient-to-r from-pink-500 to-rose-500 text-white",
-              4: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-              3: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-              2: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
-              1: "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400",
-            };
-            const colorClass = levelColors[skill.level] || levelColors[1];
-
-            return (
+        <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 tracking-wider">
+          Departments
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {userDepts.length > 0 ? (
+            userDepts.map((dept, idx) => (
               <span
                 key={idx}
-                className={`px-2 py-1 rounded text-[10px] font-medium ${colorClass}`}
+                className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
               >
-                {skill.name.length > 25
-                  ? skill.name.slice(0, 25) + "..."
-                  : skill.name}{" "}
-                Lv.{skill.level}
+                {dept}
               </span>
-            );
-          })}
+            ))
+          ) : (
+            <span className="text-xs text-slate-400 italic">
+              No specific department
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -196,9 +412,19 @@ export default function UsersPage() {
     const matchesSearch = user.name
       .toLowerCase()
       .includes(search.toLowerCase());
-    const matchesDept =
-      deptFilter === "all" ||
-      user.name.toLowerCase().includes(deptFilter.toLowerCase());
+
+    let matchesDept = true;
+    if (deptFilter !== "all") {
+      const targetDept = DEPARTMENTS.find((d) => d.id === deptFilter);
+      if (targetDept) {
+        // Check if user has this department directly (new logic) or has a skill in it (legacy)
+        matchesDept = user.skills.some(
+          (s) =>
+            s.name === targetDept.name || targetDept.skills.includes(s.name)
+        );
+      }
+    }
+
     return matchesSearch && matchesDept;
   });
 
@@ -247,9 +473,10 @@ export default function UsersPage() {
             onChange={(e) => setDeptFilter(e.target.value)}
             className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:outline-none focus:border-indigo-500 min-w-[180px]"
           >
+            <option value="all">ทั้งหมด</option>
             {DEPARTMENTS.map((dept) => (
               <option key={dept.id} value={dept.id}>
-                {dept.name}
+                {dept.label}
               </option>
             ))}
           </select>

@@ -12,6 +12,7 @@ import {
   Heart,
   Skull,
   User as UserIcon,
+  AlertTriangle,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/next";
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +36,13 @@ interface User {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+import { useAuth } from "../context/AuthContext";
+import Link from "next/link";
+// ... imports ...
+
 export default function Home() {
+  const { user: currentUser } = useAuth(); // Rename to avoid conflict with users list
+
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["users"],
     queryFn: async () => {
@@ -47,45 +54,26 @@ export default function Home() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
   );
-  const [myId, setMyId] = useState<number | null>(null);
-  const [myName, setMyName] = useState<string | null>(null);
-  const [myClass, setMyClass] = useState<string | null>(null);
-  const [myLevel, setMyLevel] = useState<number>(1);
+  const [hasMissingDept, setHasMissingDept] = useState(false);
 
-  const checkLoginStatus = () => {
-    const storedId = localStorage.getItem("myUserId");
-    const storedName = localStorage.getItem("myName");
-    const storedClass = localStorage.getItem("myClass");
-    const storedLevel = localStorage.getItem("myLevel");
-
-    if (storedId && storedId !== "undefined" && storedId !== "null") {
-      setMyId(Number(storedId));
-      setMyName(storedName);
-      setMyClass(storedClass || "Novice");
-      setMyLevel(storedLevel ? Number(storedLevel) : 1);
-    } else {
-      setMyId(null);
-      setMyName(null);
-      setMyClass(null);
-      setMyLevel(1);
-    }
-  };
-
+  // Check for missing departments
   useEffect(() => {
-    checkLoginStatus();
-    window.addEventListener("user-updated", checkLoginStatus);
-    return () => window.removeEventListener("user-updated", checkLoginStatus);
-  }, []);
+    if (currentUser?.skills?.length === 0) {
+      setHasMissingDept(true); // Simplified check
+    } else {
+      setHasMissingDept(false);
+    }
+  }, [currentUser]);
 
   const handleCardClick = (partnerId: number) => {
-    if (!myId) {
-      toast.error("คุณต้องทำพิธีปลุกพลังก่อน ถึงจะส่องสเตตัสเพื่อนได้! 🔒", {
+    if (!currentUser) {
+      toast.error("คุณต้องเข้าสู่ระบบก่อน ถึงจะส่องสเตตัสเพื่อนได้! 🔒", {
         id: "auth-error",
       });
       return;
     }
-    if (partnerId === myId) {
-      toast("นี่คือตัวคุณเองนะ ท่านผู้กล้า", { icon: "🛡️", id: "self-click" });
+    if (partnerId === currentUser.id) {
+      toast("นี่มันตัวคุณเองนี่นา! 🤔", { icon: "🪞" });
       return;
     }
     setSelectedPartnerId(partnerId);
@@ -112,6 +100,20 @@ export default function Home() {
     <div className="relative h-full w-full max-w-5xl mx-auto mb-12 mt-5 px-4 sm:px-0">
       {/* Header Section (Hero Banner) */}
       <div className="relative bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors duration-500">
+        {/* Missing Dept Warning */}
+        {hasMissingDept && (
+          <div
+            className="absolute top-0 left-0 w-full bg-red-500 text-white px-4 py-2 flex items-center justify-center gap-2 z-50 text-sm font-bold animate-pulse cursor-pointer"
+            onClick={() => (window.location.href = "/profile")}
+          >
+            <AlertTriangle size={16} className="text-white" />
+            <span>
+              คุณยังไม่ได้เลือกสังกัด (Department)!
+              คลิกที่นี่เพื่อไปตั้งค่าที่หน้าโปรไฟล์ก่อนเริ่มใช้งาน
+            </span>
+          </div>
+        )}
+
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 dark:from-blue-600/20 dark:to-purple-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-yellow-100/50 to-red-100/50 dark:from-yellow-600/10 dark:to-red-600/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
 
@@ -126,7 +128,7 @@ export default function Home() {
               </span>
             </h1>
 
-            {myId ? (
+            {currentUser?.id ? (
               <div className="animate-fade-in-up">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white mt-6 mb-6 leading-tight">
                   ยินดีต้อนรับกลับ...{" "}
@@ -170,52 +172,83 @@ export default function Home() {
           </div>
 
           <div className="shrink-0 w-full md:w-auto flex justify-center">
-            {myId ? (
-              // (ส่วนแสดงผล Profile Card ของตัวเอง - คงเดิม)
-              <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-3 w-64 animate-fade-in-up">
-                <div className="text-xs font-bold uppercase tracking-widest opacity-70 text-slate-800 dark:text-slate-200">
-                  Character Status
-                </div>
-                <div className="bg-white dark:bg-slate-700 p-4 rounded-full shadow-inner mt-2">
-                  {getClassIcon(myClass)}
-                </div>
-                <div className="text-center mb-2">
-                  <div className="font-bold text-lg text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2">
-                    {myName}{" "}
-                    <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full text-slate-700 dark:text-slate-300">
-                      Lv.{myLevel}
-                    </span>
+            {currentUser ? (
+              // If user is "Novice", show the "Take Assessment" CTA
+              currentUser.character_class === "Novice" ? (
+                <div className="bg-indigo-50/80 dark:bg-indigo-900/20 backdrop-blur-sm p-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex flex-col items-center gap-4 w-64 text-center transition-colors animate-pulse-slow">
+                  <div className="text-4xl animate-bounce text-indigo-600 dark:text-indigo-400">
+                    🔮
                   </div>
-                  <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {myClass}
+                  <div>
+                    <h3 className="font-bold text-indigo-900 dark:text-indigo-200 text-lg">
+                      ค้นหาตัวตนของคุณ
+                    </h3>
+                    <p className="text-xs text-indigo-600/80 dark:text-indigo-300/70 mt-1">
+                      คุณยังไม่ได้ทำแบบทดสอบเพื่อค้นหาอาชีพ
+                    </p>
                   </div>
+                  <button
+                    onClick={() => (window.location.href = "/assessment")}
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition transform hover:-translate-y-1 active:scale-95"
+                  >
+                    เริ่มทำพิธีปลุกพลัง ➔
+                  </button>
                 </div>
-                <button
-                  onClick={() =>
-                    (window.location.href = `/assessment/result/${myId}`)
-                  }
-                  className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 shadow-sm hover:text-indigo-500 transition"
-                >
-                  ดูคำทำนายของคุณ
-                </button>
-              </div>
+              ) : (
+                // If user has a class, show their Profile Card
+                <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-3 w-64 animate-fade-in-up">
+                  <div className="text-xs font-bold uppercase tracking-widest opacity-70 text-slate-800 dark:text-slate-200">
+                    Character Status
+                  </div>
+                  <div className="bg-white dark:bg-slate-700 p-4 rounded-full shadow-inner mt-2">
+                    {getClassIcon(currentUser.character_class)}
+                  </div>
+                  <div className="text-center mb-2">
+                    <div className="font-bold text-lg text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2">
+                      {currentUser.name}{" "}
+                      <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full text-slate-700 dark:text-slate-300">
+                        Lv.{currentUser.level}
+                      </span>
+                    </div>
+                    <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {currentUser.character_class}
+                    </div>
+                  </div>
+                  <Link
+                    href={`/assessment/result/${currentUser.id}`}
+                    className="w-full text-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 shadow-sm hover:text-indigo-500 transition"
+                  >
+                    ดูผลการทดสอบของคุณ
+                  </Link>
+                </div>
+              )
             ) : (
               <div className="bg-indigo-50/80 dark:bg-indigo-900/20 backdrop-blur-sm p-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex flex-col items-center gap-4 w-64 text-center transition-colors">
-                <div className="text-4xl animate-pulse">🛡️</div>
+                <div className="text-4xl animate-pulse text-indigo-600 dark:text-indigo-400">
+                  🛡️
+                </div>
                 <div>
                   <h3 className="font-bold text-indigo-900 dark:text-indigo-200 text-lg">
-                    ปลุกพลังฮีโร่ในตัวคุณ
+                    เข้าร่วมกิลด์
                   </h3>
                   <p className="text-xs text-indigo-600/80 dark:text-indigo-300/70 mt-1">
-                    ทำพิธีเพื่อค้นหาคลาสและค่าสเตตัสของคุณ
+                    เข้าสู่ระบบเพื่อค้นหาปาร์ตี้ของคุณ
                   </p>
                 </div>
-                <button
-                  onClick={() => (window.location.href = "/assessment")}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition transform hover:-translate-y-1"
-                >
-                  เริ่มพิธีปลุกพลัง ➔
-                </button>
+                <div className="w-full flex flex-col gap-2">
+                  <Link
+                    href="/login"
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition transform hover:-translate-y-1 block"
+                  >
+                    เข้าสู่ระบบ
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-bold py-2.5 rounded-xl border border-indigo-100 dark:border-indigo-800 transition block"
+                  >
+                    สมัครสมาชิก
+                  </Link>
+                </div>
               </div>
             )}
           </div>
@@ -254,9 +287,9 @@ export default function Home() {
         </div>
       )}
 
-      {selectedPartnerId && myId && (
+      {selectedPartnerId && currentUser && (
         <SynergyModal
-          myId={myId}
+          myId={currentUser.id}
           partnerId={selectedPartnerId}
           onClose={() => setSelectedPartnerId(null)}
         />

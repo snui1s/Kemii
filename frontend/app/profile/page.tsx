@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import ElementalLoader from "@/components/ElementalLoader";
 import {
   User as UserIcon,
   Shield,
@@ -23,6 +25,8 @@ import {
   Users,
   Award,
   Flame,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -145,6 +149,23 @@ const OCEAN_LABELS = [
   { key: "N", name: "Neuroticism", desc: "อารมณ์อ่อนไหว", icon: TrendingUp },
 ];
 
+// DEPARTMENTS CONSTANT
+const DEPARTMENTS = [
+  { id: "swp_od", name: "SWP & OD" },
+  { id: "hrbp", name: "HRBP" },
+  { id: "total_rewards", name: "Total Rewards" },
+  { id: "er", name: "ER" },
+  { id: "engagement", name: "Engagement" },
+  { id: "talent_mgmt", name: "Talent Mgmt" },
+  { id: "people_services", name: "People Services" },
+  { id: "compliance", name: "Compliance" },
+  { id: "l_and_d", name: "L&D" },
+  { id: "hr_ai", name: "HR AI" },
+  { id: "success_factors", name: "SuccessFactors" },
+  { id: "hr_dashboards", name: "Dashboards" },
+  { id: "project_manager", name: "Project Manager" },
+];
+
 const LEVEL_LABELS = [
   { level: 1, label: "เริ่มต้น", color: "bg-slate-400" },
   { level: 2, label: "พื้นฐาน", color: "bg-blue-400" },
@@ -155,102 +176,78 @@ const LEVEL_LABELS = [
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserData | null>(null);
+  const { user, token, loading: authLoading } = useAuth();
+
+  // Local state for additional data (like skills which might not be fully in auth user object yet, or if we want to fetch fresh)
+  // Actually auth user has 'skills' but let's fetch fresh to be safe or sync.
+  // The current logic fetches from /users/:id and /users/:id/skills.
+  // We can keep that for now but use the auth token.
+
+  const [profileUser, setProfileUser] = useState<UserData | null>(null);
   const [skills, setSkills] = useState<SelectedSkill[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false); // separate from authLoading
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Edit mode state
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [selectedDept, setSelectedDept] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [editedSkills, setEditedSkills] = useState<SelectedSkill[]>([]);
 
-  // Fetch user data
+  // Fetch data once user is resolved
   useEffect(() => {
-    async function fetchData() {
-      const userId = localStorage.getItem("myUserId");
-      if (!userId) {
-        toast.error("กรุณาเข้าสู่ระบบก่อน");
-        router.push("/");
-        return;
-      }
+    if (authLoading) return;
+    if (!user || !token) {
+      // Not logged in
+      toast.error("กรุณาเข้าสู่ระบบก่อน");
+      router.push("/");
+      return;
+    }
 
+    async function fetchData() {
+      setDataLoading(true);
       try {
         const [userRes, skillsRes] = await Promise.all([
-          axios.get(`${API_URL}/users/${userId}`),
-          axios.get(`${API_URL}/users/${userId}/skills`),
+          axios.get(`${API_URL}/users/${user!.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/users/${user!.id}/skills`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
-        setUser(userRes.data);
+        setProfileUser(userRes.data);
         const parsed = skillsRes.data.skills || [];
         setSkills(parsed);
         setEditedSkills(parsed);
       } catch (err) {
         toast.error("ไม่สามารถโหลดข้อมูลได้");
-        router.push("/");
+        // router.push("/"); // Don't redirect on data error, potentially just show error
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     }
+
     fetchData();
-  }, [router]);
-
-  // Fetch departments for edit mode
-  useEffect(() => {
-    if (isEditing && departments.length === 0) {
-      axios.get(`${API_URL}/skills`).then((res) => {
-        setDepartments(res.data.departments);
-        if (res.data.departments.length > 0) {
-          setSelectedDept(res.data.departments[0].id);
-        }
-      });
-    }
-  }, [isEditing, departments.length]);
-
-  // Filter skills by search
-  const filteredSkills = useMemo(() => {
-    if (!searchQuery.trim()) {
-      const dept = departments.find((d) => d.id === selectedDept);
-      return dept?.skills || [];
-    }
-    const query = searchQuery.toLowerCase();
-    const results: string[] = [];
-    departments.forEach((dept) => {
-      dept.skills.forEach((skill) => {
-        if (skill.toLowerCase().includes(query)) {
-          results.push(skill);
-        }
-      });
-    });
-    return results;
-  }, [departments, selectedDept, searchQuery]);
-
-  const toggleSkill = (skillName: string) => {
-    const existing = editedSkills.find((s) => s.name === skillName);
-    if (existing) {
-      setEditedSkills(editedSkills.filter((s) => s.name !== skillName));
-    } else {
-      setEditedSkills([...editedSkills, { name: skillName, level: 3 }]);
-    }
-  };
-
-  const updateLevel = (skillName: string, level: number) => {
-    setEditedSkills(
-      editedSkills.map((s) => (s.name === skillName ? { ...s, level } : s))
-    );
-  };
+  }, [user, token, authLoading, router]);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!profileUser || !token) return;
     setSaving(true);
     try {
-      await axios.put(`${API_URL}/users/${user.id}/skills`, {
-        skills: editedSkills,
-      });
+      await axios.put(
+        `${API_URL}/users/${profileUser.id}/skills`,
+        {
+          skills: editedSkills,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       setSkills(editedSkills);
       setIsEditing(false);
-      toast.success("บันทึก Skills สำเร็จ!");
+      toast.success("บันทึกข้อมูลสำเร็จ!");
+
+      // Force refresh auth user to update context if needed (optional)
+      // window.dispatchEvent(new Event("user-updated"));
     } catch (err) {
       toast.error("เกิดข้อผิดพลาด");
     } finally {
@@ -258,10 +255,22 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading || !user) {
+  // Toggle Department
+  const toggleDepartment = (deptName: string) => {
+    const existing = editedSkills.find((s) => s.name === deptName);
+    if (existing) {
+      setEditedSkills(editedSkills.filter((s) => s.name !== deptName));
+    } else {
+      setEditedSkills([...editedSkills, { name: deptName, level: 1 }]);
+    }
+  };
+
+  // ... inside Render ...
+
+  if (authLoading || dataLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+        <ElementalLoader />
       </div>
     );
   }
@@ -287,14 +296,9 @@ export default function ProfilePage() {
     N: user.ocean_neuroticism,
   };
 
-  // Quick stats
   const totalSkills = skills.length;
-  const maxLevel =
-    skills.length > 0 ? Math.max(...skills.map((s) => s.level)) : 0;
-  const avgLevel =
-    skills.length > 0
-      ? (skills.reduce((a, b) => a + b.level, 0) / skills.length).toFixed(1)
-      : "0";
+  const maxLevel = 1; // Default
+  const avgLevel = 1; // Default
 
   return (
     <div className="min-h-screen bg-slate-50/20 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
@@ -313,7 +317,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-center gap-1.5 mb-1">
               <Star className="text-amber-400" size={14} />
               <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
-                Skills
+                Departments
               </span>
             </div>
             <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
@@ -324,22 +328,22 @@ export default function ProfilePage() {
             <div className="flex items-center justify-center gap-1.5 mb-1">
               <Trophy className="text-purple-500" size={14} />
               <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
-                Max Lv.
+                Class
               </span>
             </div>
-            <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
-              {maxLevel}
+            <p className="text-lg md:text-xl font-black text-slate-800 dark:text-white truncate">
+              {user.character_class}
             </p>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-1">
               <Flame className="text-orange-500" size={14} />
               <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
-                Avg Lv.
+                Level
               </span>
             </div>
             <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
-              {avgLevel}
+              {user.level}
             </p>
           </div>
         </div>
@@ -364,7 +368,6 @@ export default function ProfilePage() {
                 >
                   {user.character_class} • Lv.{user.level}
                 </div>
-
                 {/* OCEAN Chart */}
                 <div className="h-40 md:h-52 mt-3 md:mt-4">
                   <ResponsiveContainer width="100%" height="100%">
@@ -405,14 +408,12 @@ export default function ProfilePage() {
             {/* Class Description */}
             <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
               <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                <span className="text-lg">{classInfo.emoji}</span>
+                <span className="text-lg">{classInfo.emoji}</span>{" "}
                 {classInfo.title}
               </h3>
               <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-3">
                 {classInfo.desc}
               </p>
-
-              {/* Strengths */}
               <div className="mb-3">
                 <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-500 mb-1.5 flex items-center gap-1">
                   <Award size={12} className="text-amber-500" /> จุดเด่น
@@ -428,76 +429,16 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
-
-              {/* Best With */}
-              <div>
-                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-500 mb-1.5 flex items-center gap-1">
-                  <Users size={12} className="text-indigo-500" />{" "}
-                  เข้ากันได้ดีกับ
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {classInfo.bestWith.map((c, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-[10px] md:text-xs font-medium"
-                    >
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* OCEAN Stats Legend */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                <Target size={16} className="text-indigo-500" />
-                OCEAN Stats
-              </h3>
-              <div className="space-y-2">
-                {OCEAN_LABELS.map((item) => {
-                  const score =
-                    oceanScores[item.key as keyof typeof oceanScores];
-                  const percentage = Math.round((score / 50) * 100);
-                  return (
-                    <div key={item.key} className="flex items-center gap-2">
-                      <span className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300">
-                        {item.key}
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex justify-between text-[10px] md:text-xs mb-0.5">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            {item.desc}
-                          </span>
-                          <span className="font-bold text-slate-800 dark:text-white">
-                            {score}
-                          </span>
-                        </div>
-                        <div className="h-1.5 md:h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${percentage}%`,
-                              backgroundColor: statColor,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           </div>
 
-          {/* RIGHT: Skills + Level Legend */}
+          {/* RIGHT: Departments (Replaces Skills) */}
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
-            {/* Skills Section */}
             <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h3 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-1.5 md:gap-2">
                   <Star className="text-amber-400" size={18} />
-                  Skills ของฉัน ({skills.length})
+                  Departments ของฉัน ({skills.length})
                 </h3>
                 {!isEditing ? (
                   <button
@@ -530,182 +471,83 @@ export default function ProfilePage() {
 
               {!isEditing ? (
                 // View Mode
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 md:gap-2 max-h-[350px] md:max-h-[400px] overflow-y-auto">
-                  {skills.length === 0 ? (
-                    <div className="col-span-2 text-center py-8">
-                      <Star
-                        className="mx-auto mb-2 text-slate-300 dark:text-slate-600"
-                        size={32}
-                      />
-                      <p className="text-slate-400 dark:text-slate-500 text-xs md:text-sm">
-                        ยังไม่มี Skills
-                      </p>
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium"
-                      >
-                        + เพิ่ม Skills
-                      </button>
+                <div>
+                  {skills.length === 0 && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl mb-4 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center shrink-0">
+                        <AlertCircle
+                          className="text-red-500 dark:text-red-200"
+                          size={20}
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-red-700 dark:text-red-200">
+                          ยังไม่ได้ระบุสังกัด (Department)
+                        </h4>
+                        <p className="text-xs text-red-600 dark:text-red-300">
+                          กรุณากด "แก้ไข" เพื่อเลือกสังกัดของคุณ
+                          เพื่อให้ระบบจัดทีมได้ถูกต้อง
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    skills.map((skill) => (
-                      <div
-                        key={skill.name}
-                        className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 px-3 md:px-4 py-2 md:py-2.5 rounded-lg"
-                      >
-                        <span className="text-slate-800 dark:text-white text-xs md:text-sm font-medium truncate pr-2">
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {skills.length === 0 && !isEditing ? (
+                      <div className="text-center w-full py-8 text-slate-400">
+                        <p>ยังไม่มีข้อมูลสังกัด</p>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="text-indigo-500 font-bold hover:underline"
+                        >
+                          เลือกสังกัด
+                        </button>
+                      </div>
+                    ) : (
+                      skills.map((skill) => (
+                        <span
+                          key={skill.name}
+                          className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 rounded-lg text-sm font-semibold"
+                        >
                           {skill.name}
                         </span>
-                        <div className="flex gap-0.5 md:gap-1 shrink-0">
-                          {LEVEL_LABELS.map((l) => (
-                            <div
-                              key={l.level}
-                              className={`w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center text-[10px] md:text-xs font-bold ${
-                                skill.level >= l.level
-                                  ? `${l.color} text-white`
-                                  : "bg-slate-200 dark:bg-slate-600 text-slate-400"
-                              }`}
-                              title={l.label}
-                            >
-                              {l.level}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               ) : (
                 // Edit Mode
-                <div className="space-y-3 md:space-y-4">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search
-                      className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                      size={14}
-                    />
-                    <input
-                      type="text"
-                      placeholder="ค้นหา Skill..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-8 md:pl-10 pr-3 py-1.5 md:py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-800 dark:text-white text-xs md:text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
+                <div className="space-y-4">
+                  <p className="text-sm text-slate-500 mb-2">
+                    เลือกสังกัดของคุณ (เลือกได้มากกว่า 1)
+                  </p>
 
-                  {/* Departments */}
-                  {!searchQuery && (
-                    <div className="flex flex-wrap gap-1.5 md:gap-2 max-h-24 overflow-y-auto">
-                      {departments.map((dept) => (
-                        <button
-                          key={dept.id}
-                          onClick={() => setSelectedDept(dept.id)}
-                          className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-medium transition whitespace-nowrap ${
-                            selectedDept === dept.id
-                              ? "bg-indigo-600 text-white"
-                              : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-                          }`}
-                          title={dept.name}
-                        >
-                          {dept.id
-                            .replace(/_/g, " ")
-                            .toUpperCase()
-                            .replace(" AND ", "&")}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Available Skills */}
-                  <div className="flex flex-wrap gap-1 md:gap-2 max-h-28 md:max-h-32 overflow-y-auto">
-                    {filteredSkills.map((skill, idx) => {
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {DEPARTMENTS.map((dept) => {
                       const isSelected = editedSkills.some(
-                        (s) => s.name === skill
+                        (s) => s.name === dept.name
                       );
                       return (
                         <button
-                          key={idx}
-                          onClick={() => toggleSkill(skill)}
-                          className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-medium transition border ${
+                          key={dept.id}
+                          onClick={() => toggleDepartment(dept.name)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all text-left flex items-center justify-between ${
                             isSelected
-                              ? "bg-indigo-600 border-indigo-500 text-white"
-                              : "bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-500"
+                              ? "bg-indigo-600 border-indigo-600 text-white shadow-md transform scale-105"
+                              : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-indigo-400"
                           }`}
                         >
-                          {skill}
+                          <span>{dept.name}</span>
+                          {isSelected && <CheckCircle size={14} />}
                         </button>
                       );
                     })}
                   </div>
-
-                  {/* Selected Skills with Level */}
-                  {editedSkills.length > 0 && (
-                    <div className="border-t border-slate-200 dark:border-slate-600 pt-3">
-                      <p className="text-[10px] md:text-xs text-slate-500 mb-2">
-                        Skills ที่เลือก ({editedSkills.length})
-                      </p>
-                      <div className="space-y-1.5 md:space-y-2 max-h-36 md:max-h-44 overflow-y-auto">
-                        {editedSkills.map((skill) => (
-                          <div
-                            key={skill.name}
-                            className="flex items-center gap-2 md:gap-3 bg-slate-50 dark:bg-slate-700/50 px-2 md:px-3 py-1.5 md:py-2 rounded-lg"
-                          >
-                            <button
-                              onClick={() => toggleSkill(skill.name)}
-                              className="text-slate-400 hover:text-red-500 shrink-0"
-                            >
-                              <X size={12} />
-                            </button>
-                            <span className="flex-1 text-slate-800 dark:text-white text-xs md:text-sm truncate">
-                              {skill.name}
-                            </span>
-                            <div className="flex gap-0.5 shrink-0">
-                              {LEVEL_LABELS.map((l) => (
-                                <button
-                                  key={l.level}
-                                  onClick={() =>
-                                    updateLevel(skill.name, l.level)
-                                  }
-                                  className={`w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center text-[10px] md:text-xs font-bold transition ${
-                                    skill.level >= l.level
-                                      ? `${l.color} text-white`
-                                      : "bg-slate-200 dark:bg-slate-600 text-slate-400"
-                                  }`}
-                                >
-                                  {l.level}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
 
             {/* Level Legend */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                <Sparkles size={16} className="text-amber-400" />
-                ระดับความเชี่ยวชาญ
-              </h3>
-              <div className="flex flex-wrap gap-3 md:gap-4">
-                {LEVEL_LABELS.map((l) => (
-                  <div key={l.level} className="flex items-center gap-1.5">
-                    <div
-                      className={`w-6 h-6 md:w-7 md:h-7 rounded ${l.color} text-white flex items-center justify-center text-xs md:text-sm font-bold`}
-                    >
-                      {l.level}
-                    </div>
-                    <span className="text-xs md:text-sm text-slate-600 dark:text-slate-400">
-                      {l.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* RPG Character Status */}
             <div

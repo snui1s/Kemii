@@ -65,7 +65,7 @@ const CLASS_THEMES = {
     border: "border-purple-500",
     statColor: "#a855f7",
     softBg:
-      "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
     softText: "text-purple-700 dark:text-purple-300",
   },
   Paladin: {
@@ -74,7 +74,7 @@ const CLASS_THEMES = {
     border: "border-yellow-500",
     statColor: "#eab308",
     softBg:
-      "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
+      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
     softText: "text-yellow-700 dark:text-yellow-300",
   },
   Warrior: {
@@ -82,7 +82,8 @@ const CLASS_THEMES = {
     color: "from-red-500 to-rose-600",
     border: "border-red-500",
     statColor: "#ef4444",
-    softBg: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
+    softBg:
+      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
     softText: "text-red-700 dark:text-red-300",
   },
   Cleric: {
@@ -91,7 +92,7 @@ const CLASS_THEMES = {
     border: "border-green-500",
     statColor: "#22c55e",
     softBg:
-      "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
     softText: "text-green-700 dark:text-green-300",
   },
   Rogue: {
@@ -100,7 +101,7 @@ const CLASS_THEMES = {
     border: "border-blue-900",
     statColor: "#1e3a5f",
     softBg:
-      "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
     softText: "text-blue-900 dark:text-blue-300",
   },
 } as const;
@@ -167,15 +168,13 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900/20 text-slate-800 dark:text-slate-100 p-4 md:p-8 font-sans flex justify-center items-center relative overflow-hidden transition-colors duration-300">
       {/* Background FX */}
-      <div
-        className={`absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-br ${theme.color} opacity-10 blur-[100px] pointer-events-none`}
-      />
+      {/* Background FX Removed */}
 
       <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
         {/* --- LEFT: HERO CARD --- */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           <div
-            className={`relative p-[2px] rounded-3xl bg-gradient-to-b ${theme.color} shadow-md`}
+            className={`relative p-[2px] rounded-3xl bg-slate-200 dark:bg-slate-700 shadow-md`}
           >
             <div className="bg-white dark:bg-slate-900 rounded-[22px] p-6 flex flex-col items-center text-center h-full relative overflow-hidden">
               {/* Badge */}
@@ -274,15 +273,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
           </div>
 
           {/* Skills Button */}
-          <Link href={`/assessment/skills?userId=${user.id}`} className="block">
-            <button
-              className={`w-full bg-gradient-to-r ${theme.color} hover:opacity-90 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg`}
-            >
-              <Star size={18} />
-              ถัดไป: เลือก Skills ของคุณ
-              <ChevronRight size={18} />
-            </button>
-          </Link>
+          {/* Skills Button Removed */}
 
           <Link href="/" className="block">
             <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md">

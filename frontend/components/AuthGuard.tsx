@@ -2,32 +2,28 @@
 import { useEffect, useState } from "react";
 import { Lock, ClipboardList } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import ElementalLoader from "@/components/ElementalLoader";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const [authorized, setAuthorized] = useState(false);
+  const { user, loading } = useAuth();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const user = localStorage.getItem("myName");
-      if (user) {
-        setAuthorized(true);
-      }
+    if (!loading) {
       setChecking(false);
-    }, 0);
+    }
+  }, [loading]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (checking) {
+  if (loading || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-pulse">กำลังตรวจสอบสิทธิ์...</div>
+        <ElementalLoader />
       </div>
     );
   }
 
-  if (!authorized) {
+  if (!user) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
         <div className="bg-slate-100 dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl max-w-md w-full">

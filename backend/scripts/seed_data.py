@@ -1,3 +1,13 @@
+"""
+Script to seed initial master data (Questions, etc.)
+Run: uv run backend/scripts/seed_data.py
+"""
+import sys
+import os
+
+# Add parent directory to path so we can import from backend
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import requests
 import random
 import json
