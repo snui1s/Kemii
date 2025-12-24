@@ -74,8 +74,8 @@ This method ensures all dependencies and services are configured automatically.
 1.  **Clone the Repository**
 
     ```bash
-    git clone https://github.com/your-username/football-team-guild.git
-    cd football-team-guild
+    git clone https://github.com/snui1s/Kemii.git
+    cd Kemii
     ```
 
 2.  **Configure Environment**
