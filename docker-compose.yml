@@ -5,11 +5,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app  # Mount for hot reloading
+      - ./backend:/app # Mount for hot reloading
     env_file:
-      - ./backend/.env
+      - .env
     environment:
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - DATABASE_URL=sqlite:///elements.db
     restart: always
 
@@ -21,6 +20,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:

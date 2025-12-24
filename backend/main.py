@@ -25,8 +25,6 @@ def read_root():
     return {"status": "I am awake!", "service": "Kemii API"}
 
 app.include_router(skills.router)
-# NOTE: users router includes /users/roster which must be registered correctly.
-# In users.py, the order is correct.
 app.include_router(users.router)
 app.include_router(teams.router)
 app.include_router(quests.router)
