@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useState, use } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import {
@@ -21,8 +22,24 @@ import {
   UserPlus,
   Plus,
   Minus,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
+
+interface MatchingSkill {
+  name: string;
+  level: number;
+  type: string;
+}
+
+interface AcceptedMember {
+  id: number;
+  name: string;
+  character_class: string;
+  department?: string;
+  level: number;
+  matching_skills?: MatchingSkill[];
+}
 
 interface QuestDetail {
   id: number;
@@ -37,13 +54,7 @@ interface QuestDetail {
   leader_name: string;
   leader_class: string;
   status: string;
-  accepted_members: {
-    id: number;
-    name: string;
-    character_class: string;
-    level: number;
-    matching_skills?: { name: string; level: number; type: string }[];
-  }[];
+  accepted_members: AcceptedMember[];
   accepted_member_ids: number[];
   start_date: string | null;
   deadline: string | null;
@@ -65,37 +76,6 @@ interface Candidate {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const RANK_COLORS: Record<
-  string,
-  { bg: string; border: string; text: string }
-> = {
-  S: {
-    bg: "from-amber-400 to-yellow-500",
-    border: "border-amber-400",
-    text: "text-amber-900",
-  },
-  A: {
-    bg: "from-rose-500 to-red-600",
-    border: "border-rose-500",
-    text: "text-white",
-  },
-  B: {
-    bg: "from-purple-500 to-indigo-600",
-    border: "border-purple-500",
-    text: "text-white",
-  },
-  C: {
-    bg: "from-blue-500 to-cyan-500",
-    border: "border-blue-500",
-    text: "text-white",
-  },
-  D: {
-    bg: "from-slate-400 to-slate-500",
-    border: "border-slate-400",
-    text: "text-white",
-  },
-};
-
 const CLASS_ICONS: Record<string, React.ReactNode> = {
   Mage: <Wand size={20} />,
   Paladin: <Shield size={20} />,
@@ -116,19 +96,25 @@ const STATUS_LABELS: Record<
   string,
   { label: string; color: string; icon: any }
 > = {
-  open: { label: "เปิดรับคน", color: "bg-blue-500 text-white", icon: Users },
-  filled: { label: "คนครบแล้ว", color: "bg-amber-500 text-white", icon: Check },
+  open: { label: "Pending", color: "bg-blue-500 text-white", icon: Users },
+  filled: {
+    label: "Pending (Ready)",
+    color: "bg-amber-500 text-white",
+    icon: Check,
+  },
   in_progress: {
-    label: "กำลังลุย",
+    label: "In Progress",
     color: "bg-purple-500 text-white",
     icon: Zap,
   },
   completed: {
-    label: "ภารกิจสำเร็จ",
+    label: "Finished",
     color: "bg-emerald-500 text-white",
     icon: Star,
   },
-  failed: { label: "ภารกิจล้มเหลว", color: "bg-red-500 text-white", icon: X },
+  late: { label: "Late", color: "bg-rose-600 text-white", icon: AlertCircle },
+  failed: { label: "Failed", color: "bg-red-500 text-white", icon: X },
+  cancelled: { label: "Failed", color: "bg-red-500 text-white", icon: X },
 };
 
 export default function QuestDetailPage({
@@ -138,80 +124,67 @@ export default function QuestDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [quest, setQuest] = useState<QuestDetail | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const searchParams = useSearchParams();
+  const returnView = searchParams.get("return_view") || "active";
   const { user } = useAuth();
-  const [teamAnalysis, setTeamAnalysis] = useState<any>(null);
 
-  const [filterSkill, setFilterSkill] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const refreshQuest = async () => {
-    const res = await axios.get(`${API_URL}/quests/${id}`);
-    setQuest(res.data);
-  };
+  // 1. Fetch Quest Detail
+  const {
+    data: quest,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["quest", id],
+    queryFn: async () => {
+      const res = await axios.get(`${API_URL}/quests/${id}`);
+      return res.data;
+    },
+  });
 
-  const handleFetchCandidates = async () => {
-    setLoadingCandidates(true);
-    try {
-      const res = await axios.get(`${API_URL}/quests/${id}/candidates`);
-      setCandidates(res.data.candidates);
-      if (res.data.candidates.length > 0) {
-        toast.success(`พบ ${res.data.candidates.length} คนที่เหมาะสม!`);
-      } else {
-        toast.error("ไม่พบผู้สมัครที่เหมาะสม");
-      }
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
-    } finally {
-      setLoadingCandidates(false);
-    }
-  };
-
-  const handleTeamSizeChange = async (delta: number) => {
-    if (!quest) return;
-    try {
-      const newSize = quest.team_size + delta;
-      await axios.patch(
-        `${API_URL}/quests/${id}/team-size?team_size=${newSize}`
-      );
-      await refreshQuest();
-      toast.success(`เปลี่ยนจำนวนทีมเป็น ${newSize} คน`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || "ไม่สามารถเปลี่ยนได้");
-    }
-  };
-
-  const fetchTeamAnalysis = async () => {
-    try {
+  // 2. Fetch Team Analysis (Enabled if quest exists)
+  const { data: teamAnalysis } = useQuery({
+    queryKey: ["quest-analysis", id],
+    queryFn: async () => {
       const res = await axios.get(`${API_URL}/quests/${id}/team-analysis`);
-      setTeamAnalysis(res.data);
-    } catch (err) {
-      console.error("Failed to fetch team analysis");
-    }
-  };
+      return res.data;
+    },
+    enabled: !!quest,
+  });
 
-  useEffect(() => {
-    axios
-      .get(`${API_URL}/quests/${id}`)
-      .then((res) => {
-        setQuest(res.data);
-        // Fetch team analysis after loading quest
-        fetchTeamAnalysis();
-      })
-      .catch(() => toast.error("ไม่พบเควส"))
-      .finally(() => setLoading(false));
-  }, [id]);
+  // 3. Fetch Candidates (Enabled if quest exists and user is leader and status allows)
+  const isLeader = user?.id === quest?.leader_id;
+
+  const { data: candidates = [], isLoading: loadingCandidates } = useQuery({
+    queryKey: ["quest-candidates", id],
+    queryFn: async () => {
+      try {
+        const res = await axios.get(`${API_URL}/quests/${id}/candidates`);
+        return res.data.candidates;
+      } catch (err) {
+        return [];
+      }
+    },
+    enabled:
+      !!quest &&
+      isLeader &&
+      (quest.status === "open" || quest.status === "filled"),
+  });
+
+  const refreshQuest = () => {
+    queryClient.invalidateQueries({ queryKey: ["quest", id] });
+    queryClient.invalidateQueries({ queryKey: ["quest-analysis", id] });
+    queryClient.invalidateQueries({ queryKey: ["quest-candidates", id] });
+    queryClient.invalidateQueries({ queryKey: ["quests"] });
+  };
 
   const handleAccept = async (candidateId: number) => {
     try {
       await axios.post(`${API_URL}/quests/${id}/accept/${candidateId}`);
       toast.success("เพิ่มสมาชิกแล้ว! 🎉");
-      await refreshQuest();
-      await fetchTeamAnalysis(); // Update team analysis
-      // Remove from candidates list
-      setCandidates(candidates.filter((c) => c.user_id !== candidateId));
+      refreshQuest();
+      // Remove from candidates list optimistically (optional, or just rely on refetch)
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
     }
@@ -222,8 +195,7 @@ export default function QuestDetailPage({
     try {
       await axios.post(`${API_URL}/quests/${id}/kick/${memberId}`);
       toast.success("ปลดสมาชิกแล้ว");
-      await refreshQuest();
-      await fetchTeamAnalysis();
+      refreshQuest();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
     }
@@ -233,7 +205,7 @@ export default function QuestDetailPage({
     try {
       await axios.post(`${API_URL}/quests/${id}/start`);
       toast.success("เริ่มเควสแล้ว! ⚔️");
-      await refreshQuest();
+      refreshQuest();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
     }
@@ -243,8 +215,8 @@ export default function QuestDetailPage({
     try {
       await axios.post(`${API_URL}/quests/${id}/complete`);
       toast.success("เควสสำเร็จ! 🎉");
+      refreshQuest();
       router.push(`/quests`);
-      await refreshQuest();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
     }
@@ -255,7 +227,7 @@ export default function QuestDetailPage({
     try {
       await axios.post(`${API_URL}/quests/${id}/cancel`);
       toast.success("ยกเลิกเควสแล้ว");
-      await refreshQuest();
+      refreshQuest();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
     }
@@ -274,13 +246,17 @@ export default function QuestDetailPage({
       } else {
         toast.success("สถานะอัปเดตแล้ว");
       }
-      await refreshQuest();
+      refreshQuest();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
     }
   };
 
   if (loading || !quest) {
+    if (error)
+      return (
+        <div className="p-8 text-center text-red-500">Error loading quest</div>
+      );
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
@@ -288,8 +264,36 @@ export default function QuestDetailPage({
     );
   }
 
-  const rankStyle = RANK_COLORS[quest.rank] || RANK_COLORS.C;
-  const isLeader = user?.id === quest.leader_id;
+  // Helper for status - moved here to have access to quest
+  const getDisplayStatus = (q: QuestDetail) => {
+    if (["completed", "failed", "cancelled"].includes(q.status))
+      return q.status;
+    const now = new Date();
+    const startDate = q.start_date ? new Date(q.start_date) : null;
+    const deadline = q.deadline ? new Date(q.deadline) : null;
+    if (deadline && now > deadline) return "late";
+    if (q.status === "filled" && startDate && now >= startDate) {
+      return "in_progress";
+    }
+    return q.status;
+  };
+
+  // Re-declare handleTeamSizeChange hook access
+  const handleTeamSizeChange = async (delta: number) => {
+    try {
+      const newSize = quest.team_size + delta;
+      await axios.patch(
+        `${API_URL}/quests/${id}/team-size?team_size=${newSize}`
+      );
+      refreshQuest();
+      toast.success(`เปลี่ยนจำนวนทีมเป็น ${newSize} คน`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "ไม่สามารถเปลี่ยนได้");
+    }
+  };
+
+  // Re-declare isLeader
+
   const acceptedCount = quest.accepted_member_ids.length;
   const needsMore = acceptedCount < quest.team_size;
 
@@ -313,108 +317,58 @@ export default function QuestDetailPage({
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => router.push("/quests")}
+          onClick={() => router.push(`/quests?view=${returnView}`)}
           className="mb-4 flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
         >
           <ChevronLeft size={18} /> กลับไปบอร์ด
         </button>
 
-        <div
-          className={`bg-white dark:bg-slate-800 rounded-2xl border-2 ${rankStyle.border} overflow-hidden shadow-lg`}
-        >
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           {/* Header */}
-          <div className={`bg-gradient-to-r ${rankStyle.bg} p-6 relative`}>
-            <div className="absolute top-4 right-4 w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className={`text-2xl font-black ${rankStyle.text}`}>
-                {quest.rank}
-              </span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white pr-16 sm:pr-20 break-words">
-              {quest.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-3 mt-3 text-white/80 text-sm">
-              <span className="flex items-center gap-1">
-                <Calendar size={16} /> {formatDate(quest.start_date)} -{" "}
-                {formatDate(quest.deadline)}
-              </span>
-              <span className="flex items-center gap-1">
-                <Users size={16} /> {acceptedCount}/{quest.team_size} คน
-                {isLeader &&
-                  (quest.status === "open" || quest.status === "filled") && (
-                    <span className="flex items-center gap-1 ml-2">
-                      <button
-                        onClick={() => handleTeamSizeChange(-1)}
-                        className="w-5 h-5 rounded bg-white/20 hover:bg-white/40 flex items-center justify-center transition"
-                        title="ลดจำนวน"
+          <div className="p-6 md:p-8 bg-white dark:bg-slate-800 relative border-b border-slate-100 dark:border-slate-700">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {(() => {
+                    const displayStatus = getDisplayStatus(quest);
+                    const statusInfo =
+                      STATUS_LABELS[displayStatus] || STATUS_LABELS.open;
+                    const StatusIcon = statusInfo.icon;
+                    return (
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${statusInfo.color}`}
                       >
-                        <Minus size={12} />
-                      </button>
-                      <button
-                        onClick={() => handleTeamSizeChange(1)}
-                        className="w-5 h-5 rounded bg-white/20 hover:bg-white/40 flex items-center justify-center transition"
-                        title="เพิ่มจำนวน"
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </span>
-                  )}
-              </span>
-              {(() => {
-                const statusInfo =
-                  STATUS_LABELS[quest.status] || STATUS_LABELS.open;
-                const StatusIcon = statusInfo.icon;
-                return (
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${statusInfo.color}`}
-                  >
-                    <StatusIcon size={12} /> {statusInfo.label}
+                        <StatusIcon size={12} /> {statusInfo.label}
+                      </span>
+                    );
+                  })()}
+                  <span className="text-slate-400 dark:text-slate-500 text-xs font-medium flex items-center gap-1">
+                    <Calendar size={14} /> Created{" "}
+                    {new Date(quest.created_at).toLocaleDateString("th-TH")}
                   </span>
-                );
-              })()}
-            </div>
+                </div>
 
-            {/* Leader Controls */}
-            {isLeader && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {(quest.status === "filled" || quest.status === "open") && (
-                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button
-                      onClick={() => handleStart()}
-                      disabled={acceptedCount < quest.team_size}
-                      className="flex-1 sm:flex-none px-4 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-purple-500/30"
-                    >
-                      <Play size={16} /> เริ่มภารกิจ
-                    </button>
-                    <button
-                      onClick={() => handleCancel()}
-                      className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition"
-                    >
-                      <X size={16} /> ยกเลิก
-                    </button>
-                  </div>
-                )}
-                {quest.status === "in_progress" && (
-                  <>
-                    <button
-                      onClick={() => handleStatusChange("completed")}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-sm flex items-center gap-2 transition shadow-lg shadow-emerald-500/30"
-                    >
-                      <Star size={16} /> ภารกิจสำเร็จ
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange("failed")}
-                      className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-bold text-sm flex items-center gap-2 transition shadow-lg shadow-rose-500/30"
-                    >
-                      <X size={16} /> ภารกิจล้มเหลว
-                    </button>
-                  </>
-                )}
+                <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2 leading-tight">
+                  {quest.title}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-slate-500 dark:text-slate-400 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={16} className="text-slate-400" />
+                    {formatDate(quest.start_date)} -{" "}
+                    {formatDate(quest.deadline)}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Users size={16} className="text-slate-400" />
+                    {acceptedCount} / {quest.team_size} Members
+                  </span>
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-6 md:p-8">
             <div className="mb-6">
               <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2">
                 รายละเอียด
@@ -422,49 +376,6 @@ export default function QuestDetailPage({
               <p className="text-slate-600 dark:text-slate-300">
                 {quest.description}
               </p>
-            </div>
-
-            {/* Skills */}
-            <div className="mb-6">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2">
-                Skills ที่ต้องการ
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {quest.required_skills.map((skill, i) => (
-                  <div
-                    key={i}
-                    className="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center gap-2"
-                  >
-                    <Zap
-                      size={14}
-                      className="text-indigo-600 dark:text-indigo-400 fill-indigo-600 dark:fill-indigo-400"
-                    />
-                    <span className="text-indigo-700 dark:text-indigo-300 text-sm font-medium">
-                      {skill.name}
-                    </span>
-                    <span className="text-indigo-500 text-xs">
-                      Lv.{skill.level}+
-                    </span>
-                  </div>
-                ))}
-                {quest.optional_skills.map((skill, i) => (
-                  <div
-                    key={`opt-${i}`}
-                    className="px-3 py-1.5 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center gap-2"
-                  >
-                    <Star
-                      size={14}
-                      className="text-teal-600 dark:text-teal-400 fill-teal-600 dark:fill-teal-400"
-                    />
-                    <span className="text-teal-700 dark:text-teal-300 text-sm font-medium">
-                      {skill.name}
-                    </span>
-                    <span className="text-teal-500 text-xs">
-                      Lv.{skill.level}+
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Leader */}
@@ -495,7 +406,7 @@ export default function QuestDetailPage({
                   สมาชิกทีม ({quest.accepted_members.length}/{quest.team_size})
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {quest.accepted_members.map((member) => (
+                  {quest.accepted_members.map((member: AcceptedMember) => (
                     <div
                       key={member.id}
                       className="bg-white dark:bg-slate-700 rounded-lg p-2"
@@ -512,7 +423,20 @@ export default function QuestDetailPage({
                               {member.name}
                             </p>
                             <p className="text-[10px] text-slate-500">
-                              {member.character_class} • Lv.{member.level}
+                              {member.character_class}
+                              {member.department &&
+                                member.department !== "Unknown" && (
+                                  <span
+                                    className="mx-1 text-slate-400"
+                                    title={member.department}
+                                  >
+                                    •{" "}
+                                    {member.department.length > 20
+                                      ? member.department.slice(0, 20) + "..."
+                                      : member.department}
+                                  </span>
+                                )}
+                              <span className="mx-1">•</span> Lv.{member.level}
                             </p>
                           </div>
                         </div>
@@ -534,18 +458,20 @@ export default function QuestDetailPage({
                       {member.matching_skills &&
                         member.matching_skills.length > 0 && (
                           <div className="mt-2 pl-10 flex flex-wrap gap-1">
-                            {member.matching_skills.map((skill, i) => (
-                              <span
-                                key={i}
-                                className={`text-[9px] px-1.5 py-0.5 rounded ${
-                                  skill.type === "required"
-                                    ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                                    : "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                                }`}
-                              >
-                                {skill.name} Lv.{skill.level}
-                              </span>
-                            ))}
+                            {member.matching_skills.map(
+                              (skill: MatchingSkill, i: number) => (
+                                <span
+                                  key={i}
+                                  className={`text-[9px] px-1.5 py-0.5 rounded ${
+                                    skill.type === "required"
+                                      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                                      : "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                                  }`}
+                                >
+                                  {skill.name}
+                                </span>
+                              )
+                            )}
                           </div>
                         )}
                     </div>
@@ -565,7 +491,7 @@ export default function QuestDetailPage({
                 {/* Team Summary - Harmony & Skill Coverage */}
                 <div className="flex items-center gap-4 mb-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                   {/* Left: Team Harmony */}
-                  <div className="flex-1 text-center border-r border-slate-100 dark:border-slate-700">
+                  <div className="flex-1 text-center">
                     <p className="text-xs text-slate-400 mb-1">
                       ความเข้ากันได้
                     </p>
@@ -589,314 +515,34 @@ export default function QuestDetailPage({
                             : "text-slate-600 dark:text-slate-300"
                         }`}
                       >
-                        {teamAnalysis.harmony_score}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Right: Skill Goal */}
-                  <div className="flex-1 text-center">
-                    <p className="text-xs text-slate-400 mb-1">
-                      สกิลครบตามโจทย์
-                    </p>
-                    <div className="flex items-center justify-center gap-2">
-                      <Zap
-                        size={24}
-                        className={`${
-                          teamAnalysis.skill_coverage.coverage_percent >= 100
-                            ? "text-emerald-500 fill-emerald-500"
-                            : "text-amber-500 fill-amber-500"
-                        }`}
-                      />
-                      <span
-                        className={`text-2xl font-black ${
-                          teamAnalysis.skill_coverage.coverage_percent >= 100
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-amber-600 dark:text-amber-400"
-                        }`}
-                      >
-                        {teamAnalysis.skill_coverage.coverage_percent}%
+                        {Math.round(teamAnalysis.harmony_score)}%
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Scores */}
-
-                {/* Skill Status */}
-                <div className="space-y-2">
-                  {teamAnalysis.skill_coverage.all_covered && (
-                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                      <Check size={14} /> ทีมมี Skills ครบทุกอย่างแล้ว!
-                    </div>
-                  )}
-
-                  {!teamAnalysis.skill_coverage.all_covered && (
-                    <>
-                      {teamAnalysis.skill_coverage.covered.length > 0 && (
-                        <div>
-                          <p className="text-[10px] text-slate-400 mb-1">
-                            ✅ ครบแล้ว:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {teamAnalysis.skill_coverage.covered.map(
-                              (s: any, i: number) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded text-[10px]"
-                                >
-                                  {s.name} (Lv.{s.has}/{s.required})
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {teamAnalysis.skill_coverage.partial.length > 0 && (
-                        <div>
-                          <p className="text-[10px] text-slate-400 mb-1">
-                            ⚠️ ยังไม่พอ:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {teamAnalysis.skill_coverage.partial.map(
-                              (s: any, i: number) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[10px]"
-                                >
-                                  {s.name} (Lv.{s.has}/{s.required})
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {teamAnalysis.skill_coverage.missing.length > 0 && (
-                        <div>
-                          <p className="text-[10px] text-slate-400 mb-1">
-                            ❌ ยังขาด:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {teamAnalysis.skill_coverage.missing.map(
-                              (s: any, i: number) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-[10px]"
-                                >
-                                  {s.name} (ต้อง Lv.{s.required})
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
               </div>
             )}
 
-            {/* AI Candidate Finder - For leaders */}
+            {/* Leader Actions */}
             {isLeader &&
-              (quest.status === "open" || quest.status === "filled") && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                      <Sparkles className="text-amber-500" size={18} /> AI
-                      แนะนำทีม
-                    </h3>
-                    <button
-                      onClick={handleFetchCandidates}
-                      disabled={loadingCandidates}
-                      className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:shadow-lg transition disabled:opacity-50"
-                    >
-                      {loadingCandidates ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                      ) : (
-                        <Zap size={16} />
-                      )}
-                      {loadingCandidates ? "กำลังหา..." : "หาคนที่เหมาะ"}
-                    </button>
-                  </div>
-
-                  {/* Filter Skills Buttons */}
-                  {teamAnalysis?.skill_coverage?.missing?.length > 0 &&
-                    candidates.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs text-slate-500 mb-2">
-                          ค้นหาคนที่มี Skill ที่ขาด:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {/* Show "All" button */}
-                          <button
-                            onClick={() => setFilterSkill(null)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                              filterSkill === null
-                                ? "bg-slate-800 text-white dark:bg-white dark:text-slate-800"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"
-                            }`}
-                          >
-                            ทั้งหมด
-                          </button>
-                          {teamAnalysis.skill_coverage.missing.map(
-                            (s: any, i: number) => (
-                              <button
-                                key={i}
-                                onClick={() =>
-                                  setFilterSkill(
-                                    filterSkill === s.name ? null : s.name
-                                  )
-                                }
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                                  filterSkill === s.name
-                                    ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
-                                    : "bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-300 border border-rose-100 dark:border-rose-800"
-                                }`}
-                              >
-                                {s.name}
-                              </button>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                  {candidates.length > 0 && (
-                    <div className="space-y-3">
-                      {candidates
-                        .filter((c) => {
-                          const hasMatchingSkills =
-                            c.matching_skills && c.matching_skills.length > 0;
-                          if (!hasMatchingSkills) return false;
-
-                          if (filterSkill) {
-                            return c.matching_skills?.some(
-                              (s) => s.name === filterSkill
-                            );
-                          }
-                          return true;
-                        })
-                        .sort((a, b) => {
-                          if (filterSkill) {
-                            // If filtering, sort by OCEAN score (compatibility)
-                            return b.ocean_score - a.ocean_score;
-                          }
-                          // Default sort by match_score
-                          return b.match_score - a.match_score;
-                        })
-                        .map((candidate) => {
-                          const isAccepted = quest.accepted_member_ids.includes(
-                            candidate.user_id
-                          );
-                          return (
-                            <div
-                              key={candidate.user_id}
-                              className={`p-4 rounded-xl border-2 transition ${
-                                isAccepted
-                                  ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700"
-                                  : "bg-white dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
-                              }`}
-                            >
-                              {/* Header */}
-                              <div className="flex items-center gap-3 mb-2">
-                                <div
-                                  className={`shrink-0 ${
-                                    CLASS_COLORS[candidate.character_class] ||
-                                    "text-slate-500"
-                                  }`}
-                                >
-                                  {CLASS_ICONS[candidate.character_class] || (
-                                    <Star size={16} />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
-                                    <p className="text-sm font-bold text-slate-800 dark:text-white break-words">
-                                      {candidate.name}
-                                    </p>
-                                    <p className="text-xs text-slate-500">
-                                      {candidate.character_class} • Lv.
-                                      {candidate.level}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="ml-auto flex items-center gap-4">
-                                  {/* Accept Button */}
-                                  {isAccepted ? (
-                                    <span className="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold">
-                                      ✓ รับแล้ว
-                                    </span>
-                                  ) : needsMore ? (
-                                    <button
-                                      onClick={() =>
-                                        handleAccept(candidate.user_id)
-                                      }
-                                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-bold flex items-center gap-1 hover:shadow-lg transition"
-                                    >
-                                      <UserPlus size={16} /> รับ
-                                    </button>
-                                  ) : (
-                                    <span className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded-lg text-xs font-bold">
-                                      ครบแล้ว
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Score breakdown + Matching Skills */}
-                              <div className="mt-3 space-y-2">
-                                {candidate.matching_skills &&
-                                  candidate.matching_skills.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                      <span className="text-[10px] text-slate-400">
-                                        เติมเต็มทีม:
-                                      </span>
-                                      {/* Deduplicate skills by name */}
-                                      {Array.from(
-                                        new Set(
-                                          (candidate.matching_skills || []).map(
-                                            (s) => s.name
-                                          )
-                                        )
-                                      )
-                                        .map((name) => {
-                                          return candidate.matching_skills?.find(
-                                            (s) => s.name === name
-                                          );
-                                        })
-                                        .filter(
-                                          (s): s is NonNullable<typeof s> => !!s
-                                        )
-                                        .map((skill, idx) => (
-                                          <span
-                                            key={idx}
-                                            className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                                              skill.type === "required"
-                                                ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                                                : "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                                            }`}
-                                          >
-                                            {skill.name} Lv.{skill.level}
-                                          </span>
-                                        ))}
-                                    </div>
-                                  )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-
-                  {candidates.length === 0 && !loadingCandidates && (
-                    <div className="text-center py-8 text-slate-400">
-                      <Users className="mx-auto mb-2" size={32} />
-                      <p className="text-sm">กดปุ่มเพื่อให้ AI หาคนที่เหมาะ</p>
-                    </div>
-                  )}
+              (quest.status === "open" ||
+                quest.status === "filled" ||
+                quest.status === "in_progress") && (
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleComplete}
+                    className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-sm"
+                  >
+                    <Check size={20} /> ภารกิจสำเร็จ (Complete)
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="flex-1 py-3 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                  >
+                    <X size={20} /> ยุบทีม (Disband)
+                  </button>
                 </div>
               )}
 

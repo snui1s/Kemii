@@ -5,8 +5,13 @@ from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 
-SECRET_KEY = "my_super_secret_key_change_this" 
-ALGORITHM = "HS256"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_dev_key_if_env_missing")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 security = HTTPBearer()
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
@@ -18,10 +23,11 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def create_access_token(user_id: int):
+    expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     payload = {
         "sub": str(user_id), # sub = subject (เจ้าของบัตร)
         "iat": datetime.utcnow(),
-        "exp": datetime.utcnow() + timedelta(days=365) # บัตรหมดอายุใน 1 ปี (หรือจะไม่ใส่ก็ได้ถ้าอยากให้ใช้ยาวๆ)
+        "exp": datetime.utcnow() + timedelta(minutes=expire_minutes) 
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -36,3 +42,19 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security))
         return int(user_id) # คืนค่า ID ของคนถือบัตร
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+from sqlmodel import Session, select
+from database import engine
+from models import User
+
+def get_current_user(user_id: int = Security(verify_token)) -> User:
+    with Session(engine) as session:
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+
+def get_current_admin(user: User = Security(get_current_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough privileges")
+    return user

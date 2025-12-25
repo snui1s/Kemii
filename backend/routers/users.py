@@ -46,7 +46,8 @@ def get_users(session: Session = Depends(get_session)):
             "ocean_agreeableness": u.ocean_agreeableness or 0,
             "ocean_neuroticism": u.ocean_neuroticism or 0,
             "skills": skills,
-            "is_available": u.is_available
+            "is_available": u.is_available,
+            "role": u.role
         })
     return results
 

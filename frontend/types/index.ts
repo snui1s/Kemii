@@ -7,6 +7,7 @@ export interface User {
   id: number;
   name: string;
   email?: string;
+  role?: "user" | "admin";
   character_class: string;
   level: number;
   ocean_openness: number;

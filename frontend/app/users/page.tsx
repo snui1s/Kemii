@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Users, Search } from "lucide-react";
+import UserCard from "@/components/UserCard";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DEPARTMENTS, matchesDepartment } from "@/data/departments";
 import {
-  Users,
-  Wand,
-  Shield,
-  Sword,
-  Heart,
-  Skull,
-  Star,
-  Search,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -34,379 +35,151 @@ interface User {
   ocean_neuroticism: number;
   skills: Skill[];
   is_available: boolean;
-}
-
-const CLASS_ICONS: Record<string, React.ReactNode> = {
-  Mage: <Wand size={16} />,
-  Paladin: <Shield size={16} />,
-  Warrior: <Sword size={16} />,
-  Cleric: <Heart size={16} />,
-  Rogue: <Skull size={16} />,
-};
-
-const CLASS_COLORS: Record<string, string> = {
-  Mage: "from-purple-500 to-indigo-500",
-  Paladin: "from-amber-500 to-yellow-500",
-  Warrior: "from-red-500 to-orange-500",
-  Cleric: "from-emerald-500 to-teal-500",
-  Rogue: "from-slate-600 to-slate-800",
-};
-
-const DEPARTMENTS = [
-  {
-    id: "swp_od",
-    name: "SWP & Organization Development",
-    label: "SWP & OD",
-    skills: [
-      "Organization Design",
-      "Workforce Forecasting",
-      "Strategic Planning",
-      "Change Management",
-      "Competency Modeling",
-      "Manpower Budgeting",
-      "Gap Analysis",
-      "Culture Transformation",
-      "Job Analysis & Job Description",
-      "Organizational Effectiveness",
-    ],
-  },
-  {
-    id: "hrbp",
-    name: "HR Business Partner (HRBP)",
-    label: "HRBP",
-    skills: [
-      "Strategic Partnering",
-      "Stakeholder Management",
-      "Performance Management",
-      "Labor Law & Regulations",
-      "Consulting Skills",
-      "Business Acumen",
-      "Conflict Resolution",
-      "Headcount Planning",
-      "Talent Review Facilitation",
-      "Exit Interview Analysis",
-    ],
-  },
-  {
-    id: "total_rewards",
-    name: "Total Rewards (Comp & Ben)",
-    label: "Total Rewards",
-    skills: [
-      "Payroll Management",
-      "Salary Structure Design",
-      "Job Grading (Hay/Mercer)",
-      "Tax & Social Security",
-      "Benefits Administration",
-      "Compensation Benchmarking",
-      "Annual Merit Planning",
-      "Bonus Calculation",
-      "Expat Compensation",
-      "Insurance Renewal Negotiation",
-    ],
-  },
-  {
-    id: "er",
-    name: "Employee Relations (ER)",
-    label: "ER",
-    skills: [
-      "Labor Law (Advanced)",
-      "Disciplinary Action",
-      "Union Management",
-      "Employee Grievance Handling",
-      "Investigation Techniques",
-      "Labor Court Proceedings",
-      "Welfare Committee Management",
-      "Termination Process",
-      "Employee Handbook Drafting",
-      "Conflict Mediation",
-    ],
-  },
-  {
-    id: "engagement",
-    name: "Employee Engagement & Internal Comm",
-    label: "Engagement",
-    skills: [
-      "Internal Communication Strategy",
-      "Event Management (Townhall/Outing)",
-      "Content Writing & Storytelling",
-      "Graphic Design (Canva/Photoshop)",
-      "Video Editing Basic",
-      "Engagement Survey Design",
-      "Crisis Communication",
-      "Employer Branding",
-      "CSR Activity Planning",
-      "Social Media Management",
-    ],
-  },
-  {
-    id: "talent_mgmt",
-    name: "Talent Management",
-    label: "Talent Mgmt",
-    skills: [
-      "Succession Planning",
-      "High Potential (HiPo) Identification",
-      "Career Path Design",
-      "Assessment Center Design",
-      "Leadership Development Program",
-      "9-Box Grid Analysis",
-      "Mentoring & Coaching Program",
-      "Individual Development Plan (IDP)",
-      "Talent Retention Strategy",
-      "Skill Mapping",
-    ],
-  },
-  {
-    id: "people_services",
-    name: "People Services (HR Ops)",
-    label: "People Services",
-    skills: [
-      "Onboarding & Offboarding",
-      "HRIS Administration",
-      "Visa & Work Permit",
-      "Document Management System",
-      "SLA Management",
-      "Time & Attendance Management",
-      "Personal Data Maintenance",
-      "Ticketing System (e.g., Zendesk)",
-      "Employee Verification",
-      "Vendor Management",
-    ],
-  },
-  {
-    id: "compliance",
-    name: "HR Compliance & Assurance",
-    label: "HR Compliance",
-    skills: [
-      "PDPA / Data Privacy Law",
-      "Internal Audit",
-      "Risk Management",
-      "Policy Writing & Review",
-      "ISO Standards (HR)",
-      "Code of Conduct Enforcement",
-      "Background Check Process",
-      "Health, Safety & Environment (HSE)",
-      "Process Control",
-      "SOP Development",
-    ],
-  },
-  {
-    id: "l_and_d",
-    name: "Learning & Development (L&D)",
-    label: "L&D",
-    skills: [
-      "Training Needs Analysis (TNA)",
-      "Instructional Design",
-      "Facilitation Skills",
-      "LMS Administration",
-      "Training Evaluation (ROI/Kirkpatrick)",
-      "E-Learning Development",
-      "Virtual Training Delivery",
-      "Training Budget Management",
-      "On-the-Job Training (OJT) Design",
-      "Knowledge Management",
-    ],
-  },
-  {
-    id: "hr_ai",
-    name: "HR AI & Automation",
-    label: "HR AI",
-    skills: [
-      "Python Programming",
-      "Prompt Engineering",
-      "Machine Learning Concepts",
-      "RPA (Robotic Process Automation)",
-      "API Integration",
-      "Natural Language Processing (NLP)",
-      "Data Cleaning & Preprocessing",
-      "AI Ethics & Governance",
-      "Chatbot Flow Design",
-      "Automated Screening Tools",
-    ],
-  },
-  {
-    id: "success_factors",
-    name: "HR SuccessFactors Specialist",
-    label: "SuccessFactors",
-    skills: [
-      "SAP SuccessFactors Overview",
-      "Employee Central (EC) Module",
-      "Performance & Goals (PMGM)",
-      "Recruiting Management (RCM)",
-      "Learning Management (LMS)",
-      "System Configuration",
-      "Role-Based Permission (RBP)",
-      "Integration Center",
-      "UAT Planning & Execution",
-      "Data Migration",
-    ],
-  },
-  {
-    id: "hr_dashboards",
-    name: "HR Dashboards & Analytics",
-    label: "HR Dashboards",
-    skills: [
-      "Power BI / Tableau",
-      "SQL Querying",
-      "Data Storytelling",
-      "Excel VBA / Macros",
-      "KPI Dashboard Design",
-      "Statistical Analysis",
-      "Database Management",
-      "Google Looker Studio",
-      "People Analytics Strategy",
-      "Data Quality Management",
-    ],
-  },
-  {
-    id: "project_manager",
-    name: "Project Manager",
-    label: "Project Manager",
-    skills: [
-      "Agile & Scrum Methodology",
-      "Waterfall / Traditional PM",
-      "Project Planning (Gantt/Timeline)",
-      "Risk Management",
-      "Budget Tracking",
-      "Resource Allocation",
-      "Stakeholder Communication",
-      "Jira / Asana / Trello",
-      "Scope Management",
-      "Meeting Facilitation",
-    ],
-  },
-];
-
-function UserCard({ user }: { user: User }) {
-  // Determine Departments
-  const userDepts = Array.from(
-    new Set(
-      user.skills
-        .map((s) => {
-          // Find which dept this skill belongs to
-          const found = DEPARTMENTS.find((d) => d.skills.includes(s.name));
-          if (found) return found.label;
-
-          // Also check if the skill name IS the department name
-          const isDept = DEPARTMENTS.find((d) => d.name === s.name);
-          if (isDept) return isDept.label;
-
-          return null;
-        })
-        .filter(Boolean)
-    )
-  );
-
-  // If no dept found (custom skills), fall back or show nothing?
-  // User said "remove skills", so we only show depts.
-
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-            CLASS_COLORS[user.character_class] || "from-slate-400 to-slate-500"
-          } flex items-center justify-center text-white shadow-sm`}
-        >
-          {CLASS_ICONS[user.character_class] || <Star size={20} />}
-        </div>
-        <div className="flex-1">
-          <p className="font-bold text-slate-800 dark:text-white text-base">
-            {user.name}
-          </p>
-          <p className="text-sm text-slate-500">
-            {user.character_class} • Lv.{user.level}
-          </p>
-        </div>
-      </div>
-
-      {/* OCEAN */}
-      <div className="mb-4 p-2.5 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700/50">
-        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider">
-          OCEAN Score
-        </p>
-        <div className="flex justify-between items-center text-xs">
-          <div className="flex flex-col items-center">
-            <span className="text-purple-600 font-bold">
-              {user.ocean_openness}
-            </span>
-            <span className="text-[9px] text-slate-400">O</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-blue-600 font-bold">
-              {user.ocean_conscientiousness}
-            </span>
-            <span className="text-[9px] text-slate-400">C</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-amber-600 font-bold">
-              {user.ocean_extraversion}
-            </span>
-            <span className="text-[9px] text-slate-400">E</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-emerald-600 font-bold">
-              {user.ocean_agreeableness}
-            </span>
-            <span className="text-[9px] text-slate-400">A</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-rose-600 font-bold">
-              {user.ocean_neuroticism}
-            </span>
-            <span className="text-[9px] text-slate-400">N</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Departments (Replaces Skills) */}
-      <div>
-        <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 tracking-wider">
-          Departments
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {userDepts.length > 0 ? (
-            userDepts.map((dept, idx) => (
-              <span
-                key={idx}
-                className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
-              >
-                {dept}
-              </span>
-            ))
-          ) : (
-            <span className="text-xs text-slate-400 italic">
-              No specific department
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  role?: "user" | "admin";
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user: currentUser, token } = useAuth();
+  /* Removed duplicate state: users, loading */
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    axios
-      .get(`${API_URL}/users`)
-      .then((res) => {
-        const parsed = res.data.map((u: any) => ({
-          ...u,
-          skills:
-            typeof u.skills === "string"
-              ? JSON.parse(u.skills)
-              : u.skills || [],
-        }));
-        setUsers(parsed);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+  const queryClient = useQueryClient();
+
+  const fetchUsers = async (): Promise<User[]> => {
+    const res = await axios.get(`${API_URL}/users`);
+    return res.data.map((u: any) => ({
+      ...u,
+      skills:
+        typeof u.skills === "string" ? JSON.parse(u.skills) : u.skills || [],
+    }));
+  };
+
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
+
+  const handlePromote = async (targetId: number, currentRole: string) => {
+    if (!token) return;
+    const newRole = currentRole === "admin" ? "user" : "admin";
+    const action = newRole === "admin" ? "Promote" : "Demote";
+
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
+          <div className="text-center">
+            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
+              {action === "Promote" ? "แต่งตั้ง Admin? 👑" : "ปลดตำแหน่ง? 📉"}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {action === "Promote"
+                ? "คุณแน่ใจนะว่าจะมอบพลัง GOD ให้เขา?"
+                : "ต้องการดึงเขากลับมาเป็นคนธรรมดาใช่มั้ย?"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                setActionLoadingId(targetId);
+                try {
+                  await axios.put(
+                    `${API_URL}/admin/users/${targetId}/role`,
+                    { role: newRole },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  toast.success(
+                    newRole === "admin"
+                      ? "แต่งตั้ง Admin เรียบร้อย! 👑"
+                      : "ลดระดับเป็น User เรียบร้อย"
+                  );
+                  queryClient.invalidateQueries({ queryKey: ["users"] });
+                } catch (err) {
+                  console.error(err);
+                  toast.error("เกิดข้อผิดพลาด");
+                } finally {
+                  setActionLoadingId(null);
+                }
+              }}
+              className="px-4 py-2 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition transform active:scale-95"
+            >
+              ยืนยัน
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 3000,
+        className:
+          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
+        style: { color: "inherit" },
+      }
+    );
+  };
+
+  const handleDelete = async (targetId: number) => {
+    if (!token) return;
+
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
+          <div className="text-center">
+            <h3 className="font-bold text-lg text-red-600 dark:text-red-400 flex items-center justify-center gap-2">
+              ลบผู้ใช้ถาวร? <span className="text-2xl">🗑️</span>
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              ข้อมูลจะหายไปตลอดกาล แน่ใจนะ?
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
+            >
+              เก็บไว้ก่อน
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                setActionLoadingId(targetId);
+                try {
+                  await axios.delete(`${API_URL}/admin/users/${targetId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  toast.success("ลบผู้ใช้เรียบร้อยแล้ว 🗑️");
+                  queryClient.invalidateQueries({ queryKey: ["users"] });
+                } catch (err) {
+                  console.error(err);
+                  toast.error("ลบไม่สำเร็จ");
+                } finally {
+                  setActionLoadingId(null);
+                }
+              }}
+              className="px-4 py-2 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition transform active:scale-95"
+            >
+              ลบเลย
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 3000,
+        className:
+          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
+        style: { color: "inherit" },
+      }
+    );
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.name
@@ -417,10 +190,8 @@ export default function UsersPage() {
     if (deptFilter !== "all") {
       const targetDept = DEPARTMENTS.find((d) => d.id === deptFilter);
       if (targetDept) {
-        // Check if user has this department directly (new logic) or has a skill in it (legacy)
-        matchesDept = user.skills.some(
-          (s) =>
-            s.name === targetDept.name || targetDept.skills.includes(s.name)
+        matchesDept = user.skills.some((s) =>
+          matchesDepartment(s.name, targetDept)
         );
       }
     }
@@ -463,23 +234,24 @@ export default function UsersPage() {
               placeholder="ค้นหาชื่อ..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
+              className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           {/* Department Dropdown */}
-          <select
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:outline-none focus:border-indigo-500 min-w-[180px]"
-          >
-            <option value="all">ทั้งหมด</option>
-            {DEPARTMENTS.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.label}
-              </option>
-            ))}
-          </select>
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[180px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white h-11 rounded-xl">
+              <SelectValue placeholder="เลือกแผนก" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ทั้งหมด</SelectItem>
+              {DEPARTMENTS.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.label || dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Stats */}
@@ -489,9 +261,44 @@ export default function UsersPage() {
 
         {/* User Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredUsers.map((user) => (
-            <UserCard key={user.id} user={user} />
-          ))}
+          {filteredUsers.map((user) => {
+            const calculatedDepartments = DEPARTMENTS.filter((d) =>
+              user.skills.some((s) => matchesDepartment(s.name, d))
+            ).map((d) => d.label || d.name);
+
+            return (
+              <UserCard
+                key={user.id}
+                id={user.id}
+                name={user.name}
+                characterClass={user.character_class}
+                type={`Lv.${user.level}`}
+                scores={{
+                  Openness: user.ocean_openness,
+                  Conscientiousness: user.ocean_conscientiousness,
+                  Extraversion: user.ocean_extraversion,
+                  Agreeableness: user.ocean_agreeableness,
+                  Neuroticism: user.ocean_neuroticism,
+                }}
+                departments={calculatedDepartments}
+                isOwnCard={user.id === currentUser?.id}
+                allowFlip={false}
+                showFullStats={true}
+                currentUserRole={currentUser?.role as "admin" | "user"}
+                userRole={user.role as "admin" | "user"}
+                onPromote={
+                  actionLoadingId === user.id
+                    ? undefined
+                    : () => handlePromote(user.id, user.role || "user")
+                }
+                onDelete={
+                  actionLoadingId === user.id
+                    ? undefined
+                    : () => handleDelete(user.id)
+                }
+              />
+            );
+          })}
         </div>
 
         {filteredUsers.length === 0 && (

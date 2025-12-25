@@ -52,11 +52,7 @@ interface UserData {
   analysis_result?: string;
 }
 
-interface Department {
-  id: string;
-  name: string;
-  skills: string[];
-}
+import { DEPARTMENTS, matchesDepartment } from "@/data/departments";
 
 interface SelectedSkill {
   name: string;
@@ -147,23 +143,6 @@ const OCEAN_LABELS = [
     icon: Heart,
   },
   { key: "N", name: "Neuroticism", desc: "อารมณ์อ่อนไหว", icon: TrendingUp },
-];
-
-// DEPARTMENTS CONSTANT
-const DEPARTMENTS = [
-  { id: "swp_od", name: "SWP & OD" },
-  { id: "hrbp", name: "HRBP" },
-  { id: "total_rewards", name: "Total Rewards" },
-  { id: "er", name: "ER" },
-  { id: "engagement", name: "Engagement" },
-  { id: "talent_mgmt", name: "Talent Mgmt" },
-  { id: "people_services", name: "People Services" },
-  { id: "compliance", name: "Compliance" },
-  { id: "l_and_d", name: "L&D" },
-  { id: "hr_ai", name: "HR AI" },
-  { id: "success_factors", name: "SuccessFactors" },
-  { id: "hr_dashboards", name: "Dashboards" },
-  { id: "project_manager", name: "Project Manager" },
 ];
 
 const LEVEL_LABELS = [
@@ -257,9 +236,15 @@ export default function ProfilePage() {
 
   // Toggle Department
   const toggleDepartment = (deptName: string) => {
-    const existing = editedSkills.find((s) => s.name === deptName);
-    if (existing) {
-      setEditedSkills(editedSkills.filter((s) => s.name !== deptName));
+    // Check if we already have this department (fuzzy match)
+    const existingIndex = editedSkills.findIndex((s) =>
+      matchesDepartment(s.name, DEPARTMENTS.find((d) => d.name === deptName)!)
+    );
+
+    if (existingIndex !== -1) {
+      const newSkills = [...editedSkills];
+      newSkills.splice(existingIndex, 1);
+      setEditedSkills(newSkills);
     } else {
       setEditedSkills([...editedSkills, { name: deptName, level: 1 }]);
     }
@@ -524,8 +509,8 @@ export default function ProfilePage() {
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {DEPARTMENTS.map((dept) => {
-                      const isSelected = editedSkills.some(
-                        (s) => s.name === dept.name
+                      const isSelected = editedSkills.some((s) =>
+                        matchesDepartment(s.name, dept)
                       );
                       return (
                         <button
@@ -537,7 +522,7 @@ export default function ProfilePage() {
                               : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-indigo-400"
                           }`}
                         >
-                          <span>{dept.name}</span>
+                          <span>{dept.label || dept.name}</span>
                           {isSelected && <CheckCircle size={14} />}
                         </button>
                       );

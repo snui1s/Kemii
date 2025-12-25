@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from sqlmodel import SQLModel
-from models import User, TeamLog
+from models import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

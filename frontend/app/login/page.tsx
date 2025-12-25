@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { Mail, Lock, LogIn, Loader2 } from "lucide-react";
+import { Mail, Lock, LogIn, Loader2, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -14,6 +14,8 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +30,7 @@ export default function LoginPage() {
       const { access_token, user } = res.data;
       if (access_token && user) {
         toast.success("ยินดีต้อนรับกลับมา! 👋");
-        login(access_token, user);
+        login(access_token, user, rememberMe);
       }
     } catch (err: any) {
       const msg = err.response?.data?.detail || "Login failed";
@@ -53,14 +55,14 @@ export default function LoginPage() {
                 อีเมล (Email)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-3 text-slate-400">
+                <span className="absolute left-3 top-3 text-slate-700 dark:text-slate-300">
                   <Mail size={20} />
                 </span>
                 <input
                   required
                   type="email"
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 text-slate-700 dark:text-slate-300 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -72,17 +74,24 @@ export default function LoginPage() {
                 รหัสผ่าน (Password)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-3 text-slate-400">
+                <span className="absolute left-3 top-3 text-slate-700 dark:text-slate-300">
                   <Lock size={20} />
                 </span>
                 <input
                   required
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                  className="w-full pl-10 pr-12 py-2.5 bg-slate-50 text-slate-700 dark:text-slate-300 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors bg-transparent border-none p-0.5"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
@@ -91,6 +100,8 @@ export default function LoginPage() {
                 <input
                   type="checkbox"
                   className="rounded text-indigo-600 focus:ring-indigo-500"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 จดจำฉันไว้
               </label>

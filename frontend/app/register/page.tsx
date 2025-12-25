@@ -18,21 +18,7 @@ import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const DEPARTMENTS = [
-  { id: "swp_od", name: "SWP & Organization Development" },
-  { id: "hrbp", name: "HR Business Partner (HRBP)" },
-  { id: "total_rewards", name: "Total Rewards (Comp & Ben)" },
-  { id: "er", name: "Employee Relations (ER)" },
-  { id: "engagement", name: "Employee Engagement & Internal Comm" },
-  { id: "talent_mgmt", name: "Talent Management" },
-  { id: "people_services", name: "People Services (HR Ops)" },
-  { id: "compliance", name: "HR Compliance & Assurance" },
-  { id: "l_and_d", name: "Learning & Development (L&D)" },
-  { id: "hr_ai", name: "HR AI & Automation" },
-  { id: "success_factors", name: "HR SuccessFactors Specialist" },
-  { id: "hr_dashboards", name: "HR Dashboards & Analytics" },
-  { id: "project_manager", name: "Project Manager" },
-];
+import { DEPARTMENTS } from "@/data/departments";
 
 export default function RegisterPage() {
   const router = useRouter();

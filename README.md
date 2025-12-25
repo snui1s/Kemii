@@ -18,28 +18,28 @@ _Psychometric Analysis (OCEAN Model) | Quest Matching | Team Harmony Optimizatio
 
 ## Project Overview
 
-**Kemii** (Chemistry) is an AI-driven Guild Support System designed to address common workforce challenges such as skill-personality mismatch and suboptimal team dynamics. Unlike traditional management tools, Kemii integrates the **OCEAN Personality Model (Big 5)** utilizes **Google Gemini AI** to analyze user traits and algorithmically construct teams that achieve maximum compatibility and operational efficiency.
+**Kemii** (Chemistry) is an AI-driven Guild Support System designed to address common workforce challenges such as skill-personality mismatch and suboptimal team dynamics. Unlike traditional management tools, Kemii integrates the **OCEAN Personality Model (Big 5)** and utilizes **Google Gemini AI** to analyze user traits and algorithmically construct teams that achieve maximum compatibility and operational efficiency.
 
 The system provides a holistic view of team composition, balancing technical skills with behavioral attributes to ensure sustainable high-performance collaboration.
 
 ## Key Features
 
-### Personality & Role Classification
+### ⚔️ Personality & Role Classification
 
 - **OCEAN Assessment**: Comprehensive psychometric evaluation covering Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism.
-- **AI Class Assignment**: Automated mapping of psychological profiles to functional RPG archetypes (Mage, Warrior, Paladin, Cleric, Rogue) to visualize core strengths and working styles.
+- **AI Class Assignment**: Automated mapping of psychological profiles to functional RPG archetypes (Mage, Warrior, Paladin, Cleric, Rogue).
 
-### Quest Board & Intelligent Matching
+### 🛡️ Team Quest (Intelligent Party Builder)
 
-- **Smart Board**: A dynamic quest interface displaying real-time "Harmony Scores" for potential team compositions.
-- **Skill Gap Analysis**: Automated identification of missing technical competencies within a team, with AI-driven recommendations for suitable candidates.
-- **Auto-Join Optimization**: Algorithmic probability assessment to suggest quests where the user's contribution maximizes success rates.
+- **Team Composition AI**: Algorithms that suggest the best candidates based on required roles, skills, and availability.
+- **Harmony Score**: Real-time prediction of team chemistry and success probability.
+- **Availability Tracking**: filters out users who are currently busy or assigned to other quests.
 
-### Team Analytics & Management
+### 🔐 Authentication & Security
 
-- **Harmony Score**: A proprietary metric quantifying team cohesion based on interpersonal compatibility variance.
-- **Skill Coverage**: Visual analytics demonstrating the team's fulfillment of mission-critical requirements.
-- **Leader Control Center**: Administrative tools for team leaders to manage roster changes with AI-assisted decision support.
+- **Secure Login**: JWT-based authentication with auto-refresh mechanisms.
+- **Remember Me**: Option to stay logged in via persistent storage (Local Storage) or temporary session (Session Storage).
+- **Configurable Expiration**: Admin-controlled session timeouts via environment variables.
 
 ---
 
@@ -48,15 +48,15 @@ The system provides a holistic view of team composition, balancing technical ski
 ### Backend Infrastructure
 
 - **Framework**: FastAPI (Python) - High-performance asynchronous API layer.
-- **Database**: SQLite (SQLModel/SQLAlchemy) - Relational data persistence.
+- **Database**: SQLite (SQLModel/SQLAlchemy) - Relational data persistence with automatic fallback.
 - **AI Engine**: Google Gemini Pro (via LangChain) - LLM for complex reasoning and analysis.
 - **Algorithms**: Variance minimization logic and heuristic scoring models for team composition.
 
 ### Frontend Interface
 
 - **Framework**: Next.js 14+ (App Router) - Server-side rendering and static generation.
-- **Styling**: Tailwind CSS - Utility-first CSS for responsive design.
-- **State Management**: React Hooks & Context API.
+- **UI Components**: **Radix UI Primitives** (Accessible, unstyled components) styled with **Tailwind CSS**.
+- **State Management**: React Query (TanStack Query) & Context API.
 - **Visualization**: Recharts & Lucide React.
 
 ### DevOps
@@ -67,9 +67,23 @@ The system provides a holistic view of team composition, balancing technical ski
 
 ## Installation & Setup
 
-### Option 1: Docker (Recommended)
+### ⚙️ Backend Configuration (Critical)
 
-This method ensures all dependencies and services are configured automatically.
+You must create a `.env` file in the `backend/` directory to run the server securely.
+
+**File:** `backend/.env`
+
+```env
+# Security Keys (Generate random strings for production)
+SECRET_KEY="your_super_secret_random_key_here"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=1440  # 1440 mins = 1 Day
+
+# Database (Optional - Defaults to local SQLite if empty)
+# DATABASE_URL="postgresql://user:password@localhost/dbname"
+```
+
+### Option 1: Docker (Recommended)
 
 1.  **Clone the Repository**
 
@@ -79,11 +93,7 @@ This method ensures all dependencies and services are configured automatically.
     ```
 
 2.  **Configure Environment**
-    Create a `.env` file in the root directory and define your API key:
-
-    ```env
-    GOOGLE_API_KEY=your_gemini_api_key_here
-    ```
+    Create a `.env` in the root (for docker) and `backend/.env` (for python app).
 
 3.  **Deploy Services**
     ```bash
@@ -91,8 +101,6 @@ This method ensures all dependencies and services are configured automatically.
     ```
     - **Frontend Application**: `http://localhost:3000`
     - **Backend API Docs**: `http://localhost:8000/docs`
-
----
 
 ### Option 2: Manual Installation (Development)
 
@@ -107,9 +115,9 @@ venv\Scripts\activate
 # macOS/Linux
 source venv/bin/activate
 
-# Install dependencies (using pip or uv)
+# Install dependencies
 pip install -r requirements.txt
-# or
+# or with uv
 uv pip install -r requirements.txt
 
 # Start the server
@@ -120,6 +128,7 @@ python main.py
 
 ```bash
 cd frontend
+
 # Install dependencies
 bun install
 
@@ -136,13 +145,18 @@ root/
 ├── backend/            # Python FastAPI Service
 │   ├── main.py         # Application Entry & API Routes
 │   ├── models.py       # SQLModel Database Schemas
-│   ├── quest_ai.py     # AI Logic & Matching Algorithms
+│   ├── auth.py         # Authentication Logic & JWT
+│   ├── .env            # Backend Config (Secrets)
+│   ├── routers/        # API Endpoints (quests, users, auth, teams)
+│   ├── services/       # Business Logic (AI, Matching)
 │   └── scripts/        # Data Seeding & Utility Scripts
 ├── frontend/           # Next.js Web Application
 │   ├── app/            # Page Routing & Layouts
-│   └── components/     # Reusable UI Components
+│   ├── components/     # Reusable UI Components (Radix UI)
+│   ├── context/        # Auth & App State
+│   └── lib/            # Utilities
 ├── docker-compose.yml  # Container Orchestration Configuration
-└── .env                # Environment Variables
+└── README.md           # Documentation
 ```
 
 ---

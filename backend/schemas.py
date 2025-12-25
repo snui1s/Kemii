@@ -42,8 +42,7 @@ class TeamBuilderRequest(BaseModel):
     member_count: int
     strategy: str 
 
-class ConfirmTeamRequest(BaseModel):
-    log_id: Optional[int] = None 
+class ConfirmTeamRequest(BaseModel): 
     team_name: Optional[str] = None 
     member_ids: Optional[List[int]] = None 
     start_date: datetime 
@@ -55,7 +54,6 @@ class TeamRecommendation(BaseModel):
     reason: str
     leader: Dict[str, Any]
     members: List[Dict[str, Any]]
-    log_id: Optional[int] = None
     team_score: Optional[int] = None
     team_rating: Optional[str] = None
 
@@ -88,7 +86,6 @@ class QuestResponse(BaseModel):
     description: str
     rank: str
     required_skills: List[QuestSkill]
-    optional_skills: List[QuestSkill]
     ocean_preference: Dict[str, Any]
     team_size: int
     leader_id: int
@@ -100,8 +97,7 @@ class QuestResponse(BaseModel):
     deadline: Optional[datetime] = None
     created_at: datetime
 
-class ApplyQuestRequest(BaseModel):
-    user_id: int
+
 
 class MatchScoreResponse(BaseModel):
     skill_score: int  # 0-100
@@ -122,12 +118,22 @@ class SmartQuestRequirement(BaseModel):
 
 class PreviewSmartTeamRequest(BaseModel):
     requirements: List[SmartQuestRequirement]
+    candidate_ids: List[int]
 
 class ConfirmSmartTeamRequest(BaseModel):
     title: str
+    description: Optional[str] = ""
     deadline: datetime
     start_date: datetime
     leader_id: int
     requirements: List[SmartQuestRequirement]
     member_ids: List[int]
     status: str
+
+class AnalyzeTeamRequest(BaseModel):
+    score: int
+    avg_o: float
+    avg_c: float
+    avg_e: float
+    avg_a: float
+    avg_n: float

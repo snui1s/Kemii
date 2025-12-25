@@ -16,7 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (token: string, user: User) => void;
+  login: (token: string, user: User, rememberMe: boolean) => void;
   logout: () => void;
   loading: boolean;
   refreshUser: () => Promise<void>;
@@ -31,8 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check localStorage on load
-    const storedToken = localStorage.getItem("access_token");
+    // Check localStorage first, then sessionStorage
+    const storedToken =
+      localStorage.getItem("access_token") ||
+      sessionStorage.getItem("access_token");
+
     if (storedToken) {
       setToken(storedToken);
       fetchUser(storedToken);
@@ -62,8 +65,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = (newToken: string, newUser: User) => {
-    localStorage.setItem("access_token", newToken);
+  const login = (newToken: string, newUser: User, rememberMe: boolean) => {
+    if (rememberMe) {
+      localStorage.setItem("access_token", newToken);
+    } else {
+      sessionStorage.setItem("access_token", newToken);
+    }
     setToken(newToken);
     setUser(newUser);
     router.push("/"); // Redirect to dashboard
@@ -71,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token");
     setToken(null);
     setUser(null);
     router.push("/login");

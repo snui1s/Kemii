@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import random
 import json
-from sqlmodel import Session
+from sqlmodel import Session, select
 from database import engine, create_db_and_tables
 from models import User
 from skills_data import DEPARTMENTS
@@ -48,6 +48,28 @@ def seed_users():
     with Session(engine) as session:
         user_count = 0
         used_names = set()
+        
+        # Create Admin User
+        admin_email = "admin@kemii.com"
+        existing_admin = session.exec(select(User).where(User.email == admin_email)).first()
+        if not existing_admin:
+            admin_user = User(
+                name="Super Admin",
+                email=admin_email,
+                hashed_password=get_password_hash("admin1234"),
+                character_class="Mage",
+                role="admin",
+                level=99,
+                ocean_openness=50,
+                ocean_conscientiousness=50,
+                ocean_extraversion=50,
+                ocean_agreeableness=50,
+                ocean_neuroticism=50,
+                skills=json.dumps([{"name": "Admin", "level": 99}], ensure_ascii=False),
+                is_available=True
+            )
+            session.add(admin_user)
+            print("👑 Created Admin User: admin@kemii.com (Pass: admin1234)")
         
         for dept in DEPARTMENTS:
             dept_id = dept["id"]

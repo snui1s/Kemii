@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
 from database import get_session
-from models import User, TeamLog
+from models import User
 from schemas import (
     MatchRequest, TeamBuilderRequest, ConfirmTeamRequest, TeamRecommendation, ReviveRequest
 )
@@ -155,17 +155,10 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
         })
 
     # 5. บันทึก Log
-    new_log = TeamLog(
-        leader_id=leader.id,
-        team_name=team_name,
-        strategy=req.strategy,
-        reason=reason,
-        members_snapshot=member_snapshot,
-        status="generated"
-    )
-    session.add(new_log)
-    session.commit()
-    session.refresh(new_log)
+    # Log saving removed
+    new_log_id = None
+    # session.add(new_log)
+    # session.commit()
 
     print("team_score", final_score)
     print("team_rating", team_rating)
@@ -186,7 +179,7 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
             }
         },
         "members": selected_members,
-        "log_id": new_log.id,
+        "log_id": None,
         "team_score": final_score,
         "team_rating": team_rating
     }
@@ -194,37 +187,25 @@ async def recommend_team_members(req: TeamBuilderRequest, session: Session = Dep
 @router.post("/confirm-team")
 def confirm_team(req: ConfirmTeamRequest, session: Session = Depends(get_session)):
 
-    # กรณี 1: มี Log ID (จาก AI Recommend)
-    if req.log_id:
-        log = session.get(TeamLog, req.log_id)
-        if not log: raise HTTPException(404, "Log not found")
-
-        log.status = "confirmed"
-        log.project_start_date = req.start_date
-        log.project_end_date = req.end_date
-        session.add(log)
-
-        # ล็อคหัวหน้า
-        leader = session.get(User, log.leader_id)
-        if leader:
-            leader.is_available = False
-            leader.active_project_end_date = req.end_date
-            leader.team_name = log.team_name # (Optional)
-            session.add(leader)
-
-        # ล็อคลูกน้อง (จาก Snapshot)
-        for m in log.members_snapshot:
-            mem = session.get(User, m['id'])
-            if mem:
-                mem.is_available = False
-                mem.active_project_end_date = req.end_date
-                mem.team_name = log.team_name
-                session.add(mem)
-
-    # กรณี 2: ส่ง ID มาเอง (Custom Manual Build) - เผื่ออนาคต
-    elif req.member_ids:
-        # (Logic คล้ายกัน คือ Loop update user status)
-        pass
+    if req.member_ids:
+        # ล็อคหัวหน้า (หาจากคนแรกหรือต้องส่งมา?)
+        # For SmartQuest, usually we just lock provided users.
+        # But confirm_team expects specific logic.
+        # Since TeamLog is gone, let's just lock the users provided in member_ids.
+        
+        # สมมติว่าคนแรกคือ leader หรือไม่ได้ส่ง leader_id มาใน ConfirmTeamRequest?
+        # Check schemas.py: ConfirmTeamRequest has member_ids (List[int]).
+        
+        for uid in req.member_ids:
+            user = session.get(User, uid)
+            if user:
+                user.is_available = False
+                user.active_project_end_date = req.end_date
+                user.team_name = req.team_name
+                session.add(user)
+    
+    else:
+         raise HTTPException(400, "Must provide member_ids since TeamLog is deprecated.")
 
     session.commit()
     return {"message": "Party formed! Heroes are now on a quest."}
@@ -235,152 +216,8 @@ def reset_teams(session: Session = Depends(get_session)):
     for user in users:
         user.is_available = True
         user.active_project_end_date = None
-        user.guild_name = None
+        user.team_name = None
         session.add(user)
 
     session.commit()
     return {"message": "All heroes recalled to the tavern!"}
-
-@router.get("/team-logs")
-def get_team_logs(session: Session = Depends(get_session)):
-    logs = session.exec(select(TeamLog).order_by(TeamLog.created_at.desc())).all()
-    results = []
-    for log in logs:
-        leader = session.get(User, log.leader_id)
-
-        # Map Snapshot for Frontend
-        mapped_members = []
-        for m in log.members_snapshot:
-            character_class = m.get("character_class") or m.get("class") or "Novice"
-            mapped_members.append({
-                **m,
-                "character_class": character_class,
-                "dominant_type": m.get("dominant_type", "Lv.1"),
-                "scores": m.get("scores", {})
-            })
-
-        results.append({
-            "id": log.id,
-            "team_name": log.team_name,
-            "strategy": log.strategy,
-            "reason": log.reason,
-            "created_at": log.created_at,
-            "project_start_date": log.project_start_date,
-            "project_end_date": log.project_end_date,
-            "status": log.status,
-            "leader_id": log.leader_id,
-            "leader_name": leader.name if leader else "Unknown Hero",
-            "leader_class": leader.character_class if leader else "Novice",
-            "members_snapshot": mapped_members
-        })
-    return results
-
-@router.post("/team-logs/{log_id}/disband")
-def disband_team(log_id: int, session: Session = Depends(get_session)):
-    log = session.get(TeamLog, log_id)
-    if not log:
-        raise HTTPException(404, "Mission log not found")
-
-    if log.status != "confirmed":
-        raise HTTPException(400, "Only active teams can be disbanded")
-
-    # 1. เปลี่ยนสถานะ Log
-    log.status = "disbanded"
-    log.project_end_date = datetime.now() # จบภารกิจทันที
-    session.add(log)
-
-    # 2. ปลดล็อค Leader
-    leader = session.get(User, log.leader_id)
-    if leader:
-        leader.is_available = True
-        leader.active_project_end_date = None
-        leader.team_name = None
-        session.add(leader)
-
-    # 3. ปลดล็อค Members
-    for m in log.members_snapshot:
-        user = session.get(User, m['id'])
-        if user:
-            user.is_available = True
-            user.active_project_end_date = None
-            user.team_name = None
-            session.add(user)
-
-    session.commit()
-    return {"message": "Team disbanded. Heroes returned to the tavern."}
-
-@router.post("/team-logs/{log_id}/revive")
-def revive_team(log_id: int, req: ReviveRequest, session: Session = Depends(get_session)):
-    log = session.get(TeamLog, log_id)
-    if not log:
-        raise HTTPException(404, "Log not found")
-
-    # 1. เช็คก่อนว่าสมาชิกทุกคนว่างไหม?
-    all_ids = [log.leader_id] + [m['id'] for m in log.members_snapshot]
-    busy_heroes = []
-
-    for uid in all_ids:
-        user = session.get(User, uid)
-        if not user: continue
-        if not user.is_available:
-            busy_heroes.append(user.name)
-
-    if busy_heroes:
-        raise HTTPException(409, detail=f"Cannot revive! Heroes are busy: {', '.join(busy_heroes)}")
-
-    # 2. ถ้าว่างทุกคน -> ล็อคตัวใหม่
-    log.status = "confirmed"
-    log.project_start_date = req.start_date
-    log.project_end_date = req.end_date
-    log.created_at = datetime.now() # อัปเดตเวลาล่าสุดให้เด้งไปบนสุด
-    session.add(log)
-
-    for uid in all_ids:
-        user = session.get(User, uid)
-        if user:
-            user.is_available = False
-            user.team_name = log.team_name
-            user.active_project_end_date = req.end_date
-            session.add(user)
-
-    session.commit()
-    return {"message": "Team revived! The legend continues."}
-
-@router.delete("/team-logs/{log_id}")
-def delete_team_log(log_id: int, session: Session = Depends(get_session)):
-    log = session.get(TeamLog, log_id)
-    if not log:
-        raise HTTPException(404, "Log not found")
-
-    leader = session.get(User, log.leader_id)
-    if leader and leader.team_name == log.team_name:
-        leader.team_name = None
-        leader.is_available = True
-        leader.active_project_end_date = None
-        session.add(leader)
-
-    for m in log.members_snapshot:
-        member = session.get(User, m['id'])
-        if member and member.team_name == log.team_name:
-            member.team_name = None
-            member.is_available = True
-            member.active_project_end_date = None
-            session.add(member)
-
-    session.delete(log)
-    session.commit()
-    return {"message": "Log burned from the archives."}
-
-@router.delete("/team-logs")
-def clear_all_logs(session: Session = Depends(get_session)):
-    logs = session.exec(select(TeamLog)).all()
-    users = session.exec(select(User)).all()
-    for log in logs:
-        session.delete(log)
-    for user in users:
-        user.team_name = None
-        user.is_available = True
-        user.active_project_end_date = None
-        session.add(user)
-    session.commit()
-    return {"message": "All history cleared"}

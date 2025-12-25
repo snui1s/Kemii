@@ -108,7 +108,7 @@ export default function SynergyModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-900/30 dark:bg-slate-950/30 backdrop-blur-md animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Container */}
@@ -152,7 +152,7 @@ export default function SynergyModal({
           // --- Result ---
           <div>
             {/* Header */}
-            <div className="bg-slate-100 dark:bg-slate-950 p-4 sm:p-6 text-center relative border-b border-slate-200 dark:border-slate-800">
+            <div className="bg-slate-100 dark:bg-slate-950/20 p-4 sm:p-6 text-center relative border-b border-slate-200 dark:border-slate-800">
               <h2 className="text-base sm:text-lg md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 dark:from-amber-200 via-yellow-500 dark:via-yellow-400 to-amber-600 relative z-10 px-2">
                 {data.ai_analysis.synergy_name}
               </h2>

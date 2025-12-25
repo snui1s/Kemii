@@ -201,3 +201,154 @@ async def generate_team_name(leader, member_names, final_score, team_rating, str
         team_name = f"ทีมของ {leader.name}"
         reason = f"ทีมนี้ถูกคัดเลือกด้วย Headhunter Algorithm คะแนนความเข้ากัน {final_score}% ({team_rating})"
         return team_name, reason
+
+# =========================
+# Quest Generation Logic (Moved from quest_ai.py)
+# =========================
+
+QUEST_GENERATION_PROMPT = """
+คุณคือ AI ที่ช่วยสร้าง Quest (ภารกิจ) สำหรับระบบ HR Gamification
+
+จาก prompt ของผู้ใช้ ให้สร้าง Quest ในรูปแบบ JSON ดังนี้:
+
+**Input Prompt:**
+{prompt}
+
+**ระยะเวลา:** {deadline_days} วัน
+
+**Skills ที่มีในระบบ (เลือกจากนี้เท่านั้น):**
+{available_skills}
+
+**กรุณา Generate JSON:**
+```json
+{{
+  "title": "ชื่อ Quest ที่ดึงดูด (ภาษาไทย)",
+  "description": "คำอธิบายงานภาษาไทยแบบ Professional (2-3 ประโยค ตรงประเด็น)",
+  "rank": "<ตัดสินใจเอง ตาม Rank Guidelines ด้านล่าง>",
+  "team_size": "<ตัดสินใจเอง 1-5 คน>",
+  "required_skills": [
+    {{"name": "Skill ที่ต้องมี", "level": 3}}
+  ],
+  "ocean_preference": {{
+    "high": ["C"],
+    "low": ["N"]
+  }}
+}}
+```
+
+**Rank Guidelines (เลือกให้เหมาะกับงานและ deadline):**
+- **S**: deadline กระชั้นมาก (1-2 วัน) หรืองานสำคัญมากๆ
+- **A**: deadline สั้น (3-5 วัน) หรือต้องการ expert
+- **B**: deadline ปกติ (6-10 วัน) งานซับซ้อนพอสมควร
+- **C**: deadline ยืดหยุ่น (10-20 วัน) งานทั่วไป
+- **D**: deadline ยาว (20+ วัน) หรืองานง่าย beginner friendly
+
+**Team Size Guidelines:**
+- งานง่ายๆ 1-2 คน: งานเอกสาร, รายงาน, งาน D/C
+- งานปานกลาง 2-3 คน: โปรเจคเล็ก, งาน B/C
+- งานซับซ้อน 3-5 คน: โปรเจคใหญ่, งาน A/S
+
+**OCEAN Preference:**
+- High C: งานต้องการความละเอียด
+- High E: งานต้องติดต่อคนมาก
+- Low N: งานกดดัน ต้องใจเย็น
+- High O: งานต้องการความคิดสร้างสรรค์
+- High A: งานต้องประสานงานมาก
+
+**Important:**
+- เลือก rank ตาม deadline_days และความซับซ้อนของงาน อย่าเลือก A ทุกครั้ง
+- เลือก Skills ที่เสริมกัน ไม่ใช่ซ้ำกัน
+
+ตอบเป็น JSON เท่านั้น ไม่ต้องมีคำอธิบายเพิ่มเติม
+"""
+
+def generate_quest(prompt: str, deadline_days: int = 7) -> dict:
+    """Generate quest details from natural language prompt using Gemini"""
+    from skills_data import get_all_skills # Lazy import to avoid circular dependency
+    ALL_SKILLS = get_all_skills()
+    
+    # Format available skills as string
+    skills_str = ", ".join(ALL_SKILLS[:50])  # Limit to avoid token overflow
+    
+    # Create the full prompt
+    full_prompt = QUEST_GENERATION_PROMPT.format(
+        prompt=prompt,
+        deadline_days=deadline_days,
+        available_skills=skills_str
+    )
+    
+    try:
+        response = llm.invoke(full_prompt)
+        content = response.content
+        
+        # Extract JSON from response
+        if "```json" in content:
+            json_str = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            json_str = content.split("```")[1].split("```")[0].strip()
+        else:
+            json_str = content.strip()
+        
+        quest_data = json.loads(json_str)
+        
+        # Validate and set defaults
+        quest_data.setdefault("title", "New Quest")
+        quest_data.setdefault("description", prompt)
+        quest_data.setdefault("rank", "C")
+        quest_data.setdefault("team_size", 3)  # AI recommends this
+        quest_data.setdefault("required_skills", [])
+        quest_data.setdefault("ocean_preference", {})
+        
+        # Validate rank
+        if quest_data["rank"] not in ["D", "C", "B", "A", "S"]:
+            quest_data["rank"] = "C"
+        
+        return quest_data
+        
+    except Exception as e:
+        print(f"Quest generation error: {e}")
+        # Return fallback quest
+        return {
+            "title": "Custom Quest",
+            "description": prompt,
+            "rank": "C",
+            "required_skills": [],
+            "ocean_preference": {},
+            "deadline_days": 7
+        }
+
+async def generate_team_overview(team_stats: dict) -> str:
+    prompt = ChatPromptTemplate.from_template("""
+    คุณเป็นระบบวิเคราะห์คุณภาพทีมจากบุคลิกภาพ Big Five (OCEAN)
+    หน้าที่ของคุณคือสรุปภาพรวมของทีมในเชิงการทำงานร่วมกัน
+    โดยเน้นจุดแข็งและความเหมาะสมของทีมในบริบทองค์กรธุรกิจ
+
+    ข้อมูลทีม:
+    - คะแนนเฉลี่ย: {score}/100
+    - Openness: {avg_o}
+    - Conscientiousness: {avg_c}
+    - Extraversion: {avg_e}
+    - Agreeableness: {avg_a}
+    - Neuroticism: {avg_n}
+
+    แนวทางการตอบ:
+    - อธิบายภาพรวมของทีม ไม่ลงรายละเอียดรายบุคคล
+    - ให้ความสำคัญกับ Conscientiousness, Agreeableness และ Neuroticism เป็นหลัก
+    - หาก Conscientiousness หรือ Agreeableness เฉลี่ยอยู่ในระดับสูง ให้ชี้ว่าเป็นจุดแข็งของทีม
+    - หาก Neuroticism เฉลี่ยอยู่ในระดับต่ำ ให้ชี้ว่าเป็นข้อดีด้านความมั่นคงทางอารมณ์
+    - สามารถกล่าวถึง Extraversion หรือ Openness ได้หากช่วยเสริมภาพรวม
+    - ห้ามกล่าวถึงสูตรคำนวณ คำว่า variance, cost function, normalize หรือ threshold
+    - ใช้ภาษาทางการ กระชับ อ่านเข้าใจง่าย
+    - ความยาว 2–4 ประโยค
+
+    เป้าหมายคือทำให้ผู้อ่านเข้าใจว่าทีมนี้มีคุณภาพอย่างไร และเหมาะสมต่อการทำงานร่วมกันหรือไม่
+    """)
+
+    chain = prompt | llm | StrOutputParser()
+
+    try:
+        response = await chain.ainvoke(team_stats)
+        return response.strip()
+    except Exception as e:
+        print(f"Team Analysis Error: {e}")
+        return "ไม่สามารถประเมินผลทีมได้ในขณะนี้"

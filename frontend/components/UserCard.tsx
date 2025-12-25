@@ -10,6 +10,9 @@ import {
   Eye,
   TrendingUp,
   Plus,
+  Crown,
+  Trash2,
+  Briefcase,
 } from "lucide-react";
 import {
   Radar,
@@ -29,6 +32,13 @@ interface UserCardProps {
   onInspect?: () => void;
   allowFlip?: boolean;
   compactMode?: boolean;
+  currentUserRole?: "admin" | "user";
+  userRole?: "admin" | "user";
+  onPromote?: () => void;
+  onDelete?: () => void;
+  showFullStats?: boolean;
+  departments?: string[];
+  isOwnCard?: boolean;
 }
 
 const CLASS_CONFIG = {
@@ -309,6 +319,13 @@ export default function UserCard({
   onInspect,
   allowFlip = false,
   compactMode = false,
+  currentUserRole,
+  userRole = "user",
+  onPromote,
+  onDelete,
+  showFullStats = false,
+  isOwnCard = false,
+  departments = [],
 }: UserCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -336,6 +353,9 @@ export default function UserCard({
   useEffect(() => setIsMounted(true), []);
 
   const handleClick = () => {
+    // Restriction: Non-admin users cannot click others' cards
+    if (currentUserRole !== "admin" && !isOwnCard) return;
+
     if (allowFlip && !compactMode) setIsFlipped(!isFlipped);
     else if (onInspect) onInspect();
     else if (id) window.location.href = `/assessment/result/${id}`;
@@ -367,7 +387,11 @@ export default function UserCard({
 
   return (
     <div
-      className="relative w-full cursor-pointer group user-card"
+      className={`relative w-full group user-card ${
+        currentUserRole === "admin" || isOwnCard
+          ? "cursor-pointer"
+          : "cursor-default"
+      }`}
       style={{ perspective: "1000px", height: cardHeight }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -381,40 +405,43 @@ export default function UserCard({
         }}
       >
         <div
-          className={`absolute inset-0 w-full h-full overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-xl ${
+          className={`absolute inset-0 w-full h-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-xl ${
             isHovered ? config.glow : ""
           } transition-all duration-300 flex flex-col`}
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div
-            className={`h-1.5 w-full bg-gradient-to-r ${config.gradient} shrink-0 relative z-20`}
-          />
+          {/* --- Effects Wrapper (Clipped) --- */}
+          <div className="absolute inset-0 w-full h-full overflow-hidden rounded-xl pointer-events-none z-0">
+            <div
+              className={`h-1.5 w-full bg-gradient-to-r ${config.gradient} shrink-0 relative z-20`}
+            />
 
-          <div className="absolute -right-6 -bottom-6 opacity-[0.15] dark:opacity-[0.2] transform rotate-12 pointer-events-none transition-transform group-hover:scale-110 duration-500 z-0">
-            <IconComponent size={140} color={config.color} />
+            <div className="absolute -right-6 -bottom-6 opacity-[0.15] dark:opacity-[0.2] transform rotate-12 pointer-events-none transition-transform group-hover:scale-110 duration-500 z-0">
+              <IconComponent size={140} color={config.color} />
+            </div>
+
+            <div className="effect-layer">
+              <ClassHoverEffect classKey={classKey} />
+            </div>
+
+            {classKey === "Novice" &&
+              isHovered &&
+              particles.map((p) => (
+                <div
+                  key={p.id}
+                  className="absolute pointer-events-none animate-float-up"
+                  style={{
+                    left: `${p.left}%`,
+                    top: `${p.top}%`,
+                    color: config.color,
+                    animationDelay: `${p.delay}ms`,
+                    zIndex: 1,
+                  }}
+                >
+                  <Sparkles size={p.size} className="opacity-60" />
+                </div>
+              ))}
           </div>
-
-          <div className="effect-layer">
-            <ClassHoverEffect classKey={classKey} />
-          </div>
-
-          {classKey === "Novice" &&
-            isHovered &&
-            particles.map((p) => (
-              <div
-                key={p.id}
-                className="absolute pointer-events-none animate-float-up"
-                style={{
-                  left: `${p.left}%`,
-                  top: `${p.top}%`,
-                  color: config.color,
-                  animationDelay: `${p.delay}ms`,
-                  zIndex: 1,
-                }}
-              >
-                <Sparkles size={p.size} className="opacity-60" />
-              </div>
-            ))}
 
           <div className="p-5 flex-1 flex flex-col relative z-10">
             <div className="flex items-start gap-4">
@@ -441,38 +468,157 @@ export default function UserCard({
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                     {type}
                   </span>
+                  {userRole === "admin" && (
+                    <span className="flex items-center gap-1 text-[9px] font-bold text-yellow-600 bg-yellow-100 border border-yellow-200 px-1.5 py-0.5 rounded-full">
+                      <Crown size={8} fill="currentColor" /> GOD
+                    </span>
+                  )}
                 </div>
-              </div>
-            </div>
+                {departments.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5 opacity-90 relative z-30">
+                    {departments.slice(0, 3).map((dept, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1 text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                      >
+                        <Briefcase size={10} className="shrink-0" />
+                        <span className="truncate max-w-[120px]">{dept}</span>
+                      </div>
+                    ))}
+                    {departments.length > 3 && (
+                      <div className="relative group/tooltip">
+                        <div className="flex items-center gap-1 text-[10px] bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 cursor-help font-medium">
+                          <span>+{departments.length - 3} more</span>
+                        </div>
 
-            <div className="mt-auto pt-4">
-              <div className="flex flex-wrap gap-2">
-                {topStats.length > 0 ? (
-                  topStats.map((stat, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
-                    >
-                      <TrendingUp size={12} className="text-emerald-500" />
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                        High {stat.key}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-dashed border-slate-200 w-full justify-center">
-                    <Sparkles size={12} /> <span>Awaiting Awakening...</span>
+                        {/* Cool Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] hidden group-hover/tooltip:block z-50">
+                          <div className="bg-slate-800 text-white text-[10px] rounded-lg py-2 px-3 shadow-xl border border-slate-700 flex flex-col gap-1 relative animate-in fade-in zoom-in-95 duration-200">
+                            {/* Arrow */}
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
+
+                            {departments.slice(3).map((dept, idx) => (
+                              <span
+                                key={idx}
+                                className="border-b border-slate-700 last:border-0 pb-1 last:pb-0"
+                              >
+                                {dept}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
 
+            <div className="mt-auto pt-4">
+              {showFullStats && normScores ? (
+                <div className="mb-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
+                  <div className="flex justify-between items-center text-xs">
+                    <div className="flex flex-col items-center">
+                      <span className="text-purple-600 font-bold">
+                        {normScores.Openness}
+                      </span>
+                      <span className="text-[9px] text-slate-400">O</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-blue-600 font-bold">
+                        {normScores.Conscientiousness}
+                      </span>
+                      <span className="text-[9px] text-slate-400">C</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-amber-600 font-bold">
+                        {normScores.Extraversion}
+                      </span>
+                      <span className="text-[9px] text-slate-400">E</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-emerald-600 font-bold">
+                        {normScores.Agreeableness}
+                      </span>
+                      <span className="text-[9px] text-slate-400">A</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-rose-600 font-bold">
+                        {normScores.Neuroticism}
+                      </span>
+                      <span className="text-[9px] text-slate-400">N</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {topStats.length > 0 ? (
+                    topStats.map((stat, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
+                      >
+                        <TrendingUp size={12} className="text-emerald-500" />
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                          High {stat.key}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-dashed border-slate-200 w-full justify-center">
+                      <Sparkles size={12} /> <span>Awaiting Awakening...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {!compactMode && (
               <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center opacity-60 group-hover:opacity-100 transition-opacity">
                 <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <Eye size={12} />{" "}
-                  {allowFlip ? "Click for Stats" : "View Profile"}
+                  {allowFlip && (
+                    <>
+                      <Eye size={12} /> Click for Stats
+                    </>
+                  )}
                 </span>
+
+                {/* Admin Controls */}
+                {currentUserRole === "admin" && (
+                  <div className="flex items-center gap-2 pointer-events-auto">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPromote?.();
+                      }}
+                      title={
+                        userRole === "admin"
+                          ? "Demote to User"
+                          : "Promote to Admin"
+                      }
+                      className={`p-1.5 rounded-full transition-colors ${
+                        userRole === "admin"
+                          ? "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+                          : "bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                      }`}
+                    >
+                      <Crown
+                        size={14}
+                        fill={userRole === "admin" ? "currentColor" : "none"}
+                      />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete?.();
+                      }}
+                      title="Delete User"
+                      className="p-1.5 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -547,7 +693,7 @@ export default function UserCard({
       <style>{`
         .user-card {
           position: relative;
-          overflow: hidden;
+          will-change: transform;
         }
         .effect-layer {
           position: absolute;
@@ -572,6 +718,7 @@ export default function UserCard({
           filter: drop-shadow(0 0 5px #d8b4fe);
           transform: rotate(20deg); /* Angle of fall */
           animation: meteorFall ease-in infinite;
+          will-change: transform, opacity;
           z-index: 5;
         }
 
@@ -583,6 +730,7 @@ export default function UserCard({
           opacity: 0;
           transform: rotate(20deg);
           animation: meteorFall ease-in infinite;
+          will-change: transform, opacity;
           z-index: 4;
         }
 
@@ -629,6 +777,7 @@ export default function UserCard({
           );
           filter: blur(1px);
           box-shadow: 0 0 20px rgba(234, 179, 8, 0.8);
+          will-change: transform, opacity;
         }
         .paladin-particle {
           position: absolute;
@@ -637,6 +786,7 @@ export default function UserCard({
           background: #ffd700;
           border-radius: 50%;
           box-shadow: 0 0 10px #ffd700, 0 0 20px #eab308;
+          will-change: transform, opacity;
         }
         @keyframes holyBeamShine {
           0% {
@@ -688,6 +838,7 @@ export default function UserCard({
           background: #ef4444;
           border-radius: 50%;
           box-shadow: 0 0 10px #ef4444, 0 0 20px #dc2626;
+          will-change: transform, opacity;
         }
         .warrior-slash {
           position: absolute;
@@ -701,6 +852,7 @@ export default function UserCard({
           0%, 100% {
             transform: scaleY(1) translateY(0);
             opacity: 0.8;
+            will-change: transform, opacity;
           }
           50% {
             transform: scaleY(1.1) translateY(-5px);
@@ -737,6 +889,7 @@ export default function UserCard({
           color: #22c55e;
           filter: drop-shadow(0 0 5px #22c55e);
           opacity: 0;
+          will-change: transform, opacity;
         }
         @keyframes floatingHeal {
           0% {
@@ -774,12 +927,14 @@ export default function UserCard({
           background: linear-gradient(90deg, transparent, #1e3a8a, #3b82f6, transparent);
           filter: drop-shadow(0 0 8px #3b82f6);
           transform-origin: left center;
+          will-change: transform, opacity;
         }
         .rogue-smoke {
           position: absolute;
           border-radius: 50%;
           background: radial-gradient(circle, rgba(30, 58, 95, 0.6), transparent);
           filter: blur(8px);
+          will-change: transform, opacity;
         }
         @keyframes shimmerWave {
           0% {
@@ -837,6 +992,7 @@ export default function UserCard({
         }
         .animate-float-up {
           animation: float-up 2s ease-out infinite;
+          will-change: transform, opacity;
         }
       `}</style>
     </div>

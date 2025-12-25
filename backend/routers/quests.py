@@ -2,10 +2,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from database import get_session
 from models import Quest, User
-from schemas import CreateQuestRequest, UpdateStatusRequest, ApplyQuestRequest
-from quest_ai import generate_quest, calculate_match_score, find_best_candidates
-from services.matching import get_stats, calculate_academic_cost
+from schemas import CreateQuestRequest, UpdateStatusRequest
+from services.ai import generate_quest
+from services.matching import calculate_match_score, find_best_candidates, get_stats, calculate_academic_cost, evaluate_team
 from datetime import datetime
+from skills_data import DEPARTMENTS
 import json
 
 router = APIRouter()
@@ -22,7 +23,6 @@ def get_quests(status: str = None, session: Session = Depends(get_session)):
     result = []
     for q in quests:
         leader = session.get(User, q.leader_id)
-        applicants = json.loads(q.applicants) if q.applicants else []
 
         quest_dict = {
             "id": q.id,
@@ -30,14 +30,13 @@ def get_quests(status: str = None, session: Session = Depends(get_session)):
             "description": q.description,
             "rank": q.rank,
             "required_skills": json.loads(q.required_skills),
-            "optional_skills": json.loads(q.optional_skills),
             "ocean_preference": json.loads(q.ocean_preference),
             "team_size": q.team_size,
             "leader_id": q.leader_id,
             "leader_name": leader.name if leader else "Unknown",
             "leader_class": leader.character_class if leader else "Novice",
             "status": q.status,
-            "applicant_count": len(applicants),
+            "applicant_count": 0,
             "start_date": q.start_date.isoformat() if q.start_date else None,
             "deadline": q.deadline.isoformat() if q.deadline else None,
             "created_at": q.created_at.isoformat(),
@@ -53,63 +52,16 @@ def get_quests(status: str = None, session: Session = Depends(get_session)):
                  if u: team_users.append(u)
 
             if len(team_users) >= 2:
-                stats = [get_stats(u) for u in team_users]
-                cost = calculate_academic_cost(stats)
-                quest_dict["harmony_score"] = max(0, 100 - int(cost))
+                # Use centralized Golden Formula
+                eval_result = evaluate_team(team_users)
+                quest_dict["harmony_score"] = int(round(eval_result["score"]))
 
         result.append(quest_dict)
 
     return {"quests": result}
 
 
-@router.post("/quests")
-def create_quest(req: CreateQuestRequest, session: Session = Depends(get_session)):
-    """Create a new quest using AI to parse the prompt"""
-    # Verify leader exists
-    leader = session.get(User, req.leader_id)
-    if not leader:
-        raise HTTPException(status_code=404, detail="Leader not found")
 
-    # Generate quest details using AI (AI recommends team_size)
-    quest_data = generate_quest(req.prompt, req.deadline_days)
-
-    # Create quest in database - use AI-recommended team_size
-    quest = Quest(
-        title=quest_data["title"],
-        description=quest_data["description"],
-        rank=quest_data["rank"],
-        required_skills=json.dumps(quest_data["required_skills"], ensure_ascii=False),
-        optional_skills=json.dumps(quest_data["optional_skills"], ensure_ascii=False),
-        ocean_preference=json.dumps(quest_data["ocean_preference"], ensure_ascii=False),
-        team_size=quest_data.get("team_size", 3),  # AI-recommended
-        leader_id=req.leader_id,
-        start_date=req.start_date,
-        deadline=req.deadline,
-        status="open"
-    )
-
-    session.add(quest)
-    session.commit()
-    session.refresh(quest)
-
-    return {
-        "id": quest.id,
-        "title": quest.title,
-        "description": quest.description,
-        "rank": quest.rank,
-        "required_skills": quest_data["required_skills"],
-        "optional_skills": quest_data["optional_skills"],
-        "ocean_preference": quest_data["ocean_preference"],
-        "team_size": quest.team_size,
-        "leader_id": quest.leader_id,
-        "leader_name": leader.name,
-        "leader_class": leader.character_class,
-        "status": quest.status,
-        "applicant_count": 0,
-        "start_date": quest.start_date.isoformat() if quest.start_date else None,
-        "deadline": quest.deadline.isoformat() if quest.deadline else None,
-        "created_at": quest.created_at.isoformat()
-    }
 
 
 @router.get("/quests/{quest_id}")
@@ -120,25 +72,14 @@ def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Quest not found")
 
     leader = session.get(User, quest.leader_id)
-    applicant_ids = json.loads(quest.applicants) if quest.applicants else []
     accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
 
-    # Get applicant details
-    applicants = []
-    for uid in applicant_ids:
-        user = session.get(User, uid)
-        if user:
-            applicants.append({
-                "id": user.id,
-                "name": user.name,
-                "character_class": user.character_class,
-                "level": user.level
-            })
+
 
     # Get accepted members details
     accepted_members = []
     req_skills = json.loads(quest.required_skills)
-    opt_skills = json.loads(quest.optional_skills)
+    req_skills = json.loads(quest.required_skills)
 
     for uid in accepted_ids:
         user = session.get(User, uid)
@@ -156,22 +97,25 @@ def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
                         "type": "required"
                     })
 
-            # Check against optional skills
-            for opt in opt_skills:
-                if opt['name'] in user_skill_map:
-                    matching.append({
-                        "name": opt['name'],
-                        "level": user_skill_map[opt['name']],
-                        "type": "optional"
-                    })
+
 
             # Sort by level desc
             matching.sort(key=lambda x: x['level'], reverse=True)
 
+            # Extract Department from skills
+            department = "Unknown"
+            dept_names = [d["name"] for d in DEPARTMENTS]
+            for s in user_skills:
+                # Check if this skill is a Department name
+                if s["name"] in dept_names:
+                    department = s["name"]
+                    break
+        
             accepted_members.append({
                 "id": user.id,
                 "name": user.name,
                 "character_class": user.character_class,
+                "department": department,
                 "level": user.level,
                 "matching_skills": matching
             })
@@ -182,14 +126,14 @@ def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
         "description": quest.description,
         "rank": quest.rank,
         "required_skills": json.loads(quest.required_skills),
-        "optional_skills": json.loads(quest.optional_skills),
+        "optional_skills": [],
         "ocean_preference": json.loads(quest.ocean_preference),
         "team_size": quest.team_size,
         "leader_id": quest.leader_id,
         "leader_name": leader.name if leader else "Unknown",
         "leader_class": leader.character_class if leader else "Novice",
         "status": quest.status,
-        "applicants": applicants,
+        "applicants": [],
         "accepted_members": accepted_members,
         "accepted_member_ids": accepted_ids,
         "start_date": quest.start_date.isoformat() if quest.start_date else None,
@@ -290,22 +234,23 @@ def get_team_analysis(quest_id: int, session: Session = Depends(get_session)):
     total_skills = len(required_skills)
     coverage_percent = int((len(covered_skills) / max(total_skills, 1)) * 100)
 
-    # Calculate OCEAN compatibility (low variance = good chemistry)
-    def variance(values):
-        if len(values) < 2:
-            return 0
-        mean = sum(values) / len(values)
-        return sum((x - mean) ** 2 for x in values) / len(values)
+    # Calculate OCEAN compatibility (Golden Formula)
+    team_users = []
+    
+    # Add Leader first
+    leader = session.get(User, quest.leader_id)
+    if leader:
+        team_users.append(leader)
 
-    # Lower variance = better team harmony
-    c_var = variance(team_ocean["C"])
-    a_var = variance(team_ocean["A"])
-    avg_neuroticism = sum(team_ocean["N"]) / len(team_ocean["N"]) if team_ocean["N"] else 25
-
-    # Team harmony score (higher is better, out of 100)
-    # Low C variance + Low A variance + Low avg N = good
-    harmony_score = 100 - int((c_var / 200) * 30 + (a_var / 200) * 30 + (avg_neuroticism / 50) * 40)
-    harmony_score = max(0, min(100, harmony_score))
+    # Add Members
+    for uid in accepted_ids:
+        u = session.get(User, uid)
+        if u: team_users.append(u)
+    
+    harmony_score = 0
+    if len(team_users) >= 2:
+        eval_result = evaluate_team(team_users)
+        harmony_score = int(round(eval_result["score"]))
 
     return {
         "has_team": True,
@@ -478,35 +423,7 @@ def auto_assign_team(quest_id: int, session: Session = Depends(get_session)):
     }
 
 
-@router.post("/quests/{quest_id}/apply")
-def apply_to_quest(quest_id: int, req: ApplyQuestRequest, session: Session = Depends(get_session)):
-    """Apply to a quest"""
-    quest = session.get(Quest, quest_id)
-    if not quest:
-        raise HTTPException(status_code=404, detail="Quest not found")
 
-    if quest.status != "open":
-        raise HTTPException(status_code=400, detail="Quest is not open for applications")
-
-    user = session.get(User, req.user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if not user.is_available:
-        raise HTTPException(status_code=400, detail="User is not available")
-
-    # Add to applicants list
-    applicants = json.loads(quest.applicants) if quest.applicants else []
-    if req.user_id in applicants:
-        raise HTTPException(status_code=400, detail="Already applied")
-
-    applicants.append(req.user_id)
-    quest.applicants = json.dumps(applicants)
-
-    session.add(quest)
-    session.commit()
-
-    return {"message": "Applied successfully", "applicant_count": len(applicants)}
 
 
 @router.post("/quests/{quest_id}/status")
@@ -527,7 +444,6 @@ def update_quest_status(quest_id: int, req: UpdateStatusRequest, session: Sessio
 
     # Handle side effects
     if req.status in ["completed", "failed"]:
-        quest.project_end_date = datetime.utcnow()
         # Free up members when quest ends
         accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
         for uid in accepted_ids:
