@@ -137,7 +137,9 @@ const getDisplayStatus = (q: Quest) => {
   return q.status;
 };
 
-export default function QuestBoardPage() {
+import { Suspense } from "react";
+
+function QuestBoardContent() {
   const router = useRouter();
   const { user } = useAuth();
   // State for UI filters
@@ -498,5 +500,19 @@ export default function QuestBoardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function QuestBoardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      }
+    >
+      <QuestBoardContent />
+    </Suspense>
   );
 }
