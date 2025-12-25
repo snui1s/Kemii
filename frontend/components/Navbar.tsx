@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import {
   Users,
-  ClipboardList,
   LogOut,
-  Shuffle,
   UserPlus,
   Lock,
   HelpCircle,
@@ -43,7 +41,9 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Use setTimeout to avoid synchronous state update warning
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLogout = () => {

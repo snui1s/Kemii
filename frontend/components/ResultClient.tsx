@@ -291,10 +291,10 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
             </div>
 
             <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-              <Scroll className="text-yellow-500" /> Guild Master's Prophecy
+                <Scroll className="text-yellow-500" /> Guild Master&apos;s Prophecy
             </h3>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-lg font-medium italic">
-              "{cleanText(analysis.prophecy)}"
+                &quot;{cleanText(analysis.prophecy)}&quot;
             </p>
           </div>
 

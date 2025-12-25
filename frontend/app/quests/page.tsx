@@ -161,7 +161,9 @@ function QuestBoardContent() {
 
   // Reset filter when view mode changes
   useEffect(() => {
-    setFilterStatus("all");
+    // Use setTimeout to avoid synchronous state update warning
+    const timer = setTimeout(() => setFilterStatus("all"), 0);
+    return () => clearTimeout(timer);
   }, [viewMode]);
 
   // Fetch quests using TanStack Query

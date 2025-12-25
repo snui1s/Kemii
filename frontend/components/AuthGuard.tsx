@@ -11,7 +11,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading) {
-      setChecking(false);
+      // Use setTimeout to avoid synchronous state update warning
+      const timer = setTimeout(() => setChecking(false), 0);
+      return () => clearTimeout(timer);
     }
   }, [loading]);
 

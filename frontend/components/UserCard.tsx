@@ -140,33 +140,56 @@ function getTopStats(scores?: { [key: string]: number }) {
 }
 
 const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
+  const [meteorsLarge, setMeteorsLarge] = useState<Array<{ top: string; left: string; delay: string; duration: string }>>([]);
+  const [meteorsSmall, setMeteorsSmall] = useState<Array<{ top: string; left: string; delay: string; duration: string }>>([]);
+
+  useEffect(() => {
+    setMeteorsLarge(
+      Array.from({ length: 12 }).map(() => ({
+        top: `${Math.random() * -20}%`,
+        left: `${Math.random() * 120 - 10}%`,
+        delay: `${Math.random() * 2}s`,
+        duration: `${1 + Math.random()}s`,
+      }))
+    );
+    setMeteorsSmall(
+      Array.from({ length: 20 }).map(() => ({
+        top: `${Math.random() * -50}%`,
+        left: `${Math.random() * 120}%`,
+        delay: `${Math.random() * 3}s`,
+        duration: `${1.5 + Math.random() * 1.5}s`,
+      }))
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (classKey === "Mage") {
     return (
       <>
         {/* Meteor Shower: Large Stream */}
-        {Array.from({ length: 12 }).map((_, i) => (
+        {meteorsLarge.map((m, i) => (
           <span
             key={`meteor-l-${i}`}
             className="mage-meteor-large"
             style={{
-              top: `${Math.random() * -20}%`, // Start above
-              left: `${Math.random() * 120 - 10}%`, // Spread across width
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${1 + Math.random()}s`,
+              top: m.top, // Start above
+              left: m.left, // Spread across width
+              animationDelay: m.delay,
+              animationDuration: m.duration,
             }}
           />
         ))}
 
         {/* Meteor Shower: Small Sparkles */}
-        {Array.from({ length: 20 }).map((_, i) => (
+        {meteorsSmall.map((m, i) => (
           <span
             key={`meteor-s-${i}`}
             className="mage-meteor-small"
             style={{
-              top: `${Math.random() * -50}%`,
-              left: `${Math.random() * 120}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${1.5 + Math.random() * 1.5}s`,
+              top: m.top,
+              left: m.left,
+              animationDelay: m.delay,
+              animationDuration: m.duration,
             }}
           />
         ))}
@@ -330,6 +353,8 @@ export default function UserCard({
   const [isHovered, setIsHovered] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [particles, setParticles] = useState<Array<{ id: number; left: number; top: number; delay: number; size: number }>>([]);
+
 
   const classKey = getClassKey(characterClass);
   const config = CLASS_CONFIG[classKey];
@@ -338,19 +363,19 @@ export default function UserCard({
   const normScores = useMemo(() => normalizeScores(scores), [scores]);
   const topStats = useMemo(() => getTopStats(scores), [scores]);
 
-  const particles = useMemo(
-    () =>
+  useEffect(() => {
+    setIsMounted(true);
+    setParticles(
       Array.from({ length: 5 }, (_, i) => ({
         id: i,
         left: Math.random() * 80 + 10,
         top: Math.random() * 80 + 10,
         delay: Math.random() * 2000,
         size: Math.random() * 4 + 2,
-      })),
-    []
-  );
-
-  useEffect(() => setIsMounted(true), []);
+      }))
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClick = () => {
     // Restriction: Non-admin users cannot click others' cards
