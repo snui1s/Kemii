@@ -1,0 +1,3 @@
+# Ignore data directory content but keep the directory
+data/*
+!data/README.md
