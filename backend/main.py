@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from database import create_db_and_tables
-from routers import users, teams, quests, smart_quest, auth, admin
+from core.database import create_db_and_tables
+# Updated imports for new structure
+from api import users, quests, admin, team, auth
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,9 +28,8 @@ def read_root():
 
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(teams.router)
 app.include_router(quests.router)
-app.include_router(smart_quest.router)
+app.include_router(team.router)
 app.include_router(admin.router)
 
 if __name__ == "__main__":

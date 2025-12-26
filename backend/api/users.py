@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
-from database import get_session
+from core.database import get_session
 from models import User
 from schemas import OceanSubmission, UserProfile, UpdateSkillsRequest
-from auth import create_access_token, verify_token
+from core.auth import create_access_token, verify_token
 from services.ai import analyze_user_profile
 from datetime import datetime
 import json

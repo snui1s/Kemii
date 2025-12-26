@@ -6,7 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import {
   Scroll,
-  Plus,
   Search,
   Filter,
   Clock,
@@ -18,8 +17,6 @@ import {
   Wand,
   Heart,
   Skull,
-  ChevronRight,
-  Sparkles,
   Check,
   X,
   History,
@@ -54,14 +51,7 @@ interface Quest {
   harmony_score?: number;
 }
 
-interface MatchScore {
-  skill_score?: number;
-  ocean_score?: number;
-  total_score?: number;
-  match_level?: string;
-  harmony_score?: number;
-  has_team?: boolean;
-}
+// Removed MatchScore interface
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 

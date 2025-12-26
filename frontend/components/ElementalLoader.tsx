@@ -1,5 +1,3 @@
-"use client";
-import { useState, useEffect } from "react";
 import {
   Wand, // Mage
   Shield, // Paladin
@@ -7,26 +5,10 @@ import {
   Heart, // Cleric
   Skull, // Rogue (✅ เพิ่ม Rogue)
   Compass,
-  Map as MapIcon,
-  Footprints,
 } from "lucide-react";
 
 export default function ElementalLoader() {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((oldValue) => {
-        if (oldValue >= 99) return 99;
-        let jump = 0;
-        if (oldValue < 30) jump = Math.random() * 2 + 1;
-        else if (oldValue < 70) jump = Math.random() * 3;
-        else jump = Math.random() * 0.5;
-        return Math.min(oldValue + jump, 99);
-      });
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);
+  // Removed fake progress logic
 
   // ข้อมูล Class พร้อมตำแหน่งคำนวณล่วงหน้า (หลีกเลี่ยง hydration mismatch)
   // 5 heroes, 72° apart, radius=80px
@@ -127,17 +109,10 @@ export default function ElementalLoader() {
           กำลังรวบรวมปาร์ตี้...
         </h3>
 
-        <div className="flex justify-between text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-          <span>Loading Assets</span>
-          <span>{Math.floor(progress)}%</span>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
-          <div
-            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out relative"
-            style={{ width: `${progress}%` }}
-          />
+        {/* Indeterminate Progress Bar */}
+        <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent w-[50%] animate-[shimmer_1.5s_infinite] -translate-x-full" />
+          <div className="absolute inset-0 bg-indigo-500/20" />
         </div>
 
         <p className="text-[10px] text-slate-400 pt-1">

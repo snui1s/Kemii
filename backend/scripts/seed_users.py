@@ -11,10 +11,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import random
 import json
 from sqlmodel import Session, select
-from database import engine, create_db_and_tables
+from core.database import engine, create_db_and_tables
 from models import User
-from skills_data import DEPARTMENTS
-from auth import get_password_hash
+from data.skills import DEPARTMENTS
+from core.auth import get_password_hash
 
 # Thai first names
 FIRST_NAMES = [

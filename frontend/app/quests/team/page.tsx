@@ -285,7 +285,7 @@ export default function SmartQuestPage() {
         candidate_ids: Array.from(selectedPoolIds),
       };
 
-      const res = await axios.post(`${API_URL}/quests/smart/preview`, payload);
+      const res = await axios.post(`${API_URL}/teams/preview`, payload);
 
       if (!res.data.members || res.data.members.length === 0) {
         toast.error("ไม่สามารถจัดทีมได้ตามเงื่อนไข (ลองเปลี่ยนคนหรือลดสเปคลง)");
@@ -328,7 +328,7 @@ export default function SmartQuestPage() {
       setTeamAnalysisText(null);
 
       axios
-        .post(`${API_URL}/quests/smart/analyze`, {
+        .post(`${API_URL}/teams/analyze`, {
           score: Math.round(res.data.harmony_score),
           avg_o: avgO,
           avg_c: avgC,
@@ -388,7 +388,7 @@ export default function SmartQuestPage() {
         member_ids: generatedTeam.members.map((m: any) => m.id),
         status: "filled",
       };
-      await axios.post(`${API_URL}/quests/smart/confirm`, payload);
+      await axios.post(`${API_URL}/teams/confirm`, payload);
       toast.success("สร้างทีมสำเร็จ!");
       router.push("/quests");
     } catch (err) {

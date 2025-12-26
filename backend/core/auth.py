@@ -44,7 +44,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security))
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 from sqlmodel import Session, select
-from database import engine
+from core.database import engine
 from models import User
 
 def get_current_user(user_id: int = Security(verify_token)) -> User:

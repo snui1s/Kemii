@@ -7,64 +7,39 @@ llm = get_llm()
 
 async def analyze_user_profile(user):
     prompt = ChatPromptTemplate.from_template("""
-    Role: You are the "Grand Guild Master" who sees through people's souls.
-    You analyze adventurers based on OCEAN stats and translate them into a Fantasy RPG profile that feels deeply personal and relatable to their work life.
+        Role: You are the "Grand Guild Master". Analyze the adventurer {name} (Class: {rpg_class}) based on their OCEAN stats: O={openness}, C={conscientiousness}, E={extraversion}, A={agreeableness}, N={neuroticism}.
 
-    Tone: Epic, Insightful, Empathetic, and "Spot-on" (**STRICTLY THAI LANGUAGE ONLY**).
+        Goal: Create a Thai Fantasy RPG profile that feels deeply personal ("This is literally me!").
 
-    Hero: {name} | Class: {rpg_class}
-    Stats: Openness={openness}, Conscientiousness={conscientiousness}, Extraversion={extraversion}, Agreeableness={agreeableness}, Neuroticism={neuroticism}
+        **ANALYSIS LOGIC (Analyze Stat Interactions):**
+        Do not judge stats in isolation. Look for the interaction between the highest/lowest stats:
+        1. The Conflict: High ambition (O) vs Low discipline (C) = "Inner Struggle".
+        2. The Synergy: High Energy (E) + High Empathy (A) = "Ultimate Combo" (but maybe a people pleaser).
+        3. The Extremes: If one stat is very high/low, make it their superpower and their curse.
 
-    **TASK:** Write a profile that makes the user say "This is literally me!".
+        **OUTPUT RULES (Strictly Thai Language):**
+        1. class_title: Creative Thai RPG class (e.g., "จอมเวทย์จอมปั่น").
+        2. prophecy (3-4 sentences):
+        - START IMMEDIATELY with "{name}" or "เจ้า".
+        - NO prefixes (e.g., NO "คำทำนาย:", NO "บทวิเคราะห์:").
+        - Describe their inner nature vs outer work style.
+        3. strengths (3 items): Format as [RPG Metaphor] -> [Real Work Scenario]. (2 sentences max).
+        4. weaknesses (2 items): Focus on the side effects of their unique stats.
+        5. best_partner: "[Class Name] - [Reason]"
 
-    **CRITICAL INSTRUCTION: DYNAMIC STAT ANALYSIS**
-    Do not just look at single stats. You MUST analyze the **INTERACTION** between the 2-3 most distinct stats (Highest or Lowest).
+        **CONSTRAINTS:**
+        - JSON FORMAT ONLY.
+        - NO English text in values.
+        - NO Markdown (no bold, no italics), NO bullet symbols in strings.
 
-    - **START DIRECTLY:** Do NOT use prefixes like "คำทำนาย:", "The Prophecy:", "การกำเนิด:", or "บทวิเคราะห์:".
-    - Start with "{name} เปรียบเสมือน..." or "ภายในใจของเจ้าคือ..." immediately.
-
-    **Apply these 3 Logic Rules:**
-    1.  **The Conflict (High X vs Low Y):** If they have high ambition (e.g., High Openness) but low discipline (Low Conscientiousness), describe this as their "Inner Struggle" or "Curse".
-    2.  **The Synergy (High X + High Y):** If they have two high positive stats (e.g., High Extraversion + High Agreeableness), describe this as their "Ultimate Combo" but warn about doing too much (e.g., People pleaser).
-    3.  **The Lone Wolf (Extreme High/Low):** If one stat stands out extremely (e.g., Very High Neuroticism), focus on how this is both their radar (sensitivity) and their poison (anxiety).
-
-    **Reference Archetypes (Examples only - Apply logic to ANY combo):**
-    - High O + Low C: "The Chaotic Genius" (Ideas > Execution).
-    - High O + High C: "The Grand Architect" (Vision + Structure).
-    - High A + High N: "The Empathic Healer" (Absorbs stress easily).
-    - High E + High N: "The Storm Caller" (High energy, high emotion, reactive).
-    - Low E + High C: "The Silent Sniper" (Quiet, precise, deadly efficient).
-    - Low A + High E: "The Commander" (Direct, result-oriented, thick-skinned).
-
-    **OUTPUT RULES (Deep & Relatable):**
-    1. **class_title**: Creative Thai Class Name (e.g. "จอมเวทย์จอมปั่น", "อัศวินไร้เงา").
-    2. **prophecy**: Write 3-4 sentences in Thai.
-       - **NO TITLE OR SUMMARY PHRASE:** Do NOT start with a short phrase like "ผู้สร้างสรรค์:", "พลังแห่งความมืด", or anything similar.
-       - **START WITH SUBJECT DIRECTLY:** The first word MUST be "{name}", "เจ้า", or "คุณ".
-       - **BAD:** "นักรบผู้บ้าคลั่ง เจ้าคือผู้ที่..." (Do not do this).
-       - **GOOD:** "{name} เปรียบเสมือนนักรบผู้บ้าคลั่งที่..." (Do this).
-       - Describe their "Inner World" vs "Outer World" immediately.
-    3. **strengths**: 3 bullet points. **(Length: 2 sentences each)**.
-       - Structure: [RPG Metaphor] -> [Real Work Scenario].
-    4. **weaknesses**: 2 bullet points. **(Length: 2 sentences each)**.
-       - Focus on the **"Side Effect"** of their specific stat mix.
-    5. **best_partner**: "[Class Name] - [Reason]"
-
-    **NEGATIVE CONSTRAINTS (STRICT):**
-    - **ABSOLUTELY NO ENGLISH TEXT.**
-    - **NO MARKDOWN:** No bold (**), no italics (*), no headers (##).
-    - **NO LABELS/PREFIXES:** Do not put "Strength 1:", "Weakness:", or bullets symbols inside the text string. Just the content.
-    - **PLAIN TEXT ONLY:** No HTML tags.
-    - **Concise:** Keep sentences clear and direct.
-
-    **JSON FORMAT ONLY:**
-    {{
-      "class_title": "...",
-      "prophecy": "...",
-      "strengths": ["...", "...", "..."],
-      "weaknesses": ["...", "..."],
-      "best_partner": "..."
-    }}
+        **JSON TEMPLATE:**
+        {{
+        "class_title": "...",
+        "prophecy": "...",
+        "strengths": ["...", "...", "..."],
+        "weaknesses": ["...", "..."],
+        "best_partner": "..."
+        }}
     """)
 
     chain = prompt | llm | StrOutputParser()
@@ -264,7 +239,7 @@ QUEST_GENERATION_PROMPT = """
 
 def generate_quest(prompt: str, deadline_days: int = 7) -> dict:
     """Generate quest details from natural language prompt using Gemini"""
-    from skills_data import get_all_skills # Lazy import to avoid circular dependency
+    from data.skills import get_all_skills # Lazy import to avoid circular dependency
     ALL_SKILLS = get_all_skills()
     
     # Format available skills as string

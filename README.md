@@ -118,7 +118,7 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 # or with uv
-uv pip install -r requirements.txt
+uv sync
 
 # Start the server
 python main.py

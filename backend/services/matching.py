@@ -1,7 +1,5 @@
 from typing import List, Optional, Dict
-from sqlmodel import Session, select
-import math
-import statistics
+# Session, select, math, statistics removed (Unused)
 
 # =========================
 # Constants (Golden Formula)
@@ -12,7 +10,16 @@ MIN_SCORE = 10
 MAX_SCORE = 50
 SCORE_RANGE = 40
 VAR_MAX = 400
-MAX_COST = 6 + LAMBDA * TAU
+
+# Theoretical Upper Bound (Absolute worst case: Max Variance + Max Penalty)
+# = 1.5(1) + 1.5(1) + 1.0(1) + 1.0(1) + 1.0(1) + LAMBDA * TAU
+# = 6.0 + 1.25 = 7.25
+THEORETICAL_MAX_COST = 6 + LAMBDA * TAU 
+
+# Empirical Upper Bound (For realistic grading calibration)
+# Real-world teams rarely exceed variance of 0.5 or receive full penalty simultaneously.
+# We map 0 - > 4.0 cost to 100 -> 0 score to utilize the full 0-100 scale effectively.
+SCALING_MAX_COST = 4.0
 
 # =========================
 # Helpers
@@ -91,17 +98,18 @@ def calculate_team_cost(users) -> float:
     return cost
 
 def cost_to_score(cost: float) -> float:
-    score = 100 * (1 - cost / MAX_COST)
+    # Use SCALING_MAX_COST to calibrate score distribution
+    score = 100 * (1 - cost / SCALING_MAX_COST)
     return round(clamp01(score / 100) * 100, 1)
 
 def get_team_rating(s):
-    if s >= 80:
+    if s >= 85:
         return "Excellent"
-    elif s >= 65:
+    elif s >= 70:
         return "Good"
-    elif s >= 50:
+    elif s >= 55:
         return "Acceptable"
-    elif s >= 35:
+    elif s >= 40:
         return "Risky"
     else:
         return "Not Recommended"
@@ -231,7 +239,7 @@ def calculate_match_score(user_skills: list, user_ocean: dict, quest) -> dict:
     stress_score = 1.0 * normalize(n)
     
     # 4. Toxic Penalty: Low A
-    tau = 0.75
+    tau = 0.6
     toxic_penalty = 2.0 * max(0, tau - normalize(a))
     
     # Total "Badness" (Lower is better)

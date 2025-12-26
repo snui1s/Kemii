@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlmodel import Session, select
-from database import get_session
+from core.database import get_session
 from models import User
 from schemas import LoginRequest, RegisterRequest
-from auth import create_access_token, verify_password, get_password_hash, SECRET_KEY, ALGORITHM
+from core.auth import create_access_token, verify_password, get_password_hash, SECRET_KEY, ALGORITHM
 import json
 
 router = APIRouter(tags=["Authentication"])

@@ -1,5 +1,5 @@
 "use client";
-import { useState, use } from "react";
+import { use } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -16,14 +16,11 @@ import {
   Check,
   X,
   Zap,
-  Play,
   Calendar,
   Sparkles,
-  UserPlus,
-  Plus,
-  Minus,
   AlertCircle,
 } from "lucide-react";
+// Removed: Play, UserPlus, Plus, Minus
 import toast from "react-hot-toast";
 
 interface MatchingSkill {
@@ -61,18 +58,7 @@ interface QuestDetail {
   created_at: string;
 }
 
-interface Candidate {
-  user_id: number;
-  name: string;
-  character_class: string;
-  level: number;
-  match_score: number;
-  skill_score: number;
-  ocean_score: number;
-  match_level: string;
-  missing_skills: any[];
-  matching_skills?: { name: string; level: number; type: string }[];
-}
+// Removed unused Candidate interface
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -156,38 +142,13 @@ export default function QuestDetailPage({
   // 3. Fetch Candidates (Enabled if quest exists and user is leader and status allows)
   const isLeader = user?.id === quest?.leader_id;
 
-  const { data: candidates = [], isLoading: loadingCandidates } = useQuery({
-    queryKey: ["quest-candidates", id],
-    queryFn: async () => {
-      try {
-        const res = await axios.get(`${API_URL}/quests/${id}/candidates`);
-        return res.data.candidates;
-      } catch (err) {
-        return [];
-      }
-    },
-    enabled:
-      !!quest &&
-      isLeader &&
-      (quest.status === "open" || quest.status === "filled"),
-  });
+  // 3. Candidates fetching removed (Legacy Quest Mode)
 
   const refreshQuest = () => {
     queryClient.invalidateQueries({ queryKey: ["quest", id] });
     queryClient.invalidateQueries({ queryKey: ["quest-analysis", id] });
     queryClient.invalidateQueries({ queryKey: ["quest-candidates", id] });
     queryClient.invalidateQueries({ queryKey: ["quests"] });
-  };
-
-  const handleAccept = async (candidateId: number) => {
-    try {
-      await axios.post(`${API_URL}/quests/${id}/accept/${candidateId}`);
-      toast.success("เพิ่มสมาชิกแล้ว! 🎉");
-      refreshQuest();
-      // Remove from candidates list optimistically (optional, or just rely on refetch)
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || "เกิดข้อผิดพลาด");
-    }
   };
 
   const handleKick = async (memberId: number) => {
@@ -278,19 +239,7 @@ export default function QuestDetailPage({
     return q.status;
   };
 
-  // Re-declare handleTeamSizeChange hook access
-  const handleTeamSizeChange = async (delta: number) => {
-    try {
-      const newSize = quest.team_size + delta;
-      await axios.patch(
-        `${API_URL}/quests/${id}/team-size?team_size=${newSize}`
-      );
-      refreshQuest();
-      toast.success(`เปลี่ยนจำนวนทีมเป็น ${newSize} คน`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || "ไม่สามารถเปลี่ยนได้");
-    }
-  };
+  // handleTeamSizeChange removed (Legacy unused)
 
   // Re-declare isLeader
 

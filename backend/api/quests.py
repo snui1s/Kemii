@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
-from database import get_session
+from core.database import get_session
 from models import Quest, User
 from schemas import CreateQuestRequest, UpdateStatusRequest
 from services.ai import generate_quest
-from services.matching import calculate_match_score, find_best_candidates, get_stats, calculate_academic_cost, evaluate_team
+from services.matching import calculate_match_score, get_stats, calculate_academic_cost, evaluate_team
 from datetime import datetime
-from skills_data import DEPARTMENTS
+from data.skills import DEPARTMENTS
 import json
 
 router = APIRouter()
@@ -301,27 +301,10 @@ def get_quest_match_score(quest_id: int, user_id: int, session: Session = Depend
     return match_result
 
 
-@router.get("/quests/{quest_id}/candidates")
-def get_quest_candidates(quest_id: int, session: Session = Depends(get_session)):
-    """AI finds best matching candidates for a quest using Dynamic Gap Scoring"""
-    quest = session.get(Quest, quest_id)
-    if not quest:
-        raise HTTPException(status_code=404, detail="Quest not found")
 
-    # Get all users
-    all_users = session.exec(select(User)).all()
 
-    # Exclude the quest leader
-    available_users = [u for u in all_users if u.id != quest.leader_id]
 
-    # Get current team members (to calculate skill gaps)
-    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
-    current_members = [session.get(User, uid) for uid in accepted_ids if session.get(User, uid)]
 
-    # Find best candidates using Dynamic Gap Scoring
-    candidates = find_best_candidates(quest, available_users, quest.team_size * 2, current_members)
-
-    return {"candidates": candidates}
 
 
 @router.post("/quests/{quest_id}/kick/{user_id}")
@@ -358,72 +341,6 @@ def kick_member(quest_id: int, user_id: int, session: Session = Depends(get_sess
     session.commit()
 
     return {"message": f"ปลดสมาชิกแล้ว", "remaining_members": len(accepted_ids)}
-
-
-@router.post("/quests/{quest_id}/auto-assign")
-def auto_assign_team(quest_id: int, session: Session = Depends(get_session)):
-    """AI automatically assigns best matching candidates to the quest team"""
-    quest = session.get(Quest, quest_id)
-    if not quest:
-        raise HTTPException(status_code=404, detail="Quest not found")
-
-    if quest.status not in ["open", "filled"]:
-        raise HTTPException(status_code=400, detail="Quest is not open for team assignment")
-
-    # Get all users
-    all_users = session.exec(select(User)).all()
-
-    # Exclude the quest leader and already accepted members
-    accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
-    available_users = [u for u in all_users if u.id != quest.leader_id and u.id not in accepted_ids]
-
-    # Calculate how many more members we need
-    current_count = len(accepted_ids)
-    needed = quest.team_size - current_count
-
-    if needed <= 0:
-        return {"message": "ทีมครบแล้ว", "assigned": [], "total_members": current_count}
-
-    # Find best candidates
-    candidates = find_best_candidates(quest, available_users, needed)
-
-    # Auto-assign top candidates
-    assigned = []
-    for candidate in candidates:
-        user = session.get(User, candidate["user_id"])
-        if user and user.is_available:
-            # Add to accepted members
-            accepted_ids.append(user.id)
-            # Mark user as unavailable
-            user.is_available = False
-            session.add(user)
-            assigned.append({
-                "user_id": user.id,
-                "name": user.name,
-                "character_class": user.character_class,
-                "level": user.level,
-                "match_score": candidate["match_score"],
-                "skill_score": candidate["skill_score"],
-                "ocean_score": candidate["ocean_score"],
-                "matching_skills": candidate["matching_skills"]
-            })
-
-    # Update quest
-    quest.accepted_members = json.dumps(accepted_ids)
-    if len(accepted_ids) >= quest.team_size:
-        quest.status = "filled"
-
-    session.add(quest)
-    session.commit()
-
-    return {
-        "message": f"จัดทีมสำเร็จ! เพิ่ม {len(assigned)} คน",
-        "assigned": assigned,
-        "total_members": len(accepted_ids)
-    }
-
-
-
 
 
 @router.post("/quests/{quest_id}/status")
