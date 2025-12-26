@@ -37,13 +37,29 @@ const lineSeed = localFont({
     },
   ],
   variable: "--font-line-seed",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Kemii",
-  description: "Team Chemistry",
+  title: "Kemii - Team Chemistry & Guild Assembly",
+  description:
+    "Build your dream team with Kemii. Analyze team chemistry, find your RPG class, and conquer the dungeon of work with data-driven insights.",
   icons: {
     icon: "/icon2.svg",
+  },
+  openGraph: {
+    title: "Kemii - Team Chemistry & Guild Assembly",
+    description:
+      "Build your dream team with Kemii. Analyze team chemistry, find your RPG class, and conquer the dungeon of work with data-driven insights.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Kemii",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kemii - Team Chemistry & Guild Assembly",
+    description:
+      "Build your dream team with Kemii. Analyze team chemistry, find your RPG class, and conquer the dungeon of work with data-driven insights.",
   },
 };
 

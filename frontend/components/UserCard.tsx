@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import {
   User,
   Wand,
@@ -9,19 +10,22 @@ import {
   Sparkles,
   Eye,
   TrendingUp,
-  Plus,
   Crown,
   Trash2,
   Briefcase,
+  Plus,
 } from "lucide-react";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-} from "recharts";
+
+// Dynamically import the radar chart component to reduce initial bundle size
+const UserStatsRadar = dynamic(() => import("./UserStatsRadar"), {
+  loading: () => (
+    <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+      <Sparkles size={20} className="opacity-50 animate-pulse" />
+      <span className="text-xs">Loading Stats...</span>
+    </div>
+  ),
+  ssr: false, // Charts are client-side only usually
+});
 
 interface UserCardProps {
   name?: string;
@@ -670,356 +674,19 @@ export default function UserCard({
                 </span>
               </div>
               <div className="flex-1 w-full min-h-0 relative mt-1">
-                {normScores ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <RadarChart
-                      cx="50%"
-                      cy="50%"
-                      outerRadius="65%"
-                      data={chartData}
-                    >
-                      <PolarGrid stroke="#94a3b8" strokeOpacity={0.2} />
-                      <PolarAngleAxis
-                        dataKey="subject"
-                        tick={{
-                          fill: "#64748b",
-                          fontSize: 9,
-                          fontWeight: "bold",
-                        }}
-                      />
-                      <PolarRadiusAxis
-                        angle={30}
-                        domain={[0, 50]}
-                        tick={false}
-                        axisLine={false}
-                      />
-                      <Radar
-                        name={name}
-                        dataKey="A"
-                        stroke={config.color}
-                        strokeWidth={2}
-                        fill={config.color}
-                        fillOpacity={0.4}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
-                    <Sparkles size={20} className="opacity-50" />
-                    <span className="text-xs">No Stats Data</span>
-                  </div>
+                {/* Only render Chart if flipped to save resources, or we can use the Dynamic import with ssr:false */}
+                {isFlipped && (
+                  <UserStatsRadar
+                    name={name}
+                    chartData={chartData}
+                    config={config}
+                  />
                 )}
               </div>
             </div>
           </div>
         )}
       </div>
-
-      <style>{`
-        .user-card {
-          position: relative;
-          will-change: transform;
-        }
-        .effect-layer {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          opacity: 0;
-          transition: opacity 0.3s ease-in-out;
-          z-index: 5;
-        }
-        .user-card:hover .effect-layer {
-          opacity: 1;
-        }
-
-        /* --- Mage Meteor Shower (Enhanced) --- */
-        .mage-meteor-large {
-          position: absolute;
-          width: 3px;
-          height: 80px; /* Long tail */
-          background: linear-gradient(180deg, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 1) 50%, #fff 100%);
-          border-radius: 50% 50% 2px 2px;
-          opacity: 0;
-          filter: drop-shadow(0 0 5px #d8b4fe);
-          transform: rotate(20deg); /* Angle of fall */
-          animation: meteorFall ease-in infinite;
-          will-change: transform, opacity;
-          z-index: 5;
-        }
-
-        .mage-meteor-small {
-          position: absolute;
-          width: 1.5px;
-          height: 40px;
-          background: linear-gradient(180deg, rgba(192, 132, 252, 0) 0%, rgba(192, 132, 252, 0.8) 100%);
-          opacity: 0;
-          transform: rotate(20deg);
-          animation: meteorFall ease-in infinite;
-          will-change: transform, opacity;
-          z-index: 4;
-        }
-
-        .mage-glow-pulse {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 50% 30%, rgba(168, 85, 247, 0.2), transparent 70%);
-          animation: glowPulse 3s ease-in-out infinite;
-          z-index: 1;
-        }
-
-        @keyframes meteorFall {
-          0% {
-            transform: translateY(-50px) translateX(0px) rotate(20deg);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          80% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(300px) translateX(-50px) rotate(20deg); /* Fall down and slightly left */
-            opacity: 0;
-          }
-        }
-
-        @keyframes glowPulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.1); }
-        }
-
-        .paladin-light-beam {
-          position: absolute;
-          width: 2px;
-          height: 100%;
-          background: linear-gradient(
-            to bottom,
-            transparent 0%,
-            rgba(234, 179, 8, 0.8) 30%,
-            rgba(255, 215, 0, 0.6) 50%,
-            transparent 100%
-          );
-          filter: blur(1px);
-          box-shadow: 0 0 20px rgba(234, 179, 8, 0.8);
-          will-change: transform, opacity;
-        }
-        .paladin-particle {
-          position: absolute;
-          width: 3px;
-          height: 3px;
-          background: #ffd700;
-          border-radius: 50%;
-          box-shadow: 0 0 10px #ffd700, 0 0 20px #eab308;
-          will-change: transform, opacity;
-        }
-        @keyframes holyBeamShine {
-          0% {
-            opacity: 0;
-            transform: translateY(-100%) scaleY(0);
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(0%) scaleY(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(100%) scaleY(0);
-          }
-        }
-        @keyframes holyParticleRise {
-          0% {
-            transform: translateY(20px) scale(0);
-            opacity: 0;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(-50px) scale(1);
-          }
-          100% {
-            transform: translateY(-120px) scale(0.5);
-            opacity: 0;
-          }
-        }
-
-        .warrior-flame {
-          position: absolute;
-          bottom: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            to top,
-            rgba(239, 68, 68, 0.4) 0%,
-            rgba(220, 38, 38, 0.3) 30%,
-            rgba(239, 68, 68, 0.2) 60%,
-            transparent 100%
-          );
-          mix-blend-mode: screen;
-        }
-        .warrior-ember {
-          position: absolute;
-          width: 4px;
-          height: 4px;
-          background: #ef4444;
-          border-radius: 50%;
-          box-shadow: 0 0 10px #ef4444, 0 0 20px #dc2626;
-          will-change: transform, opacity;
-        }
-        .warrior-slash {
-          position: absolute;
-          width: 60px;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, #ef4444, transparent);
-          transform-origin: center;
-          filter: drop-shadow(0 0 5px #ef4444);
-        }
-        @keyframes flameFlicker {
-          0%, 100% {
-            transform: scaleY(1) translateY(0);
-            opacity: 0.8;
-            will-change: transform, opacity;
-          }
-          50% {
-            transform: scaleY(1.1) translateY(-5px);
-            opacity: 1;
-          }
-        }
-        @keyframes emberFloat {
-          0% {
-            transform: translateY(0) translateX(0) scale(1);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-120px) translateX(30px) scale(0.2);
-            opacity: 0;
-          }
-        }
-        @keyframes slashEffect {
-          0% {
-            transform: translateX(-50px) rotate(-45deg) scaleX(0);
-            opacity: 0;
-          }
-          50% {
-            opacity: 1;
-            transform: translateX(0) rotate(-45deg) scaleX(1);
-          }
-          100% {
-            transform: translateX(50px) rotate(-45deg) scaleX(0);
-            opacity: 0;
-          }
-        }
-
-        .cleric-heal-icon {
-          position: absolute;
-          color: #22c55e;
-          filter: drop-shadow(0 0 5px #22c55e);
-          opacity: 0;
-          will-change: transform, opacity;
-        }
-        @keyframes floatingHeal {
-          0% {
-            transform: translateY(20px) scale(0.5);
-            opacity: 0;
-          }
-          20% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-80px) scale(1.2);
-            opacity: 0;
-          }
-        }
-
-        .rogue-shimmer {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            135deg,
-            transparent 0%,
-            rgba(30, 58, 95, 0.3) 25%,
-            rgba(15, 23, 42, 0.5) 50%,
-            rgba(30, 58, 95, 0.3) 75%,
-            transparent 100%
-          );
-          background-size: 200% 200%;
-          animation: shimmerWave 3s ease-in-out infinite;
-        }
-        .rogue-dagger {
-          position: absolute;
-          width: 20px;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, #1e3a8a, #3b82f6, transparent);
-          filter: drop-shadow(0 0 8px #3b82f6);
-          transform-origin: left center;
-          will-change: transform, opacity;
-        }
-        .rogue-smoke {
-          position: absolute;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(30, 58, 95, 0.6), transparent);
-          filter: blur(8px);
-          will-change: transform, opacity;
-        }
-        @keyframes shimmerWave {
-          0% {
-            background-position: 0% 0%;
-            opacity: 0.4;
-          }
-          50% {
-            background-position: 100% 100%;
-            opacity: 0.8;
-          }
-          100% {
-            background-position: 0% 0%;
-            opacity: 0.4;
-          }
-        }
-        @keyframes daggerStrike {
-          0% {
-            transform: translateX(-30px) translateY(-30px) rotate(45deg) scale(0);
-            opacity: 0;
-          }
-          30% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateX(80px) translateY(80px) rotate(45deg) scale(1);
-            opacity: 0;
-          }
-        }
-        @keyframes smokeDrift {
-          0% {
-            transform: translate(0, 0) scale(0.5);
-            opacity: 0;
-          }
-          50% {
-            opacity: 0.6;
-          }
-          100% {
-            transform: translate(50px, -80px) scale(1.5);
-            opacity: 0;
-          }
-        }
-
-        @keyframes float-up {
-          0% {
-            transform: translateY(10px) scale(0.5);
-            opacity: 0;
-          }
-          50% {
-            opacity: 0.8;
-          }
-          100% {
-            transform: translateY(-30px) scale(1);
-            opacity: 0;
-          }
-        }
-        .animate-float-up {
-          animation: float-up 2s ease-out infinite;
-          will-change: transform, opacity;
-        }
-      `}</style>
     </div>
   );
 }
