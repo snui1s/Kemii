@@ -260,7 +260,7 @@ export default function Home() {
           <ElementalLoader />
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {users.map((user) => {
             // ✅ 2. สร้าง Object scores จากฟิลด์แยกย่อย ก่อนส่งเข้า UserCard
             const aggregatedScores = user.ocean_scores || {

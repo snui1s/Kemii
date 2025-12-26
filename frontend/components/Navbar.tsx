@@ -285,15 +285,6 @@ export default function Navbar() {
             <div className="flex lg:hidden items-center gap-3">
               <ThemeToggle />
 
-              {!user && (
-                <Link
-                  href="/login"
-                  className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition"
-                >
-                  <LogIn size={24} />
-                </Link>
-              )}
-
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"

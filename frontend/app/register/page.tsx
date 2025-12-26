@@ -63,7 +63,7 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const msg = err.response?.data?.detail || "Registration failed";
+      const msg = err.response?.data?.detail || "สมัครสมาชิกไม่สำเร็จ";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -91,6 +91,7 @@ export default function RegisterPage() {
                   <input
                     required
                     type="text"
+                    maxLength={10}
                     placeholder="เบส, เอิร์ธ"
                     className="w-full pl-10 pr-4 py-2.5 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
                     value={formData.name}

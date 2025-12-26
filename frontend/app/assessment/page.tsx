@@ -19,154 +19,195 @@ import ElementalLoader from "@/components/ElementalLoader";
 import { useAuth } from "@/context/AuthContext";
 
 const questions = [
-  // --- Extraversion (E) ---
+  // 1. Extraversion (+)
   { id: 1, type: 1, math: "+", text: "เรามักเป็นตัวสร้างสีสันในงานสังสรรค์" },
-  { id: 6, type: 1, math: "-", text: "เราเป็นคนพูดน้อย" },
-  {
-    id: 11,
-    type: 1,
-    math: "+",
-    text: "เรารู้สึกสบายใจเวลาอยู่ท่ามกลางผู้คนเยอะๆ",
-  },
-  { id: 16, type: 1, math: "-", text: "เราชอบอยู่เงียบๆ ไม่ชอบทำตัวเด่น" },
-  { id: 21, type: 1, math: "+", text: "เรามักเป็นฝ่ายชวนคุยก่อนเสมอ" },
-  { id: 26, type: 1, math: "-", text: "เราไม่ค่อยมีเรื่องอะไรจะคุยกับคนอื่น" },
-  {
-    id: 31,
-    type: 1,
-    math: "+",
-    text: "เราชอบคุยกับผู้คนหลากหลายในงานสังสรรค์",
-  },
-  { id: 36, type: 1, math: "-", text: "เราไม่ชอบทำตัวเด่นหรือเป็นจุดสนใจ" },
-  {
-    id: 41,
-    type: 1,
-    math: "+",
-    text: "เราโอเคกับการเป็นจุดสนใจหรือตกเป็นเป้าสายตา",
-  },
-  {
-    id: 46,
-    type: 1,
-    math: "-",
-    text: "เรามักจะเงียบเวลาอยู่ท่ามกลางคนแปลกหน้า",
-  },
-
-  // --- Agreeableness (A) ---
+  // 2. Agreeableness (-)
   {
     id: 2,
     type: 2,
     math: "-",
     text: "เราไม่ค่อยใส่ใจความรู้สึกของคนอื่นเท่าไหร่",
   },
-  { id: 7, type: 2, math: "+", text: "เราสนใจความเป็นไปของผู้อื่น" },
-  { id: 12, type: 2, math: "-", text: "เรามักเผลอพูดจาไม่ถนอมน้ำใจคนอื่น" },
-  { id: 17, type: 2, math: "+", text: "เรามีความเห็นอกเห็นใจผู้อื่น" },
-  { id: 22, type: 2, math: "-", text: "เราไม่ค่อยอยากรับรู้ปัญหาของคนอื่น" },
-  { id: 27, type: 2, math: "+", text: "เราเป็นคนใจอ่อน ขี้สงสาร" },
-  { id: 32, type: 2, math: "-", text: "เราไม่ค่อยสนใจเรื่องของคนอื่นเท่าไหร่" },
-  { id: 37, type: 2, math: "+", text: "เราพร้อมสละเวลาช่วยเหลือผู้อื่นเสมอ" },
-  {
-    id: 42,
-    type: 2,
-    math: "+",
-    text: "เราสัมผัสและรับรู้อารมณ์ของคนอื่นได้ไว",
-  },
-  {
-    id: 47,
-    type: 2,
-    math: "+",
-    text: "เราทำให้คนอื่นรู้สึกผ่อนคลายและสบายใจเมื่ออยู่ด้วย",
-  },
-
-  // --- Conscientiousness (C) ---
+  // 3. Conscientiousness (+)
   { id: 3, type: 3, math: "+", text: "เรามักเตรียมตัวให้พร้อมอยู่เสมอ" },
-  { id: 8, type: 3, math: "-", text: "เรามักวางของทิ้งไว้ไม่เป็นที่เป็นทาง" },
-  { id: 13, type: 3, math: "+", text: "เราเป็นคนใส่ใจในรายละเอียด" },
-  { id: 18, type: 3, math: "-", text: "เรามักทำข้าวของรก ไม่เป็นระเบียบ" },
-  {
-    id: 23,
-    type: 3,
-    math: "+",
-    text: "เรารีบจัดการงานบ้านหรือธุระให้เสร็จทันที ไม่ชอบดองไว้",
-  },
-  { id: 28, type: 3, math: "-", text: "เรามักลืมเก็บของเข้าที่ให้เป็นระเบียบ" },
-  { id: 33, type: 3, math: "+", text: "เราชอบความเป็นระเบียบเรียบร้อย" },
-  {
-    id: 38,
-    type: 3,
-    math: "-",
-    text: "เรามักจะหลบเลี่ยงหน้าที่หรือความรับผิดชอบ",
-  },
-  {
-    id: 43,
-    type: 3,
-    math: "+",
-    text: "เราใช้ชีวิตตามตารางเวลาที่วางไว้อย่างเคร่งครัด",
-  },
-  { id: 48, type: 3, math: "+", text: "เราเป็นคนทำงานละเอียดและพิถีพิถัน" },
-
-  // --- Neuroticism (N) ---
+  // 4. Neuroticism (-)
   { id: 4, type: 4, math: "-", text: "เรารู้สึกเครียดได้ง่าย" },
-  {
-    id: 9,
-    type: 4,
-    math: "+",
-    text: "เรารู้สึกผ่อนคลายและสบายใจเกือบตลอดเวลา",
-  },
-  {
-    id: 14,
-    type: 4,
-    math: "-",
-    text: "เรามักจะกังวลใจกับเรื่องต่างๆ อยู่เสมอ",
-  },
-  { id: 19, type: 4, math: "+", text: "เราไม่ค่อยรู้สึกหดหู่หรือซึมเศร้า" },
-  {
-    id: 24,
-    type: 4,
-    math: "-",
-    text: "เรารู้สึกปั่นป่วนใจได้ง่ายเมื่อมีเรื่องมากระทบ",
-  },
-  { id: 29, type: 4, math: "-", text: "เราอารมณ์เสียหรือหัวร้อนได้ง่าย" },
-  { id: 34, type: 4, math: "-", text: "อารมณ์เราขึ้นๆ ลงๆ เปลี่ยนแปลงบ่อย" },
-  {
-    id: 39,
-    type: 4,
-    math: "-",
-    text: "เรามีอารมณ์แปรปรวนบ่อย เดี๋ยวดีเดี๋ยวร้าย",
-  },
-  { id: 44, type: 4, math: "-", text: "เรารู้สึกหงุดหงิดรำคาญใจได้ง่าย" },
-  { id: 49, type: 4, math: "-", text: "เรามักรู้สึกเศร้าหมองอยู่บ่อยครั้ง" },
-
-  // --- Openness (O) ---
+  // 5. Openness (+)
   {
     id: 5,
     type: 5,
     math: "+",
     text: "เรารู้จักคำศัพท์เยอะและเลือกใช้คำได้หลากหลาย",
   },
+  // 6. Extraversion (-)
+  { id: 6, type: 1, math: "-", text: "เราเป็นคนพูดน้อย" },
+  // 7. Agreeableness (+)
+  { id: 7, type: 2, math: "+", text: "เราสนใจความเป็นไปของผู้อื่น" },
+  // 8. Conscientiousness (-)
+  { id: 8, type: 3, math: "-", text: "เรามักวางของทิ้งไว้ไม่เป็นที่เป็นทาง" },
+  // 9. Neuroticism (+)
+  {
+    id: 9,
+    type: 4,
+    math: "+",
+    text: "เรารู้สึกผ่อนคลายและสบายใจเกือบตลอดเวลา",
+  },
+  // 10. Openness (-)
   {
     id: 10,
     type: 5,
     math: "-",
     text: "เราเข้าใจเรื่องที่เป็นนามธรรมหรือทฤษฎีซับซ้อนได้ยาก",
   },
+  // 11. Extraversion (+)
+  {
+    id: 11,
+    type: 1,
+    math: "+",
+    text: "เรารู้สึกสบายใจเวลาอยู่ท่ามกลางผู้คนเยอะๆ",
+  },
+  // 12. Agreeableness (-)
+  { id: 12, type: 2, math: "-", text: "เรามักเผลอพูดจาไม่ถนอมน้ำใจคนอื่น" },
+  // 13. Conscientiousness (+)
+  { id: 13, type: 3, math: "+", text: "เราเป็นคนใส่ใจในรายละเอียด" },
+  // 14. Neuroticism (-)
+  {
+    id: 14,
+    type: 4,
+    math: "-",
+    text: "เรามักจะกังวลใจกับเรื่องต่างๆ อยู่เสมอ",
+  },
+  // 15. Openness (+)
   { id: 15, type: 5, math: "+", text: "เราเป็นคนจินตนาการสูง" },
+  // 16. Extraversion (-)
+  { id: 16, type: 1, math: "-", text: "เราชอบอยู่เงียบๆ ไม่ชอบทำตัวเด่น" },
+  // 17. Agreeableness (+)
+  { id: 17, type: 2, math: "+", text: "เรามีความเห็นอกเห็นใจผู้อื่น" },
+  // 18. Conscientiousness (-)
+  { id: 18, type: 3, math: "-", text: "เรามักทำข้าวของรก ไม่เป็นระเบียบ" },
+  // 19. Neuroticism (+)
+  { id: 19, type: 4, math: "+", text: "เราไม่ค่อยรู้สึกหดหู่หรือซึมเศร้า" },
+  // 20. Openness (-)
   { id: 20, type: 5, math: "-", text: "เราไม่ค่อยอินกับเรื่องที่เป็นนามธรรม" },
+  // 21. Extraversion (+)
+  { id: 21, type: 1, math: "+", text: "เรามักเป็นฝ่ายชวนคุยก่อนเสมอ" },
+  // 22. Agreeableness (-)
+  { id: 22, type: 2, math: "-", text: "เราไม่ค่อยอยากรับรู้ปัญหาของคนอื่น" },
+  // 23. Conscientiousness (+)
+  {
+    id: 23,
+    type: 3,
+    math: "+",
+    text: "เรารีบจัดการงานบ้านหรือธุระให้เสร็จทันที ไม่ชอบดองไว้",
+  },
+  // 24. Neuroticism (-)
+  {
+    id: 24,
+    type: 4,
+    math: "-",
+    text: "เรารู้สึกปั่นป่วนใจได้ง่ายเมื่อมีเรื่องมากระทบ",
+  },
+  // 25. Openness (+)
   { id: 25, type: 5, math: "+", text: "เรามักจะปิ๊งไอเดียเจ๋งๆ อยู่เสมอ" },
+  // 26. Extraversion (-)
+  { id: 26, type: 1, math: "-", text: "เราไม่ค่อยมีเรื่องอะไรจะคุยกับคนอื่น" },
+  // 27. Agreeableness (+)
+  { id: 27, type: 2, math: "+", text: "เราเป็นคนใจอ่อน ขี้สงสาร" },
+  // 28. Conscientiousness (-)
+  { id: 28, type: 3, math: "-", text: "เรามักลืมเก็บของเข้าที่ให้เป็นระเบียบ" },
+  // 29. Neuroticism (-)
+  { id: 29, type: 4, math: "-", text: "เราอารมณ์เสียหรือหัวร้อนได้ง่าย" },
+  // 30. Openness (-)
   { id: 30, type: 5, math: "-", text: "เราเป็นคนจินตนาการไม่ค่อยเก่ง" },
+  // 31. Extraversion (+)
+  {
+    id: 31,
+    type: 1,
+    math: "+",
+    text: "เราชอบคุยกับผู้คนหลากหลายในงานสังสรรค์",
+  },
+  // 32. Agreeableness (-)
+  { id: 32, type: 2, math: "-", text: "เราไม่ค่อยสนใจเรื่องของคนอื่นเท่าไหร่" },
+  // 33. Conscientiousness (+)
+  { id: 33, type: 3, math: "+", text: "เราชอบความเป็นระเบียบเรียบร้อย" },
+  // 34. Neuroticism (-)
+  { id: 34, type: 4, math: "-", text: "อารมณ์เราขึ้นๆ ลงๆ เปลี่ยนแปลงบ่อย" },
+  // 35. Openness (+)
   { id: 35, type: 5, math: "+", text: "เราหัวไว เข้าใจอะไรได้เร็ว" },
+  // 36. Extraversion (-)
+  { id: 36, type: 1, math: "-", text: "เราไม่ชอบทำตัวเด่นหรือเป็นจุดสนใจ" },
+  // 37. Agreeableness (+)
+  { id: 37, type: 2, math: "+", text: "เราพร้อมสละเวลาช่วยเหลือผู้อื่นเสมอ" },
+  // 38. Conscientiousness (-)
+  {
+    id: 38,
+    type: 3,
+    math: "-",
+    text: "เรามักจะหลบเลี่ยงหน้าที่หรือความรับผิดชอบ",
+  },
+  // 39. Neuroticism (-)
+  {
+    id: 39,
+    type: 4,
+    math: "-",
+    text: "เรามีอารมณ์แปรปรวนบ่อย เดี๋ยวดีเดี๋ยวร้าย",
+  },
+  // 40. Openness (+)
   {
     id: 40,
     type: 5,
     math: "+",
     text: "เราชอบใช้คำศัพท์ยากๆ หรือคำที่มีความหมายลึกซึ้ง",
   },
+  // 41. Extraversion (+)
+  {
+    id: 41,
+    type: 1,
+    math: "+",
+    text: "เราโอเคกับการเป็นจุดสนใจหรือตกเป็นเป้าสายตา",
+  },
+  // 42. Agreeableness (+)
+  {
+    id: 42,
+    type: 2,
+    math: "+",
+    text: "เราสัมผัสและรับรู้อารมณ์ของคนอื่นได้ไว",
+  },
+  // 43. Conscientiousness (+)
+  {
+    id: 43,
+    type: 3,
+    math: "+",
+    text: "เราใช้ชีวิตตามตารางเวลาที่วางไว้อย่างเคร่งครัด",
+  },
+  // 44. Neuroticism (-)
+  { id: 44, type: 4, math: "-", text: "เรารู้สึกหงุดหงิดรำคาญใจได้ง่าย" },
+  // 45. Openness (+)
   {
     id: 45,
     type: 5,
     math: "+",
     text: "เราชอบใช้เวลาคิดทบทวนเรื่องราวต่างๆ อย่างลึกซึ้ง",
   },
+  // 46. Extraversion (-)
+  {
+    id: 46,
+    type: 1,
+    math: "-",
+    text: "เรามักจะเงียบเวลาอยู่ท่ามกลางคนแปลกหน้า",
+  },
+  // 47. Agreeableness (+)
+  {
+    id: 47,
+    type: 2,
+    math: "+",
+    text: "เราทำให้คนอื่นรู้สึกผ่อนคลายและสบายใจเมื่ออยู่ด้วย",
+  },
+  // 48. Conscientiousness (+)
+  { id: 48, type: 3, math: "+", text: "เราเป็นคนทำงานละเอียดและพิถีพิถัน" },
+  // 49. Neuroticism (-)
+  { id: 49, type: 4, math: "-", text: "เรามักรู้สึกเศร้าหมองอยู่บ่อยครั้ง" },
+  // 50. Openness (+)
   { id: 50, type: 5, math: "+", text: "ในหัวเรามีไอเดียผุดขึ้นมาเต็มไปหมด" },
 ];
 
@@ -221,8 +262,25 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
 
   useEffect(() => {
+    // 1. Load progress on mount
+    const saved = localStorage.getItem("assessment_progress");
+    if (saved) {
+      try {
+        setAnswers(JSON.parse(saved));
+        toast.success("Restore progress from last session");
+      } catch (e) {
+        console.error("Failed to load progress", e);
+      }
+    }
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    // 2. Save progress on change
+    if (Object.keys(answers).length > 0) {
+      localStorage.setItem("assessment_progress", JSON.stringify(answers));
+    }
+  }, [answers]);
 
   if (!isLoaded)
     return (
@@ -360,6 +418,9 @@ export default function AssessmentPage() {
         await refreshUser();
       }
 
+      // 3. Clear progress on success
+      localStorage.removeItem("assessment_progress");
+
       toast.success(`ปลุกพลังสำเร็จ! ยินดีต้อนรับคุณ ${newUser.name}`);
       router.push(`/assessment/result/${newUser.id}`);
     } catch (err) {
@@ -383,7 +444,7 @@ export default function AssessmentPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-black/30 backdrop-blur-md">
           <div className="bg-white dark:bg-slate-900/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
             {/* Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 text-center">
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 text-center">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-3">
                 <Sparkles size={12} /> AWAKENING RITUAL
               </div>
@@ -398,7 +459,7 @@ export default function AssessmentPage() {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto">
+            <div className="p-4 sm:p-6 overflow-y-auto">
               {tutorialStep === 1 ? (
                 <div className="space-y-3">
                   {[
@@ -435,7 +496,7 @@ export default function AssessmentPage() {
                   ].map((cls) => (
                     <div
                       key={cls.name}
-                      className={`flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-${cls.color}-500/50 transition-colors`}
+                      className={`flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-${cls.color}-500/50 transition-colors`}
                     >
                       <div
                         className={`p-2 rounded-lg bg-${cls.color}-500/20 text-${cls.color}-400`}
@@ -480,7 +541,7 @@ export default function AssessmentPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 pt-0">
+            <div className="p-4 sm:p-6 pt-0">
               {tutorialStep === 1 ? (
                 <button
                   onClick={() => setTutorialStep(2)}
@@ -558,16 +619,16 @@ export default function AssessmentPage() {
               </div>
 
               {/* Spirit Orbs - Glowing Runes */}
-              <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-4">
+              <div className="flex items-center justify-between gap-1 sm:gap-4 max-w-md mx-auto">
                 {ratingOptions.map((opt) => {
                   const isSelected = answers[q.id] === opt.value;
-                  // Mobile (375px): sizes 28-48, Desktop: sizes 36-60
-                  const mobileSize = 24 + opt.value * 5; // 29, 34, 39, 44, 49
+                  // Mobile (375px): sizes 32-52, Desktop: sizes 36-60
+                  const mobileSize = 28 + opt.value * 5; // 33, 38, 43, 48, 53
                   const desktopSize = 32 + opt.value * 6; // 38, 44, 50, 56, 62
                   return (
                     <div
                       key={opt.value}
-                      className="flex flex-col items-center gap-1 sm:gap-2 cursor-pointer group"
+                      className="flex flex-col items-center gap-2 cursor-pointer group"
                       onClick={() => handleSelect(q.id, opt.value)}
                     >
                       <div
@@ -580,8 +641,8 @@ export default function AssessmentPage() {
                           }
                         `}
                         style={{
-                          width: `clamp(${mobileSize}px, 8vw, ${desktopSize}px)`,
-                          height: `clamp(${mobileSize}px, 8vw, ${desktopSize}px)`,
+                          width: `clamp(${mobileSize}px, 9vw, ${desktopSize}px)`,
+                          height: `clamp(${mobileSize}px, 9vw, ${desktopSize}px)`,
                         }}
                       >
                         {isSelected && (
@@ -589,7 +650,7 @@ export default function AssessmentPage() {
                         )}
                       </div>
                       <span
-                        className={`text-[8px] sm:text-[10px] font-bold transition-all duration-300 whitespace-nowrap ${
+                        className={`text-[10px] sm:text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                           isSelected
                             ? "opacity-100 text-slate-800 dark:text-white"
                             : "opacity-0 group-hover:opacity-100 text-slate-500"

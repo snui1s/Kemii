@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import ElementalLoader from "@/components/ElementalLoader";
@@ -155,12 +155,8 @@ const LEVEL_LABELS = [
 
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, token, loading: authLoading } = useAuth();
-
-  // Local state for additional data (like skills which might not be fully in auth user object yet, or if we want to fetch fresh)
-  // Actually auth user has 'skills' but let's fetch fresh to be safe or sync.
-  // The current logic fetches from /users/:id and /users/:id/skills.
-  // We can keep that for now but use the auth token.
 
   const [profileUser, setProfileUser] = useState<UserData | null>(null);
   const [skills, setSkills] = useState<SelectedSkill[]>([]);
@@ -170,6 +166,20 @@ export default function ProfilePage() {
 
   // Edit mode state
   const [editedSkills, setEditedSkills] = useState<SelectedSkill[]>([]);
+
+  // Determine target ID:
+  // If Admin AND ?id=X exists -> Use X
+  // Else -> Use current user.id
+  const targetId = useMemo(() => {
+    if (!user) return null;
+    const queryId = searchParams.get("id");
+    if (user.role === "admin" && queryId) {
+      return parseInt(queryId);
+    }
+    return user.id;
+  }, [user, searchParams]);
+
+  const isOwnProfile = user?.id === targetId;
 
   // Fetch data once user is resolved
   useEffect(() => {
@@ -181,14 +191,16 @@ export default function ProfilePage() {
       return;
     }
 
+    if (!targetId) return;
+
     async function fetchData() {
       setDataLoading(true);
       try {
         const [userRes, skillsRes] = await Promise.all([
-          axios.get(`${API_URL}/users/${user!.id}`, {
+          axios.get(`${API_URL}/users/${targetId}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${API_URL}/users/${user!.id}/skills`, {
+          axios.get(`${API_URL}/users/${targetId}/skills`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -205,7 +217,7 @@ export default function ProfilePage() {
     }
 
     fetchData();
-  }, [user, token, authLoading, router]);
+  }, [user, token, authLoading, router, targetId]);
 
   const handleSave = async () => {
     if (!profileUser || !token) return;
@@ -250,9 +262,7 @@ export default function ProfilePage() {
     }
   };
 
-  // ... inside Render ...
-
-  if (authLoading || dataLoading || !user) {
+  if (authLoading || dataLoading || !profileUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <ElementalLoader />
@@ -260,30 +270,33 @@ export default function ProfilePage() {
     );
   }
 
-  const themeColor = CLASS_COLORS[user.character_class] || CLASS_COLORS.Warrior;
-  const statColor = CLASS_STAT_COLORS[user.character_class] || "#818cf8";
-  const classIcon = CLASS_ICONS[user.character_class] || CLASS_ICONS.Warrior;
-  const classInfo = CLASS_INFO[user.character_class] || CLASS_INFO.Warrior;
+  const themeColor =
+    CLASS_COLORS[profileUser.character_class] || CLASS_COLORS.Warrior;
+  const statColor = CLASS_STAT_COLORS[profileUser.character_class] || "#818cf8";
+  const classIcon =
+    CLASS_ICONS[profileUser.character_class] || CLASS_ICONS.Warrior;
+  const classInfo =
+    CLASS_INFO[profileUser.character_class] || CLASS_INFO.Warrior;
 
   const statsData = [
-    { subject: "O", A: user.ocean_openness, fullMark: 50 },
-    { subject: "C", A: user.ocean_conscientiousness, fullMark: 50 },
-    { subject: "E", A: user.ocean_extraversion, fullMark: 50 },
-    { subject: "A", A: user.ocean_agreeableness, fullMark: 50 },
-    { subject: "N", A: user.ocean_neuroticism, fullMark: 50 },
+    { subject: "O", A: profileUser.ocean_openness, fullMark: 50 },
+    { subject: "C", A: profileUser.ocean_conscientiousness, fullMark: 50 },
+    { subject: "E", A: profileUser.ocean_extraversion, fullMark: 50 },
+    { subject: "A", A: profileUser.ocean_agreeableness, fullMark: 50 },
+    { subject: "N", A: profileUser.ocean_neuroticism, fullMark: 50 },
   ];
 
-  const oceanScores = {
-    O: user.ocean_openness,
-    C: user.ocean_conscientiousness,
-    E: user.ocean_extraversion,
-    A: user.ocean_agreeableness,
-    N: user.ocean_neuroticism,
-  };
+  /* Unused const oceanScores = {
+    O: profileUser.ocean_openness,
+    C: profileUser.ocean_conscientiousness,
+    E: profileUser.ocean_extraversion,
+    A: profileUser.ocean_agreeableness,
+    N: profileUser.ocean_neuroticism,
+  }; */
 
   const totalSkills = skills.length;
   const maxLevel = 1; // Default
-  const avgLevel = 1; // Default
+  /* const avgLevel = 1; // Default */
 
   return (
     <div className="min-h-screen bg-slate-50/20 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
@@ -292,7 +305,7 @@ export default function ProfilePage() {
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white mb-1">
             <UserIcon className="inline-block mr-1 md:mr-2" size={24} />
-            โปรไฟล์ของฉัน
+            {isOwnProfile ? "โปรไฟล์ของฉัน" : `โปรไฟล์ของ ${profileUser.name}`}
           </h1>
         </div>
 
@@ -317,7 +330,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <p className="text-lg md:text-xl font-black text-slate-800 dark:text-white truncate">
-              {user.character_class}
+              {profileUser.character_class}
             </p>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
@@ -328,7 +341,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
-              {user.level}
+              {profileUser.level}
             </p>
           </div>
         </div>
@@ -346,12 +359,12 @@ export default function ProfilePage() {
                   {classIcon}
                 </div>
                 <h2 className="text-lg md:text-2xl font-bold text-slate-800 dark:text-white mb-1">
-                  {user.name}
+                  {profileUser.name}
                 </h2>
                 <div
                   className={`inline-block px-3 md:px-4 py-1 rounded-full text-xs md:text-sm font-bold bg-gradient-to-r ${themeColor} text-white`}
                 >
-                  {user.character_class} • Lv.{user.level}
+                  {profileUser.character_class} • Lv.{profileUser.level}
                 </div>
                 {/* OCEAN Chart */}
                 <div className="h-40 md:h-52 mt-3 md:mt-4">
@@ -423,35 +436,36 @@ export default function ProfilePage() {
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h3 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-1.5 md:gap-2">
                   <Star className="text-amber-400" size={18} />
-                  Departments ของฉัน ({skills.length})
+                  Departments ({skills.length})
                 </h3>
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-3 md:px-4 py-1.5 md:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <Edit3 size={12} /> แก้ไข
-                  </button>
-                ) : (
-                  <div className="flex gap-1.5 md:gap-2">
+                {isOwnProfile &&
+                  (!isEditing ? (
                     <button
-                      onClick={() => {
-                        setEditedSkills(skills);
-                        setIsEditing(false);
-                      }}
-                      className="p-1.5 md:p-2 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-600 dark:text-white rounded-lg"
+                      onClick={() => setIsEditing(true)}
+                      className="px-3 md:px-4 py-1.5 md:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5"
                     >
-                      <X size={14} />
+                      <Edit3 size={12} /> แก้ไข
                     </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5 disabled:opacity-50"
-                    >
-                      <Save size={12} /> {saving ? "..." : "บันทึก"}
-                    </button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex gap-1.5 md:gap-2">
+                      <button
+                        onClick={() => {
+                          setEditedSkills(skills);
+                          setIsEditing(false);
+                        }}
+                        className="p-1.5 md:p-2 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-600 dark:text-white rounded-lg"
+                      >
+                        <X size={14} />
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Save size={12} /> {saving ? "..." : "บันทึก"}
+                      </button>
+                    </div>
+                  ))}
               </div>
 
               {!isEditing ? (
@@ -470,8 +484,9 @@ export default function ProfilePage() {
                           ยังไม่ได้ระบุสังกัด (Department)
                         </h4>
                         <p className="text-xs text-red-600 dark:text-red-300">
-                          กรุณากด "แก้ไข" เพื่อเลือกสังกัดของคุณ
-                          เพื่อให้ระบบจัดทีมได้ถูกต้อง
+                          {isOwnProfile
+                            ? "กรุณากด 'แก้ไข' เพื่อเลือกสังกัดของคุณ เพื่อให้ระบบจัดทีมได้ถูกต้อง"
+                            : "ผู้ใช้นี้ยังไม่ได้ระบุสังกัด"}
                         </p>
                       </div>
                     </div>
@@ -481,12 +496,14 @@ export default function ProfilePage() {
                     {skills.length === 0 && !isEditing ? (
                       <div className="text-center w-full py-8 text-slate-400">
                         <p>ยังไม่มีข้อมูลสังกัด</p>
-                        <button
-                          onClick={() => setIsEditing(true)}
-                          className="text-indigo-500 font-bold hover:underline"
-                        >
-                          เลือกสังกัด
-                        </button>
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => setIsEditing(true)}
+                            className="text-indigo-500 font-bold hover:underline"
+                          >
+                            เลือกสังกัด
+                          </button>
+                        )}
                       </div>
                     ) : (
                       skills.map((skill) => (
@@ -569,7 +586,7 @@ export default function ProfilePage() {
                   </div>
                   <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-500 mt-1">
                     {1000 - Math.min(totalSkills * 150 + maxLevel * 100, 1000)}{" "}
-                    EXP until Level {user.level + 1}
+                    EXP until Level {profileUser.level + 1}
                   </p>
                 </div>
 
@@ -612,11 +629,11 @@ export default function ProfilePage() {
                     </p>
                     <p className="text-lg md:text-xl font-black text-indigo-700 dark:text-indigo-300">
                       {Math.round(
-                        (user.ocean_openness +
-                          user.ocean_conscientiousness +
-                          user.ocean_extraversion +
-                          user.ocean_agreeableness +
-                          (50 - user.ocean_neuroticism)) /
+                        (profileUser.ocean_openness +
+                          profileUser.ocean_conscientiousness +
+                          profileUser.ocean_extraversion +
+                          profileUser.ocean_agreeableness +
+                          (50 - profileUser.ocean_neuroticism)) /
                           2.5
                       )}
                     </p>
@@ -700,7 +717,7 @@ export default function ProfilePage() {
                       Quests
                     </p>
                     <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
-                      {totalSkills + user.level}
+                      {totalSkills + profileUser.level}
                     </p>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
@@ -718,14 +735,14 @@ export default function ProfilePage() {
                       Streak
                     </p>
                     <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
-                      {Math.min(user.level, 7)} days
+                      {Math.min(profileUser.level, 7)} days
                     </p>
                   </div>
                 </div>
 
                 {/* User ID */}
                 <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between text-[10px] md:text-xs text-slate-400 dark:text-slate-500">
-                  <span>ID: #{user.id.toString().padStart(4, "0")}</span>
+                  <span>ID: #{profileUser.id.toString().padStart(4, "0")}</span>
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                     Online

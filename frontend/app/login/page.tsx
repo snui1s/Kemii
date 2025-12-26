@@ -33,7 +33,7 @@ export default function LoginPage() {
         login(access_token, user, rememberMe);
       }
     } catch (err: any) {
-      const msg = err.response?.data?.detail || "Login failed";
+      const msg = err.response?.data?.detail || "เข้าสู่ระบบไม่สำเร็จ";
       toast.error(msg);
     } finally {
       setLoading(false);

@@ -17,17 +17,17 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Security(sec
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=401, detail="Token ไม่ถูกต้อง")
         return int(user_id)
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=401, detail="Token ไม่ถูกต้องหรือหมดอายุ")
 
 @router.post("/register")
 def register(req: RegisterRequest, session: Session = Depends(get_session)):
     # 1. Check if email exists
     existing_user = session.exec(select(User).where(User.email == req.email)).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="อีเมลนี้ถูกลงทะเบียนแล้ว")
     
     # 2. Prepare Skills from Departments
     # Structure: [{"name": "Department Name", "level": 1}]
@@ -61,10 +61,10 @@ def register(req: RegisterRequest, session: Session = Depends(get_session)):
 def login(req: LoginRequest, session: Session = Depends(get_session)):
     user = session.exec(select(User).where(User.email == req.email)).first()
     if not user or not user.hashed_password:
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
+        raise HTTPException(status_code=401, detail="อีเมลหรือรหัสผ่านไม่ถูกต้อง")
         
     if not verify_password(req.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
+        raise HTTPException(status_code=401, detail="อีเมลหรือรหัสผ่านไม่ถูกต้อง")
         
     access_token = create_access_token(user_id=user.id)
     return {"access_token": access_token, "token_type": "bearer", "user": user}
@@ -73,5 +73,5 @@ def login(req: LoginRequest, session: Session = Depends(get_session)):
 def read_users_me(user_id: int = Depends(get_current_user_id), session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="ไม่พบผู้ใช้งาน")
     return user

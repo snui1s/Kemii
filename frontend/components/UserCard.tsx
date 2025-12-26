@@ -1,4 +1,7 @@
+"use client";
+
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   User,
@@ -144,8 +147,12 @@ function getTopStats(scores?: { [key: string]: number }) {
 }
 
 const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
-  const [meteorsLarge, setMeteorsLarge] = useState<Array<{ top: string; left: string; delay: string; duration: string }>>([]);
-  const [meteorsSmall, setMeteorsSmall] = useState<Array<{ top: string; left: string; delay: string; duration: string }>>([]);
+  const [meteorsLarge, setMeteorsLarge] = useState<
+    Array<{ top: string; left: string; delay: string; duration: string }>
+  >([]);
+  const [meteorsSmall, setMeteorsSmall] = useState<
+    Array<{ top: string; left: string; delay: string; duration: string }>
+  >([]);
 
   useEffect(() => {
     setMeteorsLarge(
@@ -164,7 +171,7 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
         duration: `${1.5 + Math.random() * 1.5}s`,
       }))
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (classKey === "Mage") {
@@ -354,11 +361,19 @@ export default function UserCard({
   isOwnCard = false,
   departments = [],
 }: UserCardProps) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [particles, setParticles] = useState<Array<{ id: number; left: number; top: number; delay: number; size: number }>>([]);
-
+  const [particles, setParticles] = useState<
+    Array<{
+      id: number;
+      left: number;
+      top: number;
+      delay: number;
+      size: number;
+    }>
+  >([]);
 
   const classKey = getClassKey(characterClass);
   const config = CLASS_CONFIG[classKey];
@@ -378,7 +393,7 @@ export default function UserCard({
         size: Math.random() * 4 + 2,
       }))
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClick = () => {
@@ -387,7 +402,7 @@ export default function UserCard({
 
     if (allowFlip && !compactMode) setIsFlipped(!isFlipped);
     else if (onInspect) onInspect();
-    else if (id) window.location.href = `/assessment/result/${id}`;
+    else if (id) router.push(`/profile?id=${id}`);
   };
 
   const chartData = useMemo(

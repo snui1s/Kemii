@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Plus,
+  Minus,
   Trash2,
   Briefcase,
   Users,
@@ -399,9 +400,9 @@ export default function SmartQuestPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/20 flex flex-col font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900/30">
       {/* Main Split Layout */}
-      <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] md:overflow-hidden">
         {/* === LEFT PANEL: INPUTS (40%) === */}
-        <div className="w-full md:w-[400px] lg:w-[450px] p-8 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 overflow-y-auto z-20 shadow-xl md:shadow-none flex flex-col">
+        <div className="w-full md:w-[400px] lg:w-[450px] p-8 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 md:overflow-y-auto z-20 shadow-xl md:shadow-none flex flex-col">
           <div className="flex-1 space-y-10">
             {/* Header */}
             <div className="space-y-2">
@@ -550,23 +551,41 @@ export default function SmartQuestPage() {
 
                       <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700" />
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 font-medium">
-                          จำนวน
-                        </span>
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => {
+                            const val = Math.max(1, row.count - 1);
+                            updateRow(row.id, "count", val);
+                          }}
+                          className="w-7 h-7 flex items-center justify-center rounded-l-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors border border-r-0 border-slate-200 dark:border-slate-700"
+                        >
+                          <Minus size={12} />
+                        </button>
                         <input
                           type="number"
                           min={1}
                           max={row.deptId ? availableCount : undefined}
                           value={row.count}
                           onChange={(e) => {
-                            let val = parseInt(e.target.value) || 1;
+                            let val = parseInt(e.target.value) || 0; // Allow 0/empty while typing, but clamp on blur if needed
+                            if (val < 1) val = 1;
                             if (row.deptId && val > availableCount)
-                              val = availableCount; // Clamp
+                              val = availableCount;
                             updateRow(row.id, "count", val);
                           }}
-                          className="w-12 bg-transparent text-sm font-bold text-center text-slate-900 dark:text-white outline-none focus:text-indigo-600 transition-colors"
+                          className="w-10 h-7 bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700 text-xs font-bold text-center text-slate-900 dark:text-white outline-none focus:border-indigo-500 z-10"
                         />
+                        <button
+                          onClick={() => {
+                            let val = row.count + 1;
+                            if (row.deptId && val > availableCount)
+                              val = availableCount;
+                            updateRow(row.id, "count", val);
+                          }}
+                          className="w-7 h-7 flex items-center justify-center rounded-r-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors border border-l-0 border-slate-200 dark:border-slate-700"
+                        >
+                          <Plus size={12} />
+                        </button>
                       </div>
 
                       {requirements.length > 1 && (
@@ -674,8 +693,8 @@ export default function SmartQuestPage() {
                 </div>
 
                 {!generatedTeam && (
-                  <div className="text-xs font-semibold text-slate-400 flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800">
-                    เลือกแล้ว
+                  <div className="text-xs font-semibold text-slate-400 flex flex-shrink-0 items-center gap-1 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800 ml-2">
+                    <span className="hidden xs:inline">เลือกแล้ว</span>
                     <span className="text-indigo-600 dark:text-indigo-400">
                       {selectedPoolIds.size}
                     </span>
@@ -683,7 +702,92 @@ export default function SmartQuestPage() {
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 pt-4">
+              {/* === Mobile List View (Cards) - Visible < md === */}
+              <div className="block md:hidden p-4 space-y-3 pb-20">
+                {(generatedTeam ? generatedTeam.members : candidates).map(
+                  (user: any) => {
+                    const isSelected = selectedPoolIds.has(user.id);
+                    const matchedDepts = getUserDepartments(user);
+
+                    return (
+                      <div
+                        key={user.id}
+                        className={`p-4 rounded-xl border transition-all ${
+                          isSelected
+                            ? "bg-indigo-50/50 border-indigo-200 dark:bg-indigo-900/10 dark:border-indigo-800"
+                            : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800"
+                        } ${
+                          !user.is_available ? "opacity-60 grayscale-[0.5]" : ""
+                        }`}
+                        onClick={() => !generatedTeam && toggleUser(user.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Avatar */}
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${
+                              CLASS_COLORS[user.character_class] ||
+                              "text-slate-400"
+                            } bg-slate-50 dark:bg-slate-800`}
+                          >
+                            {CLASS_ICONS[user.character_class] || (
+                              <Users size={18} />
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start">
+                              <h4
+                                className={`font-bold text-sm ${
+                                  isSelected
+                                    ? "text-indigo-700 dark:text-indigo-300"
+                                    : "text-slate-800 dark:text-slate-200"
+                                }`}
+                              >
+                                {user.name}
+                              </h4>
+                              {/* Selection Checkbox (Mobile) */}
+                              {!generatedTeam && (
+                                <div
+                                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                                    isSelected
+                                      ? "bg-indigo-600 border-indigo-600"
+                                      : "border-slate-300 dark:border-slate-600"
+                                  }`}
+                                >
+                                  {isSelected && (
+                                    <CheckSquare
+                                      size={14}
+                                      className="text-white"
+                                    />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                              Lv.{user.level} • {user.character_class}
+                            </p>
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {matchedDepts.map((d) => (
+                                <span
+                                  key={d.id}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                >
+                                  {d.label}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+
+              <div className="flex-1 md:overflow-y-auto p-4 md:p-8 pt-4">
                 {/* AI Team Analysis Section */}
                 {generatedTeam && (
                   <div className="mb-6 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in zoom-in duration-500">
@@ -709,7 +813,7 @@ export default function SmartQuestPage() {
 
                 {/* Team Score & Visualizer */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8"></div>
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 dark:bg-slate-800/30 text-[11px] uppercase tracking-wider font-bold text-slate-400 sticky top-0">
                       <tr>
