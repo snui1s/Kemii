@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
 import axios from "axios";
 import { User } from "../types";
@@ -30,21 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check localStorage first, then sessionStorage
-    const storedToken =
-      localStorage.getItem("access_token") ||
-      sessionStorage.getItem("access_token");
+  const logout = useCallback(() => {
+    localStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token");
+    setToken(null);
+    setUser(null);
+    router.push("/login");
+  }, [router]);
 
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUser(storedToken);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchUser = async (accessToken: string) => {
+  const fetchUser = useCallback(async (accessToken: string) => {
     try {
       const res = await axios.get(`${API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -57,7 +52,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
+
+  useEffect(() => {
+    // Check localStorage first, then sessionStorage
+    const storedToken =
+      localStorage.getItem("access_token") ||
+      sessionStorage.getItem("access_token");
+
+    if (storedToken) {
+      setToken(storedToken);
+      fetchUser(storedToken);
+    } else {
+      setLoading(false);
+    }
+  }, [fetchUser]);
 
   const refreshUser = async () => {
     if (token) {
@@ -74,14 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(newToken);
     setUser(newUser);
     router.push("/"); // Redirect to dashboard
-  };
-
-  const logout = () => {
-    localStorage.removeItem("access_token");
-    sessionStorage.removeItem("access_token");
-    setToken(null);
-    setUser(null);
-    router.push("/login");
   };
 
   return (

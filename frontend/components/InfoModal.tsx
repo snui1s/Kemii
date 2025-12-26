@@ -94,7 +94,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
             </div>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-            *ไม่มีนิสัยที่ "ดี" หรือ "แย่" ทุกอย่างคือจุดเด่นที่คุณมี
+            *ไม่มีนิสัยที่ &quot;ดี&quot; หรือ &quot;แย่&quot; ทุกอย่างคือจุดเด่นที่คุณมี
           </p>
         </div>
       ),

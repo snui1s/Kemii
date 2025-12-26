@@ -229,7 +229,7 @@ export default function SynergyModal({
               {/* Insight */}
               <div className="relative pl-2 sm:pl-3">
                 <h4 className="font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 flex items-center gap-1.5 text-[10px] sm:text-xs uppercase tracking-wider">
-                  <Scroll size={12} className="sm:w-4 sm:h-4" /> Oracle's
+                  <Scroll size={12} className="sm:w-4 sm:h-4" /> Oracle&apos;s
                   Insight
                 </h4>
                 <p className="text-slate-600 dark:text-slate-300 text-[11px] sm:text-sm leading-relaxed break-words">
@@ -242,7 +242,7 @@ export default function SynergyModal({
                 <span className="text-base sm:text-lg shrink-0">💡</span>
                 <div className="min-w-0">
                   <h4 className="font-bold text-amber-600 dark:text-amber-400 text-[10px] sm:text-xs uppercase mb-0.5">
-                    Guild Master's Advice
+                    Guild Master&apos;s Advice
                   </h4>
                   <p className="text-amber-800 dark:text-slate-400 text-[11px] sm:text-sm leading-relaxed break-words">
                     {data.ai_analysis.pro_tip}
