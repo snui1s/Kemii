@@ -442,7 +442,7 @@ export default function AssessmentPage() {
       {/* --- Tutorial Modal --- */}
       {showGuide && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-black/30 backdrop-blur-md">
-          <div className="bg-white dark:bg-slate-900/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+          <div className="bg-white dark:bg-slate-900/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[75vh] shadow-2xl">
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 text-center">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-3">

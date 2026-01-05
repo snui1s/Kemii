@@ -4,6 +4,16 @@ from typing import List, Optional, Dict
 # =========================
 # Constants (Golden Formula)
 # =========================
+DISCLAIMER = """
+Kemii Golden Formula for Team Composition:
+Cost = 1.5 * Var(C) + 1.5 * Var(A) + 1.0 * Var(E) + 1.0 * Var(O) + 1.0 * Mean(N) + 2.0 * max(0, 0.625 - Mean(A))
+
+Key Components:
+1. Variance (Diversity): We balance Conscientiousness (C) and Agreeableness (A) with higher weights (1.5).
+2. Stress Factor: Mean Neuroticism (N) adds directly to cost (Lower is better).
+3. Toxic Penalty: If average Agreeableness (A) drops below 0.625 (normalized), a steep penalty (2.0x) is applied.
+"""
+
 TAU = 0.625
 LAMBDA = 2.0
 MIN_SCORE = 10

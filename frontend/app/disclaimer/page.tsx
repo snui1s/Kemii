@@ -54,6 +54,40 @@ export default function Disclaimer() {
               ผู้ใช้งานควรใช้วิจารณญาณในการอ่านและนำไปประยุกต์ใช้
             </p>
           </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+              4. Kemii Golden Formula (Algorithm Transparency)
+            </h2>
+            <p className="mb-4">
+              การจับคู่ทีมใช้สูตรทางคณิตศาสตร์{" "}
+              <strong>Kemii Golden Formula</strong> ที่คำนวณจากค่าความหลากหลาย
+              (Normalized Variance) และค่าเฉลี่ย (Normalized Mean)
+              เพื่อสร้างทีมที่มีความสมดุล โดยอ้างอิงจากโค้ดต้นฉบับ:
+            </p>
+            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg font-mono text-xs md:text-sm text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-pre">
+              {`Cost = 1.5 * Var*(C) + 1.5 * Var*(A) + 1.0 * Var*(E) + 1.0 * Var*(O) + 1.0 * Mean*(N) + 2.0 * max(0, 0.625 - Mean*(A))`}
+            </div>
+            <div className="mt-4 space-y-2 text-sm text-slate-500">
+              <h4 className="font-bold text-slate-700 dark:text-slate-300">
+                ตัวแปรสำคัญ (Variables):
+              </h4>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>
+                  <strong>Var* (Normalized Variance):</strong> Variance / 400
+                  (ค่าความกระจายหารด้วย 400)
+                </li>
+                <li>
+                  <strong>Mean* (Normalized Mean):</strong> (Mean - 10) / 40
+                  (แปลงช่วงคะแนน 10-50 ให้อยู่ในสเกล 0-1)
+                </li>
+                <li>
+                  <strong>Penalty:</strong> หากค่าเฉลี่ย A ต่ำกว่า 0.625
+                  (เทียบเท่าคะแนน ~35/50) จะมีโทษปรับ 2 เท่า
+                </li>
+              </ul>
+            </div>
+          </section>
         </div>
       </div>
     </div>

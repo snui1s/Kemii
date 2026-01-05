@@ -94,7 +94,8 @@ export default function InfoModal({ onClose }: InfoModalProps) {
             </div>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-            *ไม่มีนิสัยที่ &quot;ดี&quot; หรือ &quot;แย่&quot; ทุกอย่างคือจุดเด่นที่คุณมี
+            *ไม่มีนิสัยที่ &quot;ดี&quot; หรือ &quot;แย่&quot;
+            ทุกอย่างคือจุดเด่นที่คุณมี
           </p>
         </div>
       ),
@@ -179,8 +180,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               </p>
               <p className="text-slate-800 dark:text-slate-100">
                 พิสูจน์ว่า <b>Conscientiousness</b>{" "}
-                คือตัวทำนายความสำเร็จในการทำงานที่แม่นยำที่สุดในทุกอาชีพ [cite:
-                880, 881]
+                คือตัวทำนายความสำเร็จในการทำงานที่แม่นยำที่สุดในทุกอาชีพ
               </p>
             </div>
 
@@ -190,7 +190,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               </p>
               <p className="text-slate-800 dark:text-slate-100">
                 ยืนยันว่าการล็อคเป้าหมายนิสัยให้ตรงกับงาน (Confirmatory)
-                แม่นยำกว่าการสุ่มตรวจทั่วไป [cite: 998, 999]
+                แม่นยำกว่าการสุ่มตรวจทั่วไป
               </p>
             </div>
 
@@ -200,7 +200,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               </p>
               <p className="text-slate-800 dark:text-slate-100">
                 พบว่าทีมที่ <b>Agreeableness</b> และ <b>Conscientiousness</b>{" "}
-                สูงและคล้ายกัน จะทำงานได้ดีที่สุด [cite: 491, 974, 975]
+                สูงและคล้ายกัน จะทำงานได้ดีที่สุด
               </p>
             </div>
 
@@ -211,7 +211,6 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               <p className="text-slate-800 dark:text-slate-100">
                 คน <b>Introvert</b>{" "}
                 จะพึงพอใจน้อยลงมากหากต้องอยู่ในทีมที่มีระดับการเข้าสังคมต่างจากตนมากไป
-                [cite: 497, 801, 805]
               </p>
             </div>
 
