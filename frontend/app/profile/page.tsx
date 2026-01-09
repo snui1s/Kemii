@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+import api from "@/lib/api";
 import ElementalLoader from "@/components/ElementalLoader";
 import {
   User as UserIcon,
@@ -58,8 +58,6 @@ interface SelectedSkill {
   name: string;
   level: number;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const CLASS_ICONS: Record<string, React.ReactNode> = {
   Mage: <Wand size={28} />,
@@ -153,7 +151,7 @@ const LEVEL_LABELS = [
   { level: 5, label: "เชี่ยวชาญ", color: "bg-purple-500" },
 ];
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, token, loading: authLoading } = useAuth();
@@ -183,28 +181,27 @@ export default function ProfilePage() {
 
   // Fetch data once user is resolved
   useEffect(() => {
-    if (authLoading) return;
-    if (!user || !token) {
-      // Not logged in
-      toast.error("กรุณาเข้าสู่ระบบก่อน");
-      router.push("/");
-      return;
-    }
-
     if (!targetId) return;
 
     async function fetchData() {
       setDataLoading(true);
       try {
         const [userRes, skillsRes] = await Promise.all([
-          axios.get(`${API_URL}/users/${targetId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${API_URL}/users/${targetId}/skills`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          api.get(`/users/${targetId}`),
+          api.get(`/users/${targetId}/skills`),
         ]);
-        setProfileUser(userRes.data);
+        const userData = userRes.data;
+
+        // If visiting someone else who is still a Novice, bounce back
+        if (userData.character_class === "Novice" && !isOwnProfile) {
+          toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้น้าา", {
+            icon: "✨",
+          });
+          router.back();
+          return;
+        }
+
+        setProfileUser(userData);
         const parsed = skillsRes.data.skills || [];
         setSkills(parsed);
         setEditedSkills(parsed);
@@ -223,15 +220,9 @@ export default function ProfilePage() {
     if (!profileUser || !token) return;
     setSaving(true);
     try {
-      await axios.put(
-        `${API_URL}/users/${profileUser.id}/skills`,
-        {
-          skills: editedSkills,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await api.put(`/users/${profileUser.id}/skills`, {
+        skills: editedSkills,
+      });
 
       setSkills(editedSkills);
       setIsEditing(false);
@@ -299,470 +290,495 @@ export default function ProfilePage() {
   /* const avgLevel = 1; // Default */
 
   return (
-    <div className="min-h-screen bg-slate-50/20 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white mb-1">
-            <UserIcon className="inline-block mr-1 md:mr-2" size={24} />
-            {isOwnProfile ? "โปรไฟล์ของฉัน" : `โปรไฟล์ของ ${profileUser.name}`}
-          </h1>
-        </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-slate-50/20 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-6 md:mb-8">
+            <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white mb-1">
+              <UserIcon className="inline-block mr-1 md:mr-2" size={24} />
+              {isOwnProfile
+                ? "โปรไฟล์ของฉัน"
+                : `โปรไฟล์ของ ${profileUser.name}`}
+            </h1>
+          </div>
 
-        {/* Quick Stats Bar */}
-        <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Star className="text-amber-400" size={14} />
-              <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
-                Departments
-              </span>
-            </div>
-            <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
-              {totalSkills}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Trophy className="text-purple-500" size={14} />
-              <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
-                Class
-              </span>
-            </div>
-            <p className="text-lg md:text-xl font-black text-slate-800 dark:text-white truncate">
-              {profileUser.character_class}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Flame className="text-orange-500" size={14} />
-              <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
-                Level
-              </span>
-            </div>
-            <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
-              {profileUser.level}
-            </p>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* LEFT: User Card + Class Info */}
-          <div className="lg:col-span-1 space-y-4 md:space-y-6">
-            {/* User Card */}
-            <div
-              className={`bg-gradient-to-br ${themeColor} p-[2px] rounded-xl md:rounded-2xl`}
-            >
-              <div className="bg-white dark:bg-slate-800 rounded-[10px] md:rounded-xl p-4 md:p-6 text-center">
-                <div className="w-14 h-14 md:w-20 md:h-20 mx-auto mb-3 md:mb-4 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-700 dark:text-white border-2 border-slate-200 dark:border-slate-600">
-                  {classIcon}
-                </div>
-                <h2 className="text-lg md:text-2xl font-bold text-slate-800 dark:text-white mb-1">
-                  {profileUser.name}
-                </h2>
-                <div
-                  className={`inline-block px-3 md:px-4 py-1 rounded-full text-xs md:text-sm font-bold bg-gradient-to-r ${themeColor} text-white`}
-                >
-                  {profileUser.character_class} • Lv.{profileUser.level}
-                </div>
-                {/* OCEAN Chart */}
-                <div className="h-40 md:h-52 mt-3 md:mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart
-                      cx="50%"
-                      cy="50%"
-                      outerRadius="70%"
-                      data={statsData}
-                    >
-                      <PolarGrid stroke="#cbd5e1" />
-                      <PolarAngleAxis
-                        dataKey="subject"
-                        tick={{
-                          fill: "#64748b",
-                          fontSize: 11,
-                          fontWeight: "bold",
-                        }}
-                      />
-                      <PolarRadiusAxis
-                        angle={30}
-                        domain={[0, 50]}
-                        tick={false}
-                        axisLine={false}
-                      />
-                      <Radar
-                        dataKey="A"
-                        stroke={statColor}
-                        strokeWidth={2}
-                        fill={statColor}
-                        fillOpacity={0.4}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
+          {/* Quick Stats Bar */}
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Star className="text-amber-400" size={14} />
+                <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
+                  Departments
+                </span>
               </div>
-            </div>
-
-            {/* Class Description */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                <span className="text-lg">{classInfo.emoji}</span>{" "}
-                {classInfo.title}
-              </h3>
-              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-3">
-                {classInfo.desc}
+              <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
+                {totalSkills}
               </p>
-              <div className="mb-3">
-                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-500 mb-1.5 flex items-center gap-1">
-                  <Award size={12} className="text-amber-500" /> จุดเด่น
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {classInfo.strengths.map((s, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[10px] md:text-xs font-medium"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Trophy className="text-purple-500" size={14} />
+                <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
+                  Class
+                </span>
               </div>
+              <p className="text-lg md:text-xl font-black text-slate-800 dark:text-white truncate">
+                {profileUser.character_class}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Flame className="text-orange-500" size={14} />
+                <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
+                  Level
+                </span>
+              </div>
+              <p className="text-lg md:text-2xl font-black text-slate-800 dark:text-white">
+                {profileUser.level}
+              </p>
             </div>
           </div>
 
-          {/* RIGHT: Departments (Replaces Skills) */}
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <div className="flex justify-between items-center mb-3 md:mb-4">
-                <h3 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-1.5 md:gap-2">
-                  <Star className="text-amber-400" size={18} />
-                  Departments ({skills.length})
-                </h3>
-                {isOwnProfile &&
-                  (!isEditing ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="px-3 md:px-4 py-1.5 md:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <Edit3 size={12} /> แก้ไข
-                    </button>
-                  ) : (
-                    <div className="flex gap-1.5 md:gap-2">
-                      <button
-                        onClick={() => {
-                          setEditedSkills(skills);
-                          setIsEditing(false);
-                        }}
-                        className="p-1.5 md:p-2 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-600 dark:text-white rounded-lg"
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            {/* LEFT: User Card + Class Info */}
+            <div className="lg:col-span-1 space-y-4 md:space-y-6">
+              {/* User Card */}
+              <div
+                className={`bg-gradient-to-br ${themeColor} p-[2px] rounded-xl md:rounded-2xl`}
+              >
+                <div className="bg-white dark:bg-slate-800 rounded-[10px] md:rounded-xl p-4 md:p-6 text-center">
+                  <div className="w-14 h-14 md:w-20 md:h-20 mx-auto mb-3 md:mb-4 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-700 dark:text-white border-2 border-slate-200 dark:border-slate-600">
+                    {classIcon}
+                  </div>
+                  <h2 className="text-lg md:text-2xl font-bold text-slate-800 dark:text-white mb-1">
+                    {profileUser.name}
+                  </h2>
+                  <div
+                    className={`inline-block px-3 md:px-4 py-1 rounded-full text-xs md:text-sm font-bold bg-gradient-to-r ${themeColor} text-white`}
+                  >
+                    {profileUser.character_class} • Lv.{profileUser.level}
+                  </div>
+                  {/* OCEAN Chart */}
+                  <div className="h-40 md:h-52 mt-3 md:mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart
+                        cx="50%"
+                        cy="50%"
+                        outerRadius="70%"
+                        data={statsData}
                       >
-                        <X size={14} />
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5 disabled:opacity-50"
-                      >
-                        <Save size={12} /> {saving ? "..." : "บันทึก"}
-                      </button>
-                    </div>
-                  ))}
-              </div>
-
-              {!isEditing ? (
-                // View Mode
-                <div>
-                  {skills.length === 0 && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl mb-4 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center shrink-0">
-                        <AlertCircle
-                          className="text-red-500 dark:text-red-200"
-                          size={20}
+                        <PolarGrid stroke="#cbd5e1" />
+                        <PolarAngleAxis
+                          dataKey="subject"
+                          tick={{
+                            fill: "#64748b",
+                            fontSize: 11,
+                            fontWeight: "bold",
+                          }}
                         />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-red-700 dark:text-red-200">
-                          ยังไม่ได้ระบุสังกัด (Department)
-                        </h4>
-                        <p className="text-xs text-red-600 dark:text-red-300">
-                          {isOwnProfile
-                            ? "กรุณากด 'แก้ไข' เพื่อเลือกสังกัดของคุณ เพื่อให้ระบบจัดทีมได้ถูกต้อง"
-                            : "ผู้ใช้นี้ยังไม่ได้ระบุสังกัด"}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-2">
-                    {skills.length === 0 && !isEditing ? (
-                      <div className="text-center w-full py-8 text-slate-400">
-                        <p>ยังไม่มีข้อมูลสังกัด</p>
-                        {isOwnProfile && (
-                          <button
-                            onClick={() => setIsEditing(true)}
-                            className="text-indigo-500 font-bold hover:underline"
-                          >
-                            เลือกสังกัด
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      skills.map((skill) => (
-                        <span
-                          key={skill.name}
-                          className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 rounded-lg text-sm font-semibold"
-                        >
-                          {skill.name}
-                        </span>
-                      ))
-                    )}
+                        <PolarRadiusAxis
+                          angle={30}
+                          domain={[0, 50]}
+                          tick={false}
+                          axisLine={false}
+                        />
+                        <Radar
+                          dataKey="A"
+                          stroke={statColor}
+                          strokeWidth={2}
+                          fill={statColor}
+                          fillOpacity={0.4}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-              ) : (
-                // Edit Mode
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-500 mb-2">
-                    เลือกสังกัดของคุณ (เลือกได้มากกว่า 1)
+              </div>
+
+              {/* Class Description */}
+              <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                  <span className="text-lg">{classInfo.emoji}</span>{" "}
+                  {classInfo.title}
+                </h3>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  {classInfo.desc}
+                </p>
+                <div className="mb-3">
+                  <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-500 mb-1.5 flex items-center gap-1">
+                    <Award size={12} className="text-amber-500" /> จุดเด่น
                   </p>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {DEPARTMENTS.map((dept) => {
-                      const isSelected = editedSkills.some((s) =>
-                        matchesDepartment(s.name, dept)
-                      );
-                      return (
-                        <button
-                          key={dept.id}
-                          onClick={() => toggleDepartment(dept.name)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all text-left flex items-center justify-between ${
-                            isSelected
-                              ? "bg-indigo-600 border-indigo-600 text-white shadow-md transform scale-105"
-                              : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-indigo-400"
-                          }`}
-                        >
-                          <span>{dept.label || dept.name}</span>
-                          {isSelected && <CheckCircle size={14} />}
-                        </button>
-                      );
-                    })}
+                  <div className="flex flex-wrap gap-1">
+                    {classInfo.strengths.map((s, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[10px] md:text-xs font-medium"
+                      >
+                        {s}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Level Legend */}
-
-            {/* RPG Character Status */}
-            <div
-              className={`bg-gradient-to-br ${themeColor} p-[2px] rounded-xl md:rounded-2xl`}
-            >
-              <div className="bg-white dark:bg-slate-800 rounded-[10px] md:rounded-xl p-4 md:p-5">
-                <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-lg">⚔️</span>
-                  Character Status
-                </h3>
-
-                {/* XP Bar */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-[10px] md:text-xs mb-1">
-                    <span className="text-slate-600 dark:text-slate-400">
-                      EXP
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-white">
-                      {Math.min(totalSkills * 150 + maxLevel * 100, 1000)} /
-                      1000
-                    </span>
-                  </div>
-                  <div className="h-3 md:h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative">
-                    <div
-                      className="h-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(
-                          (totalSkills * 150 + maxLevel * 100) / 10,
-                          100
-                        )}%`,
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
-                  </div>
-                  <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-500 mt-1">
-                    {1000 - Math.min(totalSkills * 150 + maxLevel * 100, 1000)}{" "}
-                    EXP until Level {profileUser.level + 1}
-                  </p>
+            {/* RIGHT: Departments (Replaces Skills) */}
+            <div className="lg:col-span-2 space-y-4 md:space-y-6">
+              <div className="bg-white dark:bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="flex justify-between items-center mb-3 md:mb-4">
+                  <h3 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-1.5 md:gap-2">
+                    <Star className="text-amber-400" size={18} />
+                    Departments ({skills.length})
+                  </h3>
+                  {isOwnProfile &&
+                    (!isEditing ? (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-3 md:px-4 py-1.5 md:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5"
+                      >
+                        <Edit3 size={12} /> แก้ไข
+                      </button>
+                    ) : (
+                      <div className="flex gap-1.5 md:gap-2">
+                        <button
+                          onClick={() => {
+                            setEditedSkills(skills);
+                            setIsEditing(false);
+                          }}
+                          className="p-1.5 md:p-2 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-600 dark:text-white rounded-lg"
+                        >
+                          <X size={14} />
+                        </button>
+                        <button
+                          onClick={handleSave}
+                          disabled={saving}
+                          className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Save size={12} /> {saving ? "..." : "บันทึก"}
+                        </button>
+                      </div>
+                    ))}
                 </div>
 
-                {/* Adventurer Rank */}
-                <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4">
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-lg p-3 text-center border border-amber-200 dark:border-amber-800/50">
-                    <p className="text-[9px] md:text-[10px] text-amber-600 dark:text-amber-400 mb-1">
-                      Adventurer Rank
-                    </p>
-                    <p className="text-lg md:text-xl font-black text-amber-700 dark:text-amber-300">
-                      {totalSkills >= 10
-                        ? "S"
-                        : totalSkills >= 7
-                        ? "A"
-                        : totalSkills >= 5
-                        ? "B"
-                        : totalSkills >= 3
-                        ? "C"
-                        : totalSkills >= 1
-                        ? "D"
-                        : "E"}
-                    </p>
-                    <p className="text-[8px] md:text-[9px] text-amber-600/70 dark:text-amber-400/70">
-                      {totalSkills >= 10
-                        ? "Legendary"
-                        : totalSkills >= 7
-                        ? "Elite"
-                        : totalSkills >= 5
-                        ? "Veteran"
-                        : totalSkills >= 3
-                        ? "Regular"
-                        : totalSkills >= 1
-                        ? "Rookie"
-                        : "Novice"}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/20 dark:to-purple-800/20 rounded-lg p-3 text-center border border-indigo-200 dark:border-indigo-800/50">
-                    <p className="text-[9px] md:text-[10px] text-indigo-600 dark:text-indigo-400 mb-1">
-                      Power Level
-                    </p>
-                    <p className="text-lg md:text-xl font-black text-indigo-700 dark:text-indigo-300">
-                      {Math.round(
-                        (profileUser.ocean_openness +
-                          profileUser.ocean_conscientiousness +
-                          profileUser.ocean_extraversion +
-                          profileUser.ocean_agreeableness +
-                          (50 - profileUser.ocean_neuroticism)) /
-                          2.5
+                {!isEditing ? (
+                  // View Mode
+                  <div>
+                    {skills.length === 0 && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl mb-4 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center shrink-0">
+                          <AlertCircle
+                            className="text-red-500 dark:text-red-200"
+                            size={20}
+                          />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-red-700 dark:text-red-200">
+                            ยังไม่ได้ระบุสังกัด (Department)
+                          </h4>
+                          <p className="text-xs text-red-600 dark:text-red-300">
+                            {isOwnProfile
+                              ? "กรุณากด 'แก้ไข' เพื่อเลือกสังกัดของคุณ เพื่อให้ระบบจัดทีมได้ถูกต้อง"
+                              : "ผู้ใช้นี้ยังไม่ได้ระบุสังกัด"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {skills.length === 0 && !isEditing ? (
+                        <div className="text-center w-full py-8 text-slate-400">
+                          <p>ยังไม่มีข้อมูลสังกัด</p>
+                          {isOwnProfile && (
+                            <button
+                              onClick={() => setIsEditing(true)}
+                              className="text-indigo-500 font-bold hover:underline"
+                            >
+                              เลือกสังกัด
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        skills.map((skill) => (
+                          <span
+                            key={skill.name}
+                            className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 rounded-lg text-sm font-semibold"
+                          >
+                            {skill.name}
+                          </span>
+                        ))
                       )}
+                    </div>
+                  </div>
+                ) : (
+                  // Edit Mode
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-500 mb-2">
+                      เลือกสังกัดของคุณ (เลือกได้มากกว่า 1)
                     </p>
-                    <p className="text-[8px] md:text-[9px] text-indigo-600/70 dark:text-indigo-400/70">
-                      Combat Rating
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {DEPARTMENTS.map((dept) => {
+                        const isSelected = editedSkills.some((s) =>
+                          matchesDepartment(s.name, dept)
+                        );
+                        return (
+                          <button
+                            key={dept.id}
+                            onClick={() => toggleDepartment(dept.name)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all text-left flex items-center justify-between ${
+                              isSelected
+                                ? "bg-indigo-600 border-indigo-600 text-white shadow-md transform scale-105"
+                                : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-indigo-400"
+                            }`}
+                          >
+                            <span>{dept.label || dept.name}</span>
+                            {isSelected && <CheckCircle size={14} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Level Legend */}
+
+              {/* RPG Character Status */}
+              <div
+                className={`bg-gradient-to-br ${themeColor} p-[2px] rounded-xl md:rounded-2xl`}
+              >
+                <div className="bg-white dark:bg-slate-800 rounded-[10px] md:rounded-xl p-4 md:p-5">
+                  <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="text-lg">⚔️</span>
+                    Character Status
+                  </h3>
+
+                  {/* XP Bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-[10px] md:text-xs mb-1">
+                      <span className="text-slate-600 dark:text-slate-400">
+                        EXP
+                      </span>
+                      <span className="font-bold text-slate-800 dark:text-white">
+                        {Math.min(totalSkills * 150 + maxLevel * 100, 1000)} /
+                        1000
+                      </span>
+                    </div>
+                    <div className="h-3 md:h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(
+                            (totalSkills * 150 + maxLevel * 100) / 10,
+                            100
+                          )}%`,
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
+                    </div>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-500 mt-1">
+                      {1000 -
+                        Math.min(totalSkills * 150 + maxLevel * 100, 1000)}{" "}
+                      EXP until Level {profileUser.level + 1}
                     </p>
                   </div>
-                </div>
 
-                {/* Achievements */}
-                <div className="mb-4">
-                  <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                    <Trophy size={12} className="text-amber-500" /> Achievements
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {/* Always unlocked */}
-                    <span
-                      className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded text-[9px] md:text-[10px] font-medium"
-                      title="ทำ Assessment เสร็จ"
-                    >
-                      ✅ ปลุกพลัง
+                  {/* Adventurer Rank */}
+                  <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4">
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-lg p-3 text-center border border-amber-200 dark:border-amber-800/50">
+                      <p className="text-[9px] md:text-[10px] text-amber-600 dark:text-amber-400 mb-1">
+                        Adventurer Rank
+                      </p>
+                      <p className="text-lg md:text-xl font-black text-amber-700 dark:text-amber-300">
+                        {totalSkills >= 10
+                          ? "S"
+                          : totalSkills >= 7
+                          ? "A"
+                          : totalSkills >= 5
+                          ? "B"
+                          : totalSkills >= 3
+                          ? "C"
+                          : totalSkills >= 1
+                          ? "D"
+                          : "E"}
+                      </p>
+                      <p className="text-[8px] md:text-[9px] text-amber-600/70 dark:text-amber-400/70">
+                        {totalSkills >= 10
+                          ? "Legendary"
+                          : totalSkills >= 7
+                          ? "Elite"
+                          : totalSkills >= 5
+                          ? "Veteran"
+                          : totalSkills >= 3
+                          ? "Regular"
+                          : totalSkills >= 1
+                          ? "Rookie"
+                          : "Novice"}
+                      </p>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/20 dark:to-purple-800/20 rounded-lg p-3 text-center border border-indigo-200 dark:border-indigo-800/50">
+                      <p className="text-[9px] md:text-[10px] text-indigo-600 dark:text-indigo-400 mb-1">
+                        Power Level
+                      </p>
+                      <p className="text-lg md:text-xl font-black text-indigo-700 dark:text-indigo-300">
+                        {Math.round(
+                          (profileUser.ocean_openness +
+                            profileUser.ocean_conscientiousness +
+                            profileUser.ocean_extraversion +
+                            profileUser.ocean_agreeableness +
+                            (50 - profileUser.ocean_neuroticism)) /
+                            2.5
+                        )}
+                      </p>
+                      <p className="text-[8px] md:text-[9px] text-indigo-600/70 dark:text-indigo-400/70">
+                        Combat Rating
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Achievements */}
+                  <div className="mb-4">
+                    <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
+                      <Trophy size={12} className="text-amber-500" />{" "}
+                      Achievements
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {/* Always unlocked */}
+                      <span
+                        className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded text-[9px] md:text-[10px] font-medium"
+                        title="ทำ Assessment เสร็จ"
+                      >
+                        ✅ ปลุกพลัง
+                      </span>
+                      {/* Skill based */}
+                      {totalSkills >= 1 && (
+                        <span
+                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-[9px] md:text-[10px] font-medium"
+                          title="เพิ่ม Skill แรก"
+                        >
+                          ⭐ First Skill
+                        </span>
+                      )}
+                      {totalSkills >= 5 && (
+                        <span
+                          className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-[9px] md:text-[10px] font-medium"
+                          title="มี 5 Skills"
+                        >
+                          🌟 Skill Collector
+                        </span>
+                      )}
+                      {maxLevel >= 4 && (
+                        <span
+                          className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[9px] md:text-[10px] font-medium"
+                          title="มี Skill Level 4+"
+                        >
+                          🔥 Advanced
+                        </span>
+                      )}
+                      {maxLevel >= 5 && (
+                        <span
+                          className="px-2 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded text-[9px] md:text-[10px] font-medium"
+                          title="มี Skill Level 5"
+                        >
+                          👑 Master
+                        </span>
+                      )}
+                      {/* Locked achievements */}
+                      {totalSkills < 5 && (
+                        <span
+                          className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded text-[9px] md:text-[10px] font-medium opacity-50"
+                          title="เพิ่ม 5 Skills เพื่อปลดล็อค"
+                        >
+                          🔒 ???
+                        </span>
+                      )}
+                      {totalSkills < 10 && (
+                        <span
+                          className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded text-[9px] md:text-[10px] font-medium opacity-50"
+                          title="เพิ่ม 10 Skills เพื่อปลดล็อค"
+                        >
+                          🔒 ???
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Fun Stats */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
+                      <p className="text-lg md:text-xl">🗓️</p>
+                      <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
+                        Quests
+                      </p>
+                      <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
+                        {totalSkills + profileUser.level}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
+                      <p className="text-lg md:text-xl">💎</p>
+                      <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
+                        Gold
+                      </p>
+                      <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
+                        {(totalSkills * 100 + maxLevel * 50).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
+                      <p className="text-lg md:text-xl">⚡</p>
+                      <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
+                        Streak
+                      </p>
+                      <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
+                        {Math.min(profileUser.level, 7)} days
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* User ID */}
+                  <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between text-[10px] md:text-xs text-slate-400 dark:text-slate-500">
+                    <span>
+                      ID: #{profileUser.id.toString().padStart(4, "0")}
                     </span>
-                    {/* Skill based */}
-                    {totalSkills >= 1 && (
-                      <span
-                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-[9px] md:text-[10px] font-medium"
-                        title="เพิ่ม Skill แรก"
-                      >
-                        ⭐ First Skill
-                      </span>
-                    )}
-                    {totalSkills >= 5 && (
-                      <span
-                        className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-[9px] md:text-[10px] font-medium"
-                        title="มี 5 Skills"
-                      >
-                        🌟 Skill Collector
-                      </span>
-                    )}
-                    {maxLevel >= 4 && (
-                      <span
-                        className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[9px] md:text-[10px] font-medium"
-                        title="มี Skill Level 4+"
-                      >
-                        🔥 Advanced
-                      </span>
-                    )}
-                    {maxLevel >= 5 && (
-                      <span
-                        className="px-2 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded text-[9px] md:text-[10px] font-medium"
-                        title="มี Skill Level 5"
-                      >
-                        👑 Master
-                      </span>
-                    )}
-                    {/* Locked achievements */}
-                    {totalSkills < 5 && (
-                      <span
-                        className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded text-[9px] md:text-[10px] font-medium opacity-50"
-                        title="เพิ่ม 5 Skills เพื่อปลดล็อค"
-                      >
-                        🔒 ???
-                      </span>
-                    )}
-                    {totalSkills < 10 && (
-                      <span
-                        className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded text-[9px] md:text-[10px] font-medium opacity-50"
-                        title="เพิ่ม 10 Skills เพื่อปลดล็อค"
-                      >
-                        🔒 ???
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                      Online
+                    </span>
                   </div>
-                </div>
-
-                {/* Fun Stats */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
-                    <p className="text-lg md:text-xl">🗓️</p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
-                      Quests
-                    </p>
-                    <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
-                      {totalSkills + profileUser.level}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
-                    <p className="text-lg md:text-xl">💎</p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
-                      Gold
-                    </p>
-                    <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
-                      {(totalSkills * 100 + maxLevel * 50).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2">
-                    <p className="text-lg md:text-xl">⚡</p>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
-                      Streak
-                    </p>
-                    <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-white">
-                      {Math.min(profileUser.level, 7)} days
-                    </p>
-                  </div>
-                </div>
-
-                {/* User ID */}
-                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between text-[10px] md:text-xs text-slate-400 dark:text-slate-500">
-                  <span>ID: #{profileUser.id.toString().padStart(4, "0")}</span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    Online
-                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Back Button */}
-        <div className="mt-6 md:mt-8 text-center">
-          <button
-            onClick={() => router.push("/")}
-            className="px-4 md:px-6 py-2 md:py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-white rounded-lg md:rounded-xl text-sm md:text-base font-medium flex items-center justify-center gap-1.5 md:gap-2 mx-auto transition-colors"
-          >
-            <ChevronLeft size={16} /> กลับหน้าหลัก
-          </button>
+          {/* Back Button */}
+          <div className="mt-6 md:mt-8 text-center">
+            <button
+              onClick={() => router.push("/")}
+              className="px-4 md:px-6 py-2 md:py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-white rounded-lg md:rounded-xl text-sm md:text-base font-medium flex items-center justify-center gap-1.5 md:gap-2 mx-auto transition-colors"
+            >
+              <ChevronLeft size={16} /> กลับหน้าหลัก
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
+  );
+}
+
+import { Suspense } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+export default function ProfilePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+          <ElementalLoader />
+        </div>
+      }
+    >
+      <ProfileContent />
+    </Suspense>
   );
 }

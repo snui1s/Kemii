@@ -18,6 +18,7 @@ import {
   Briefcase,
   Plus,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 // Dynamically import the radar chart component to reduce initial bundle size
 const UserStatsRadar = dynamic(() => import("./UserStatsRadar"), {
@@ -156,7 +157,7 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
 
   useEffect(() => {
     setMeteorsLarge(
-      Array.from({ length: 12 }).map(() => ({
+      Array.from({ length: 4 }).map(() => ({
         top: `${Math.random() * -20}%`,
         left: `${Math.random() * 120 - 10}%`,
         delay: `${Math.random() * 2}s`,
@@ -164,7 +165,7 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
       }))
     );
     setMeteorsSmall(
-      Array.from({ length: 20 }).map(() => ({
+      Array.from({ length: 6 }).map(() => ({
         top: `${Math.random() * -50}%`,
         left: `${Math.random() * 120}%`,
         delay: `${Math.random() * 3}s`,
@@ -214,12 +215,12 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
   if (classKey === "Paladin") {
     return (
       <div className="w-full h-full relative">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <span
             key={`beam-${i}`}
             className="paladin-light-beam"
             style={{
-              left: `${15 + i * 18}%`,
+              left: `${25 + i * 25}%`,
               animationName: "holyBeamShine",
               animationDuration: `${1.5 + i * 0.1}s`,
               animationTimingFunction: "ease-in-out",
@@ -228,13 +229,13 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
             }}
           />
         ))}
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <span
             key={`particle-${i}`}
             className="paladin-particle"
             style={{
-              left: `${10 + i * 10}%`,
-              bottom: `${5 + (i % 4) * 5}%`,
+              left: `${20 + i * 20}%`,
+              bottom: `${5 + (i % 3) * 5}%`,
               animationName: "holyParticleRise",
               animationDuration: `${2 + i * 0.1}s`,
               animationTimingFunction: "ease-out",
@@ -259,13 +260,13 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
             animationIterationCount: "infinite",
           }}
         />
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <span
             key={`ember-${i}`}
             className="warrior-ember"
             style={{
-              left: `${8 + i * 7}%`,
-              bottom: `${5 + (i % 6) * 5}%`,
+              left: `${15 + i * 14}%`,
+              bottom: `${5 + (i % 3) * 5}%`,
               animationName: "emberFloat",
               animationDuration: `${1.5 + i * 0.1}s`,
               animationTimingFunction: "ease-out",
@@ -281,14 +282,14 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
   if (classKey === "Cleric") {
     return (
       <>
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <Plus
             key={i}
             size={10 + i * 3}
             className="cleric-heal-icon"
             style={{
               bottom: `${5 + i * 4}%`,
-              left: `${15 + i * 15}%`,
+              left: `${20 + i * 30}%`,
               animationName: "floatingHeal",
               animationDuration: `${2 + i * 0.2}s`,
               animationTimingFunction: "ease-out",
@@ -305,13 +306,13 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
     return (
       <>
         <div className="rogue-shimmer" />
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 2 }).map((_, i) => (
           <span
             key={`dagger-${i}`}
             className="rogue-dagger"
             style={{
-              top: `${15 + i * 20}%`,
-              left: `${10 + i * 15}%`,
+              top: `${25 + i * 40}%`,
+              left: `${20 + i * 30}%`,
               animationName: "daggerStrike",
               animationDuration: `${1.2 + i * 0.3}s`,
               animationTimingFunction: "ease-out",
@@ -320,13 +321,13 @@ const ClassHoverEffect = ({ classKey }: { classKey: ClassName }) => {
             }}
           />
         ))}
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <span
             key={`smoke-${i}`}
             className="rogue-smoke"
             style={{
-              left: `${10 + i * 12}%`,
-              bottom: `${10 + (i % 4) * 10}%`,
+              left: `${20 + i * 30}%`,
+              bottom: `${10 + (i % 2) * 10}%`,
               width: `${30 + i * 5}px`,
               height: `${30 + i * 5}px`,
               animationName: "smokeDrift",
@@ -396,13 +397,37 @@ export default function UserCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleClick = () => {
-    // Restriction: Non-admin users cannot click others' cards
-    if (currentUserRole !== "admin" && !isOwnCard) return;
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-    if (allowFlip && !compactMode) setIsFlipped(!isFlipped);
-    else if (onInspect) onInspect();
-    else if (id) router.push(`/profile?id=${id}`);
+    const isNovice = classKey === "Novice";
+
+    // 1. Block Novice Comparison/View (unless it's me)
+    if (isNovice && !isOwnCard) {
+      toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้น้าา", {
+        icon: "✨",
+        style: {
+          borderRadius: "12px",
+          background: "#334155",
+          color: "#fff",
+        },
+      });
+      return;
+    }
+
+    // 2. Perform Action
+    if (allowFlip && !compactMode) {
+      setIsFlipped(!isFlipped);
+    } else if (onInspect) {
+      // Synergy/Comparison is allowed for everyone!
+      onInspect();
+    } else if (id) {
+      // Visiting full profile page is restricted to Admin or Me
+      if (isOwnCard || currentUserRole === "admin") {
+        router.push(`/profile?id=${id}`);
+      }
+    }
   };
 
   const chartData = useMemo(
@@ -431,11 +456,7 @@ export default function UserCard({
 
   return (
     <div
-      className={`relative w-full group user-card ${
-        currentUserRole === "admin" || isOwnCard
-          ? "cursor-pointer"
-          : "cursor-default"
-      }`}
+      className="relative w-full group user-card cursor-pointer"
       style={{ perspective: "1000px", height: cardHeight }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -465,7 +486,7 @@ export default function UserCard({
             </div>
 
             <div className="effect-layer">
-              <ClassHoverEffect classKey={classKey} />
+              {isHovered && <ClassHoverEffect classKey={classKey} />}
             </div>
 
             {classKey === "Novice" &&

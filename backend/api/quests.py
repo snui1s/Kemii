@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from core.database import get_session
+from core.auth import verify_token
 from models import Quest, User
-from schemas import CreateQuestRequest, UpdateStatusRequest
-from services.ai import generate_quest
-from services.matching import calculate_match_score, get_stats, calculate_academic_cost, evaluate_team
+from schemas import UpdateStatusRequest
+from services.matching import calculate_match_score, evaluate_team
 from datetime import datetime
 from data.skills import DEPARTMENTS
 import json
@@ -143,11 +143,14 @@ def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
 
 
 @router.patch("/quests/{quest_id}/team-size")
-def update_quest_team_size(quest_id: int, team_size: int, session: Session = Depends(get_session)):
+def update_quest_team_size(quest_id: int, team_size: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
     """Update quest team size (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
+
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่แก้ไขได้")
 
     if quest.status not in ["open", "filled"]:
         raise HTTPException(status_code=400, detail="Cannot change team size for started/completed quests")
@@ -308,11 +311,14 @@ def get_quest_match_score(quest_id: int, user_id: int, session: Session = Depend
 
 
 @router.post("/quests/{quest_id}/kick/{user_id}")
-def kick_member(quest_id: int, user_id: int, session: Session = Depends(get_session)):
+def kick_member(quest_id: int, user_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
     """Remove a member from the quest team (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
+
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่ปลดสมาชิกได้")
 
     if quest.status not in ["open", "filled"]:
         raise HTTPException(status_code=400, detail="Cannot kick members from started/completed quests")
@@ -344,14 +350,14 @@ def kick_member(quest_id: int, user_id: int, session: Session = Depends(get_sess
 
 
 @router.post("/quests/{quest_id}/status")
-def update_quest_status(quest_id: int, req: UpdateStatusRequest, session: Session = Depends(get_session)):
-    """Update quest status (e.g. start, complete, fail)"""
+def update_quest_status(quest_id: int, req: UpdateStatusRequest, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+    """Update quest status (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
 
-    if quest.leader_id != req.user_id:
-        raise HTTPException(status_code=403, detail="Only leader can update status")
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่เปลี่ยนสถานะได้")
 
     # Validate transition
     if req.status not in ["open", "filled", "in_progress", "completed", "failed"]:
@@ -380,11 +386,14 @@ def update_quest_status(quest_id: int, req: UpdateStatusRequest, session: Sessio
 
 
 @router.post("/quests/{quest_id}/accept/{user_id}")
-def accept_applicant(quest_id: int, user_id: int, session: Session = Depends(get_session)):
+def accept_applicant(quest_id: int, user_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
     """Leader accepts an applicant"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่รับสมัครได้")
 
     user = session.get(User, user_id)
     if not user:
@@ -411,11 +420,14 @@ def accept_applicant(quest_id: int, user_id: int, session: Session = Depends(get
 
 
 @router.post("/quests/{quest_id}/complete")
-def complete_quest(quest_id: int, session: Session = Depends(get_session)):
-    """Mark quest as completed - releases members' availability"""
+def complete_quest(quest_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+    """Mark quest as completed (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่แจ้งจบภารกิจได้")
 
     if quest.status == "completed":
         raise HTTPException(status_code=400, detail="Quest already completed")
@@ -441,11 +453,14 @@ def complete_quest(quest_id: int, session: Session = Depends(get_session)):
 
 
 @router.post("/quests/{quest_id}/cancel")
-def cancel_quest(quest_id: int, session: Session = Depends(get_session)):
-    """Cancel a quest - releases all applicants and members"""
+def cancel_quest(quest_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+    """Cancel a quest (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่ยกเลิกภารกิจได้")
 
     if quest.status == "completed":
         raise HTTPException(status_code=400, detail="Cannot cancel completed quest")
@@ -471,11 +486,14 @@ def cancel_quest(quest_id: int, session: Session = Depends(get_session)):
 
 
 @router.post("/quests/{quest_id}/start")
-def start_quest(quest_id: int, session: Session = Depends(get_session)):
-    """Start working on a quest - changes status to in_progress"""
+def start_quest(quest_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+    """Start working on a quest (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
+        
+    if quest.leader_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่เริ่มภารกิจได้")
 
     if quest.status not in ["open", "filled"]:
         raise HTTPException(status_code=400, detail="Quest cannot be started")

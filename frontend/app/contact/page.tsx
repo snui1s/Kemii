@@ -33,7 +33,7 @@ export default function Contact() {
           </a>
 
           <a
-            href="https://github.com/snailsqz/Kemii"
+            href="https://github.com/snailsqz/Kemii/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition border border-slate-100 dark:border-slate-700 group"

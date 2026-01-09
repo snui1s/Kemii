@@ -62,11 +62,16 @@ body {
   position: absolute;
   width: 3px;
   height: 80px; /* Long tail */
-  background: linear-gradient(180deg, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 1) 50%, #fff 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(168, 85, 247, 0) 0%,
+    rgba(168, 85, 247, 1) 50%,
+    #fff 100%
+  );
   border-radius: 50% 50% 2px 2px;
   opacity: 0;
-  filter: drop-shadow(0 0 5px #d8b4fe);
-  transform: rotate(20deg); /* Angle of fall */
+  box-shadow: 0 0 4px #d8b4fe; /* Simpler than drop-shadow */
+  transform: rotate(20deg);
   animation: meteorFall ease-in infinite;
   will-change: transform, opacity;
   z-index: 5;
@@ -76,7 +81,11 @@ body {
   position: absolute;
   width: 1.5px;
   height: 40px;
-  background: linear-gradient(180deg, rgba(192, 132, 252, 0) 0%, rgba(192, 132, 252, 0.8) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(192, 132, 252, 0) 0%,
+    rgba(192, 132, 252, 0.8) 100%
+  );
   opacity: 0;
   transform: rotate(20deg);
   animation: meteorFall ease-in infinite;
@@ -87,7 +96,11 @@ body {
 .mage-glow-pulse {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 30%, rgba(168, 85, 247, 0.2), transparent 70%);
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(168, 85, 247, 0.2),
+    transparent 70%
+  );
   animation: glowPulse 3s ease-in-out infinite;
   z-index: 1;
 }
@@ -110,8 +123,15 @@ body {
 }
 
 @keyframes glowPulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
 }
 
 .paladin-light-beam {
@@ -125,8 +145,8 @@ body {
     rgba(255, 215, 0, 0.6) 50%,
     transparent 100%
   );
-  filter: blur(1px);
-  box-shadow: 0 0 20px rgba(234, 179, 8, 0.8);
+  /* Simplified shadow */
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
   will-change: transform, opacity;
 }
 .paladin-particle {
@@ -196,10 +216,11 @@ body {
   height: 2px;
   background: linear-gradient(90deg, transparent, #ef4444, transparent);
   transform-origin: center;
-  filter: drop-shadow(0 0 5px #ef4444);
+  box-shadow: 0 0 4px #ef4444;
 }
 @keyframes flameFlicker {
-  0%, 100% {
+  0%,
+  100% {
     transform: scaleY(1) translateY(0);
     opacity: 0.8;
     will-change: transform, opacity;
@@ -237,7 +258,7 @@ body {
 .cleric-heal-icon {
   position: absolute;
   color: #22c55e;
-  filter: drop-shadow(0 0 5px #22c55e);
+  text-shadow: 0 0 4px #22c55e;
   opacity: 0;
   will-change: transform, opacity;
 }
@@ -274,7 +295,13 @@ body {
   position: absolute;
   width: 20px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #1e3a8a, #3b82f6, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #1e3a8a,
+    #3b82f6,
+    transparent
+  );
   filter: drop-shadow(0 0 8px #3b82f6);
   transform-origin: left center;
   will-change: transform, opacity;
@@ -283,7 +310,6 @@ body {
   position: absolute;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(30, 58, 95, 0.6), transparent);
-  filter: blur(8px);
   will-change: transform, opacity;
 }
 @keyframes shimmerWave {

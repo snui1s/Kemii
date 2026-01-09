@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import UserCard from "@/components/UserCard";
 import SynergyModal from "@/components/SynergyModal";
 import toast from "react-hot-toast";
@@ -15,7 +15,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/next";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import ElementalLoader from "@/components/ElementalLoader";
 
 // ✅ 1. อัปเดต Interface ให้ตรงกับ Database จริง (รับค่าแบบแยกฟิลด์)
@@ -34,22 +34,38 @@ interface User {
   ocean_scores?: { [key: string]: number };
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
-// ... imports ...
+import { useRouter } from "next/navigation";
 
-export default function Home() {
-  const { user: currentUser } = useAuth(); // Rename to avoid conflict with users list
+function HomeContent() {
+  const { user: currentUser } = useAuth();
+  const router = useRouter();
 
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const res = await axios.get(`${API_URL}/users`);
-      return res.data;
-    },
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteQuery({
+      queryKey: ["users", "paginated"],
+      queryFn: async ({ pageParam = 0 }) => {
+        const res = await api.get("/users", {
+          params: { offset: pageParam, limit: 12 },
+        });
+        return res.data;
+      },
+      getNextPageParam: (
+        lastPage: { users: User[]; total: number },
+        allPages: any[]
+      ) => {
+        const loadedCount = allPages.reduce(
+          (sum, page) => sum + page.users.length,
+          0
+        );
+        return loadedCount < lastPage.total ? loadedCount : undefined;
+      },
+      initialPageParam: 0,
+    });
+
+  const users = data?.pages.flatMap((page) => page.users) || [];
+  const totalInDb = data?.pages[0]?.total || 0;
 
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
@@ -76,6 +92,21 @@ export default function Home() {
       toast("นี่มันตัวคุณเองนี่นา! 🤔", { icon: "🪞" });
       return;
     }
+
+    // Find the partner to check if they are a Novice
+    const partner = users.find((u) => u.id === partnerId);
+    if (partner?.character_class === "Novice") {
+      toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้น้าา", {
+        icon: "✨",
+        style: {
+          borderRadius: "12px",
+          background: "#334155",
+          color: "#fff",
+        },
+      });
+      return;
+    }
+
     setSelectedPartnerId(partnerId);
   };
 
@@ -98,13 +129,12 @@ export default function Home() {
 
   return (
     <div className="relative h-full w-full max-w-5xl mx-auto mb-12 mt-5 px-4 sm:px-0">
-      {/* Header Section (Hero Banner) */}
+      {/* Header Section (Hero Banner) ... lines 102-256 ... */}
       <div className="relative bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors duration-500">
-        {/* Missing Dept Warning */}
         {hasMissingDept && (
           <div
             className="absolute top-0 left-0 w-full bg-red-500 text-white px-4 py-2 flex items-center justify-center gap-2 z-50 text-sm font-bold animate-pulse cursor-pointer"
-            onClick={() => (window.location.href = "/profile")}
+            onClick={() => router.push("/profile")}
           >
             <AlertTriangle size={16} className="text-white" />
             <span>
@@ -162,9 +192,9 @@ export default function Home() {
                   size={16}
                   className="text-indigo-500 dark:text-indigo-400"
                 />{" "}
-                สมาชิกกิลด์{" "}
+                สมาชิกกิลด์ทั้งหมด{" "}
                 <span className="text-slate-900 dark:text-white font-bold">
-                  {users.length}
+                  {totalInDb}
                 </span>{" "}
                 ท่าน
               </div>
@@ -173,7 +203,6 @@ export default function Home() {
 
           <div className="shrink-0 w-full md:w-auto flex justify-center">
             {currentUser ? (
-              // If user is "Novice", show the "Take Assessment" CTA
               currentUser.character_class === "Novice" ? (
                 <div className="bg-indigo-50/80 dark:bg-indigo-900/20 backdrop-blur-sm p-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex flex-col items-center gap-4 w-64 text-center transition-colors animate-pulse-slow">
                   <div className="text-4xl animate-bounce text-indigo-600 dark:text-indigo-400">
@@ -188,14 +217,13 @@ export default function Home() {
                     </p>
                   </div>
                   <button
-                    onClick={() => (window.location.href = "/assessment")}
+                    onClick={() => router.push("/assessment")}
                     className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition transform hover:-translate-y-1 active:scale-95"
                   >
                     เริ่มทำพิธีปลุกพลัง ➔
                   </button>
                 </div>
               ) : (
-                // If user has a class, show their Profile Card
                 <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-3 w-64 animate-fade-in-up">
                   <div className="text-xs font-bold uppercase tracking-widest opacity-70 text-slate-800 dark:text-slate-200">
                     Character Status
@@ -255,36 +283,63 @@ export default function Home() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isLoading && users.length === 0 ? (
         <div className="text-center p-10 text-zinc-900 dark:text-zinc-200 text-3xl animate-pulse">
           <ElementalLoader />
         </div>
       ) : (
-        <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {users.map((user) => {
-            // ✅ 2. สร้าง Object scores จากฟิลด์แยกย่อย ก่อนส่งเข้า UserCard
-            const aggregatedScores = user.ocean_scores || {
-              Openness: user.ocean_openness || 0,
-              Conscientiousness: user.ocean_conscientiousness || 0,
-              Extraversion: user.ocean_extraversion || 0,
-              Agreeableness: user.ocean_agreeableness || 0,
-              Neuroticism: user.ocean_neuroticism || 0,
-            };
+        <>
+          <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {users.map((user: User) => {
+              const aggregatedScores = user.ocean_scores || {
+                Openness: user.ocean_openness || 0,
+                Conscientiousness: user.ocean_conscientiousness || 0,
+                Extraversion: user.ocean_extraversion || 0,
+                Agreeableness: user.ocean_agreeableness || 0,
+                Neuroticism: user.ocean_neuroticism || 0,
+              };
 
-            return (
-              <div key={user.id} onClick={() => handleCardClick(user.id)}>
+              return (
                 <UserCard
                   key={user.id}
+                  id={user.id}
                   name={user.name}
                   characterClass={user.character_class}
                   type={`Lv.${user.level}`}
                   scores={aggregatedScores}
                   compactMode={true}
+                  isOwnCard={user.id === currentUser?.id}
+                  onInspect={() => handleCardClick(user.id)}
                 />
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+
+          {hasNextPage && (
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="group relative px-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                <span className="relative flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
+                  {isFetchingNextPage ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      กำลังเรียกพวก...
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} className="text-indigo-500" />
+                      เรียกพวกเพิ่ม (Load More)
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {selectedPartnerId && currentUser && (
@@ -303,5 +358,21 @@ export default function Home() {
 
       <Analytics />
     </div>
+  );
+}
+
+import { Suspense } from "react";
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-center p-10 text-zinc-900 dark:text-zinc-200 text-3xl animate-pulse">
+          <ElementalLoader />
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }

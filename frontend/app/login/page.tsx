@@ -3,11 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
+import api from "../../lib/api";
 import { Mail, Lock, LogIn, Loader2, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -22,7 +20,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/login`, {
+      const res = await api.post("/login", {
         email,
         password,
       });

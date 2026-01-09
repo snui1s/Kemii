@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from sqlmodel import Session, select
 from core.database import get_session
 from models import User
-from schemas import LoginRequest, RegisterRequest
+from schemas import LoginRequest, RegisterRequest, AuthResponse, UserPublic
 from core.auth import create_access_token, verify_password, get_password_hash, SECRET_KEY, ALGORITHM
 import json
 
@@ -22,7 +22,7 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Security(sec
     except JWTError:
         raise HTTPException(status_code=401, detail="Token ไม่ถูกต้องหรือหมดอายุ")
 
-@router.post("/register")
+@router.post("/register", response_model=AuthResponse)
 def register(req: RegisterRequest, session: Session = Depends(get_session)):
     # 1. Check if email exists
     existing_user = session.exec(select(User).where(User.email == req.email)).first()
@@ -57,7 +57,7 @@ def register(req: RegisterRequest, session: Session = Depends(get_session)):
     access_token = create_access_token(user_id=new_user.id)
     return {"access_token": access_token, "token_type": "bearer", "user": new_user}
 
-@router.post("/login")
+@router.post("/login", response_model=AuthResponse)
 def login(req: LoginRequest, session: Session = Depends(get_session)):
     user = session.exec(select(User).where(User.email == req.email)).first()
     if not user or not user.hashed_password:
@@ -69,7 +69,7 @@ def login(req: LoginRequest, session: Session = Depends(get_session)):
     access_token = create_access_token(user_id=user.id)
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
-@router.get("/users/me")
+@router.get("/users/me", response_model=UserPublic)
 def read_users_me(user_id: int = Depends(get_current_user_id), session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     if not user:

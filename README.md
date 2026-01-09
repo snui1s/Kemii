@@ -1,16 +1,16 @@
-# Guild AI Support System (Kemii)
+# Kemii: Intelligent Guild Support System
 
 <div align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-14.0%2B-black?style=for-the-badge&logo=next.js&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-15.0%2B-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Bun](https://img.shields.io/badge/Bun-1.0%2B-f9f9f9?style=for-the-badge&logo=bun&logoColor=black)
+![UV](https://img.shields.io/badge/UV-Package--Manager-orange?style=for-the-badge)
 
-**Intelligent Guild Management and Team Optimization System**
-_Psychometric Analysis (OCEAN Model) | Quest Matching | Team Harmony Optimization_
+**Next-Gen Team Optimization and Personality-Driven Quest Matching**
+_Powered by the Kemii Golden Formula and Google Gemini AI_
 
 </div>
 
@@ -18,117 +18,102 @@ _Psychometric Analysis (OCEAN Model) | Quest Matching | Team Harmony Optimizatio
 
 ## Project Overview
 
-**Kemii** (Chemistry) is an AI-driven Guild Support System designed to address common workforce challenges such as skill-personality mismatch and suboptimal team dynamics. Unlike traditional management tools, Kemii integrates the **OCEAN Personality Model (Big 5)** and utilizes **Google Gemini AI** to analyze user traits and algorithmically construct teams that achieve maximum compatibility and operational efficiency.
+Kemii (Chemistry) is a sophisticated AI-driven Guild Support System designed to solve the human element challenges in professional and collaborative environments. By integrating the OCEAN Personality Model (Big 5) and the proprietary Kemii Golden Formula, the system analyzes individual traits to build world-class teams with maximum harmony and operational efficiency.
 
-The system provides a holistic view of team composition, balancing technical skills with behavioral attributes to ensure sustainable high-performance collaboration.
+The system gamifies team management by mapping real-world psychological profiles to functional RPG-inspired archetypes, ensuring that every project (Quest) has the perfect balance of roles and personalities.
 
 ## Key Features
 
-### ⚔️ Personality & Role Classification
+### Personality-Based Class System
 
-- **OCEAN Assessment**: Comprehensive psychometric evaluation covering Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism.
-- **AI Class Assignment**: Automated mapping of psychological profiles to functional RPG archetypes (Mage, Warrior, Paladin, Cleric, Rogue).
+- OCEAN Assessment: In-depth psychometric testing covering Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism.
+- AI Class Mapping: Automatic assignment to character classes (Mage, Warrior, Paladin, Cleric, Rogue) based on psychological data.
+- Novice Restriction: Secure tiering system that restricts full guild access until the assessment ritual is completed.
 
-### 🛡️ Team Quest (Intelligent Party Builder)
+### Intelligent Party Builder (Quest System)
 
-- **Team Composition AI**: Algorithms that suggest the best candidates based on required roles, skills, and availability.
-- **Harmony Score**: Real-time prediction of team chemistry and success probability.
-- **Availability Tracking**: filters out users who are currently busy or assigned to other quests.
+- Kemii Golden Formula: Specialized algorithm for calculating optimal team composition by balancing technical skills and personality harmony.
+- Quest-Specific Requirements: Configurable class needs for each quest types.
+- Harmony Score: Predictive analysis of team success probability and potential interpersonal friction.
 
-### 🔐 Authentication & Security
+### Premium Responsive Experience
 
-- **Secure Login**: JWT-based authentication with auto-refresh mechanisms.
-- **Remember Me**: Option to stay logged in via persistent storage (Local Storage) or temporary session (Session Storage).
-- **Configurable Expiration**: Admin-controlled session timeouts via environment variables.
+- Adaptive UI: Fully optimized for mobile (375px+) with card-based layouts and intuitive touch controls.
+- Interactive Inputs: Custom quantity toggle buttons and modern design system for an immersive experience.
+
+### Security and Role Management
+
+- JWT Authentication: Secure token-based access with auto-refresh capabilities.
+- Role-Based Access Control: Granular management of profile visibility and internal system interactions.
 
 ---
 
 ## Technology Stack
 
-### Backend Infrastructure
+### Backend
 
-- **Framework**: FastAPI (Python) - High-performance asynchronous API layer.
-- **Database**: SQLite (SQLModel/SQLAlchemy) - Relational data persistence with automatic fallback.
-- **AI Engine**: Google Gemini Pro (via LangChain) - LLM for complex reasoning and analysis.
-- **Algorithms**: Variance minimization logic and heuristic scoring models for team composition.
+- Framework: FastAPI (Python)
+- Package Manager: UV
+- Database: SQLite with SQLModel (SQLAlchemy)
+- AI Engine: Google Gemini AI
 
-### Frontend Interface
+### Frontend
 
-- **Framework**: Next.js 14+ (App Router) - Server-side rendering and static generation.
-- **UI Components**: **Radix UI Primitives** (Accessible, unstyled components) styled with **Tailwind CSS**.
-- **State Management**: React Query (TanStack Query) & Context API.
-- **Visualization**: Recharts & Lucide React.
-
-### DevOps
-
-- **Containerization**: Docker & Docker Compose - consistent deployment environments.
+- Framework: Next.js 15 (App Router)
+- Runtime: Bun
+- Styling: Tailwind CSS
+- State Management: TanStack Query (React Query) and Context API
 
 ---
 
-## Installation & Setup
+## Configuration Details
 
-### ⚙️ Backend Configuration (Critical)
+### Backend Environment Variables (backend/.env)
 
-You must create a `.env` file in the `backend/` directory to run the server securely.
+Create a `.env` file in the `backend/` directory with the following variables:
 
-**File:** `backend/.env`
+| Variable                    | Description                                     | Example                 |
+| :-------------------------- | :---------------------------------------------- | :---------------------- |
+| SECRET_KEY                  | Random string for JWT encryption                | `your-secret-key-here`  |
+| ALGORITHM                   | Hashing algorithm for tokens                    | `HS256`                 |
+| ACCESS_TOKEN_EXPIRE_MINUTES | Token validity duration in minutes              | `1440`                  |
+| GOOGLE_API_KEY              | API key for Google Gemini AI services (Crucial) | `AIzaSy...`             |
+| ORIGINS                     | Allowed CORS origins (comma-separated)          | `http://localhost:3000` |
 
-```env
-# Security Keys (Generate random strings for production)
-SECRET_KEY="your_super_secret_random_key_here"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=1440  # 1440 mins = 1 Day
+### Frontend Environment Variables (frontend/.env)
 
-# Database (Optional - Defaults to local SQLite if empty)
-# DATABASE_URL="postgresql://user:password@localhost/dbname"
+Create a `.env` file in the `frontend/` directory with the following variables:
+
+| Variable            | Description                         | Example                 |
+| :------------------ | :---------------------------------- | :---------------------- |
+| NEXT_PUBLIC_API_URL | Full URL of the backend API service | `http://localhost:8000` |
+
+---
+
+## Installation and Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/snailsqz/Kemii.git
+cd Kemii
 ```
 
-### Option 1: Docker (Recommended)
-
-1.  **Clone the Repository**
-
-    ```bash
-    git clone https://github.com/snui1s/Kemii.git
-    cd Kemii
-    ```
-
-2.  **Configure Environment**
-    Create a `.env` in the root (for docker) and `backend/.env` (for python app).
-
-3.  **Deploy Services**
-    ```bash
-    docker-compose up --build
-    ```
-    - **Frontend Application**: `http://localhost:3000`
-    - **Backend API Docs**: `http://localhost:8000/docs`
-
-### Option 2: Manual Installation (Development)
-
-#### Backend Setup (Python)
+### 2. Backend Setup
 
 ```bash
 cd backend
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-# macOS/Linux
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-# or with uv
+# Install dependencies and sync environment
 uv sync
 
 # Start the server
-python main.py
+uv run main.py
 ```
 
-#### Frontend Setup (Node.js)
+### 3. Frontend Setup
 
 ```bash
 cd frontend
-
 # Install dependencies
 bun install
 
@@ -142,21 +127,19 @@ bun run dev
 
 ```
 root/
-├── backend/            # Python FastAPI Service
-│   ├── main.py         # Application Entry & API Routes
-│   ├── models.py       # SQLModel Database Schemas
-│   ├── auth.py         # Authentication Logic & JWT
-│   ├── .env            # Backend Config (Secrets)
-│   ├── routers/        # API Endpoints (quests, users, auth, teams)
-│   ├── services/       # Business Logic (AI, Matching)
-│   └── scripts/        # Data Seeding & Utility Scripts
-├── frontend/           # Next.js Web Application
-│   ├── app/            # Page Routing & Layouts
-│   ├── components/     # Reusable UI Components (Radix UI)
-│   ├── context/        # Auth & App State
+├── backend/            # FastAPI Service
+│   ├── api/            # Route Handlers (quests, users, auth, team)
+│   ├── services/       # Core Logic (AI Service, Kemii Golden Formula)
+│   ├── schemas/        # Pydantic Data Models
+│   ├── models/         # SQLModel Database Tables
+│   ├── tests/          # Pytest Suite
+│   └── main.py         # Entry Point
+├── frontend/           # Next.js Application
+│   ├── app/            # Pages and Routing
+│   ├── components/     # UI Library
+│   ├── context/        # Global State Management
 │   └── lib/            # Utilities
-├── docker-compose.yml  # Container Orchestration Configuration
-└── README.md           # Documentation
+└── docker-compose.yml  # Containerization Config
 ```
 
 ---

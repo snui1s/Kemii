@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from core.database import get_session
 from models import User
-from schemas import OceanSubmission, UserProfile, UpdateSkillsRequest
+from schemas import OceanSubmission, UserProfile, UpdateSkillsRequest, UserPublic
 from core.auth import create_access_token, verify_token
 from services.ai import analyze_user_profile
 from datetime import datetime
@@ -28,9 +28,14 @@ def check_and_release_users(session: Session):
         print(f"Auto-released {released_count} heroes from duty.")
 
 @router.get("/users")
-def get_users(session: Session = Depends(get_session)):
-    # ดึงข้อมูลทั้งหมด เรียงตาม ID ล่าสุด
-    users = session.exec(select(User).order_by(User.id.desc())).all()
+def get_users(offset: int = 0, limit: int = 12, session: Session = Depends(get_session)):
+    # Get total count
+    total = session.exec(select(func.count(User.id))).one()
+    
+    # ดึงข้อมูลแบบ Pagination เรียงตาม ID ล่าสุด
+    users = session.exec(
+        select(User).order_by(User.id.desc()).offset(offset).limit(limit)
+    ).all()
 
     results = []
     for u in users:
@@ -49,7 +54,7 @@ def get_users(session: Session = Depends(get_session)):
             "is_available": u.is_available,
             "role": u.role
         })
-    return results
+    return {"users": results, "total": total}
 
 @router.get("/users/roster")
 def get_user_roster(session: Session = Depends(get_session)):
@@ -75,7 +80,7 @@ def get_user_roster(session: Session = Depends(get_session)):
         })
     return results
 
-@router.get("/users/{user_id}")
+@router.get("/users/{user_id}", response_model=UserPublic)
 def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
     """Get user by ID"""
     user = session.get(User, user_id)
@@ -94,8 +99,11 @@ def get_user_skills(user_id: int, session: Session = Depends(get_session)):
     return {"user_id": user_id, "skills": skills}
 
 @router.put("/users/{user_id}/skills")
-def update_user_skills(user_id: int, req: UpdateSkillsRequest, session: Session = Depends(get_session)):
-    """Update user's skills"""
+def update_user_skills(user_id: int, req: UpdateSkillsRequest, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+    """Update user's skills (Self only)"""
+    if user_id != user_id_from_token:
+        raise HTTPException(status_code=403, detail="คุณไม่มีสิทธิ์แก้ไขข้อมูลผู้อื่น")
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

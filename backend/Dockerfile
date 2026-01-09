@@ -1,22 +1,28 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# Use a Python image with uv pre-installed or install it
+FROM python:3.12-slim
+
+# Copy uv from the official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies (needed for some python packages)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
 
-# Copy the requirements file into the container at /app
-COPY requirements.txt .
+# Copy the lock file and pyproject.toml
+COPY pyproject.toml uv.lock ./
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies using uv
+# --frozen ensures we use the exact versions in uv.lock
+# --no-install-project installs only dependencies, not the project itself
+RUN uv sync --frozen --no-install-project --no-cache
 
 # Copy the current directory contents into the container at /app
 COPY . .
+
+# Place the virtual environment in the PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Expose port 8000
 EXPOSE 8000

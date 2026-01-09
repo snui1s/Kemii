@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
+import api from "../../lib/api";
 import {
   Building2,
   CheckCircle,
@@ -15,8 +15,6 @@ import {
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 import { DEPARTMENTS } from "@/data/departments";
 
@@ -49,7 +47,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/register`, {
+      const res = await api.post("/register", {
         ...formData,
         departments: selectedDepts,
       });

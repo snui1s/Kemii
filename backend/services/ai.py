@@ -132,50 +132,7 @@ async def analyze_match_synergy(u1, u2, s1, s2, final_score):
             "pro_tip": "ลองให้ทั้งคู่ลงดันเจี้ยนง่ายๆ ร่วมกันดูก่อน",
         }
 
-async def generate_team_name(leader, member_names, final_score, team_rating, strategy):
-    prompt = ChatPromptTemplate.from_template("""
-    Role: You are the "Grand Guild Master" naming a newly formed party.
-
-    **Party Leader:** {leader_name} (Class: {leader_class})
-    **Members:** {member_names}
-    **Team Score:** {score}% ({rating})
-    **Strategy:** {strategy}
-
-    **TASK:** Create an epic Thai team name and explain why this team works well together.
-
-    **OUTPUT RULES:**
-    - team_name: Creative Thai name (e.g. "ภาคีพิทักษ์เดดไลน์", "กองหน้าล่าโปรเจกต์")
-    - reason: 2-3 sentences in Thai explaining the team synergy. NO MARKDOWN.
-
-    **JSON OUTPUT:**
-    {{
-      "team_name": "...",
-      "reason": "..."
-    }}
-    """)
-
-    chain = prompt | llm | StrOutputParser()
-
-    try:
-        raw = await chain.ainvoke({
-            "leader_name": leader.name,
-            "leader_class": leader.character_class,
-            "member_names": member_names,
-            "score": final_score,
-            "rating": team_rating,
-            "strategy": strategy
-        })
-
-        res_json = json.loads(raw.replace("```json", "").replace("```", "").strip())
-        team_name = res_json.get('team_name', f"ทีมของ {leader.name}")
-        reason = res_json.get('reason', f"ทีมนี้มีคะแนนความเข้ากัน {final_score}% ({team_rating})")
-        return team_name, reason
-
-    except Exception as e:
-        print(f"AI Naming Error: {e}")
-        team_name = f"ทีมของ {leader.name}"
-        reason = f"ทีมนี้ถูกคัดเลือกด้วย Headhunter Algorithm คะแนนความเข้ากัน {final_score}% ({team_rating})"
-        return team_name, reason
+# generate_team_name removed (Unused)
 
 # =========================
 # Quest Generation Logic (Moved from quest_ai.py)
@@ -237,60 +194,7 @@ QUEST_GENERATION_PROMPT = """
 ตอบเป็น JSON เท่านั้น ไม่ต้องมีคำอธิบายเพิ่มเติม
 """
 
-def generate_quest(prompt: str, deadline_days: int = 7) -> dict:
-    """Generate quest details from natural language prompt using Gemini"""
-    from data.skills import get_all_skills # Lazy import to avoid circular dependency
-    ALL_SKILLS = get_all_skills()
-    
-    # Format available skills as string
-    skills_str = ", ".join(ALL_SKILLS[:50])  # Limit to avoid token overflow
-    
-    # Create the full prompt
-    full_prompt = QUEST_GENERATION_PROMPT.format(
-        prompt=prompt,
-        deadline_days=deadline_days,
-        available_skills=skills_str
-    )
-    
-    try:
-        response = llm.invoke(full_prompt)
-        content = response.content
-        
-        # Extract JSON from response
-        if "```json" in content:
-            json_str = content.split("```json")[1].split("```")[0].strip()
-        elif "```" in content:
-            json_str = content.split("```")[1].split("```")[0].strip()
-        else:
-            json_str = content.strip()
-        
-        quest_data = json.loads(json_str)
-        
-        # Validate and set defaults
-        quest_data.setdefault("title", "New Quest")
-        quest_data.setdefault("description", prompt)
-        quest_data.setdefault("rank", "C")
-        quest_data.setdefault("team_size", 3)  # AI recommends this
-        quest_data.setdefault("required_skills", [])
-        quest_data.setdefault("ocean_preference", {})
-        
-        # Validate rank
-        if quest_data["rank"] not in ["D", "C", "B", "A", "S"]:
-            quest_data["rank"] = "C"
-        
-        return quest_data
-        
-    except Exception as e:
-        print(f"Quest generation error: {e}")
-        # Return fallback quest
-        return {
-            "title": "Custom Quest",
-            "description": prompt,
-            "rank": "C",
-            "required_skills": [],
-            "ocean_preference": {},
-            "deadline_days": 7
-        }
+# generate_quest removed (Unused)
 
 async def generate_team_overview(team_stats: dict) -> str:
     prompt = ChatPromptTemplate.from_template("""
@@ -314,7 +218,7 @@ async def generate_team_overview(team_stats: dict) -> str:
     - สามารถกล่าวถึง Extraversion หรือ Openness ได้หากช่วยเสริมภาพรวม
     - ห้ามกล่าวถึงสูตรคำนวณ คำว่า variance, cost function, normalize หรือ threshold
     - ใช้ภาษาทางการ กระชับ อ่านเข้าใจง่าย
-    - ความยาว 2–4 ประโยค
+    - ความยาว 2-4 ประโยค
 
     เป้าหมายคือทำให้ผู้อ่านเข้าใจว่าทีมนี้มีคุณภาพอย่างไร และเหมาะสมต่อการทำงานร่วมกันหรือไม่
     """)

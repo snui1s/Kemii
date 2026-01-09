@@ -4,11 +4,10 @@ from core.database import get_session
 from models import User, Quest
 from schemas import PreviewSmartTeamRequest, ConfirmSmartTeamRequest, AnalyzeTeamRequest, MatchRequest
 from data.skills import DEPARTMENTS
-from services.matching import calculate_team_cost, cost_to_score, get_stats, calculate_academic_cost, get_team_rating, LAMBDA, TAU, THEORETICAL_MAX_COST, SCALING_MAX_COST
+from services.matching import calculate_team_cost, cost_to_score, get_stats, calculate_academic_cost, get_team_rating, LAMBDA, TAU, SCALING_MAX_COST
 from services.ai import generate_team_overview, analyze_match_synergy
 import json
 import random
-# from datetime import datetime (Unused)
 
 router = APIRouter()
 

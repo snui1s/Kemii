@@ -30,8 +30,32 @@ class UserProfile(BaseModel):
     
     access_token: Optional[str] = None
 
+class UserPublic(BaseModel):
+    id: int
+    name: str
+    email: Optional[str] = None
+    role: str
+    character_class: str
+    level: int
+    ocean_openness: int
+    ocean_conscientiousness: int
+    ocean_extraversion: int
+    ocean_agreeableness: int
+    ocean_neuroticism: int
+    is_available: bool
+    skills: Optional[str] = None
+    active_project_end_date: Optional[datetime] = None
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserPublic
+
 class UserNameUpdate(BaseModel):
     name: str
+
+class RoleUpdate(BaseModel):
+    role: str # "user" or "admin"
 
 class MatchRequest(BaseModel):
     user1_id: int

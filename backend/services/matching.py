@@ -162,12 +162,7 @@ def calculate_academic_cost(team_stats_list):
     users = [MockUser(s) for s in team_stats_list]
     return calculate_team_cost(users)
 
-def calculate_team_score_from_cost(cost):
-    return cost_to_score(cost)
-
-# Alias for backward compatibility
-def calculate_team_score(cost):
-    return cost_to_score(cost)
+# Removed unused aliases, using cost_to_score directly.
 
 
 import json

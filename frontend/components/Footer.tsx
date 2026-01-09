@@ -1,8 +1,37 @@
+"use client";
+
+import React, { useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Code } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function Footer() {
   const APP_VERSION = "v3.4";
+  const { user, logout } = useAuth();
+
+  const toastCooldown = useRef(false);
+  const handleProtectedLink = (e: React.MouseEvent, href: string) => {
+    if (!user) {
+      e.preventDefault();
+
+      if (toastCooldown.current) return;
+
+      toastCooldown.current = true;
+      setTimeout(() => {
+        toastCooldown.current = false;
+      }, 3000);
+
+      toast.error("🔒 กรุณาทำพิธีปลุกพลังก่อนใช้งานครับ", {
+        style: {
+          background: "#334155",
+          color: "#fff",
+        },
+        id: "assessment-error",
+        duration: 3000,
+      });
+    }
+  };
 
   return (
     <footer
@@ -43,18 +72,28 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/assessment"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  href="/quests"
+                  onClick={(e) => handleProtectedLink(e, "/quests")}
+                  className={`hover:text-indigo-600 dark:hover:text-indigo-400 transition ${
+                    user
+                      ? "hover:text-indigo-600 dark:hover:text-indigo-400"
+                      : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                  }`}
                 >
-                  ทำแบบประเมิน
+                  <span>เควส</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/team-history"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  href="/users"
+                  onClick={(e) => handleProtectedLink(e, "/users")}
+                  className={`hover:text-indigo-600 dark:hover:text-indigo-400 transition ${
+                    user
+                      ? "hover:text-indigo-600 dark:hover:text-indigo-400"
+                      : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                  }`}
                 >
-                  ประวัติทีม
+                  <span>สมาชิกกิลด์</span>
                 </Link>
               </li>
             </ul>
@@ -114,7 +153,13 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition group"
                 >
-                  <Code size={16} />
+                  <Image
+                    src="/Octicons-mark-github.svg"
+                    alt="GitHub"
+                    width={24}
+                    height={24}
+                    className="dark:invert"
+                  />
                   <span>GitHub Repository</span>
                 </a>
               </li>

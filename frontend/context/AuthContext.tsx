@@ -8,11 +8,9 @@ import {
   ReactNode,
   useCallback,
 } from "react";
-import axios from "axios";
+import api from "../lib/api";
 import { User } from "../types";
 import { useRouter } from "next/navigation";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface AuthContextType {
   user: User | null;
@@ -39,20 +37,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   }, [router]);
 
-  const fetchUser = useCallback(async (accessToken: string) => {
-    try {
-      const res = await axios.get(`${API_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      setUser(res.data);
-    } catch (err) {
-      console.error("Failed to fetch user:", err);
-      // If valid token but user fetch fails (e.g. 401), logout
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  }, [logout]);
+  const fetchUser = useCallback(
+    async (accessToken: string) => {
+      try {
+        const res = await api.get("/users/me");
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+        // If valid token but user fetch fails (e.g. 401), logout
+        logout();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [logout]
+  );
 
   useEffect(() => {
     // Check localStorage first, then sessionStorage
