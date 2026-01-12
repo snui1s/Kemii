@@ -21,7 +21,7 @@ class OceanSubmission(BaseModel):
     neuroticism: int
 
 class UserProfile(BaseModel):
-    id: int
+    id: str
     name: str
     character_class: str  
     level: int
@@ -31,7 +31,7 @@ class UserProfile(BaseModel):
     access_token: Optional[str] = None
 
 class UserPublic(BaseModel):
-    id: int
+    id: str
     name: str
     email: Optional[str] = None
     role: str
@@ -46,6 +46,15 @@ class UserPublic(BaseModel):
     skills: Optional[str] = None
     active_project_end_date: Optional[datetime] = None
 
+class UserCandidate(BaseModel):
+    id: str
+    name: str
+    character_class: str
+    level: int
+    is_available: bool
+    skills: Optional[str] = None
+    # No sensitive OCEAN scores or email
+
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -58,19 +67,20 @@ class RoleUpdate(BaseModel):
     role: str # "user" or "admin"
 
 class MatchRequest(BaseModel):
-    user1_id: int
-    user2_id: int
+    user1_id: str
+    user2_id: str
 
 class TeamBuilderRequest(BaseModel):
-    leader_id: int
+    leader_id: str
     member_count: int
     strategy: str 
 
 class ConfirmTeamRequest(BaseModel): 
     team_name: Optional[str] = None 
-    member_ids: Optional[List[int]] = None 
+    member_ids: Optional[List[str]] = None 
     start_date: datetime 
     end_date: datetime
+    # leader_id will be derived from token or verified
 
 class TeamRecommendation(BaseModel):
     strategy: str
@@ -96,7 +106,7 @@ class UpdateSkillsRequest(BaseModel):
 class CreateQuestRequest(BaseModel):
     prompt: str  # Natural language description
     deadline_days: int = 7  # Number of days for the quest
-    leader_id: int
+    leader_id: str
     start_date: datetime
     deadline: datetime
 
@@ -105,14 +115,14 @@ class QuestSkill(BaseModel):
     level: int
 
 class QuestResponse(BaseModel):
-    id: int
+    id: str
     title: str
     description: str
     rank: str
     required_skills: List[QuestSkill]
     ocean_preference: Dict[str, Any]
     team_size: int
-    leader_id: int
+    leader_id: str
     leader_name: Optional[str] = None
     leader_class: Optional[str] = None
     status: str
@@ -133,7 +143,7 @@ class MatchScoreResponse(BaseModel):
 
 class UpdateStatusRequest(BaseModel):
     status: str
-    user_id: int
+    user_id: str
 
 # Smart Quest (Quest 2) Schemas
 class SmartQuestRequirement(BaseModel):
@@ -142,16 +152,16 @@ class SmartQuestRequirement(BaseModel):
 
 class PreviewSmartTeamRequest(BaseModel):
     requirements: List[SmartQuestRequirement]
-    candidate_ids: List[int]
+    candidate_ids: List[str]
 
 class ConfirmSmartTeamRequest(BaseModel):
     title: str
     description: Optional[str] = ""
     deadline: datetime
     start_date: datetime
-    leader_id: int
+    leader_id: str
     requirements: List[SmartQuestRequirement]
-    member_ids: List[int]
+    member_ids: List[str]
     status: str
 
 class AnalyzeTeamRequest(BaseModel):

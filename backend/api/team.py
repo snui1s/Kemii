@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from core.database import get_session
 from models import User, Quest
-from schemas import PreviewSmartTeamRequest, ConfirmSmartTeamRequest, AnalyzeTeamRequest, MatchRequest
+from schemas import PreviewSmartTeamRequest, ConfirmSmartTeamRequest, AnalyzeTeamRequest, MatchRequest, UserPublic
+from core.auth import verify_token, get_current_user
 from data.skills import DEPARTMENTS
 from services.matching import calculate_team_cost, cost_to_score, get_stats, calculate_academic_cost, get_team_rating, LAMBDA, TAU, SCALING_MAX_COST
 from services.ai import generate_team_overview, analyze_match_synergy
@@ -41,9 +42,10 @@ async def match_users_ai(req: MatchRequest, session: Session = Depends(get_sessi
     # --- AI Analysis ---
     analysis_json = await analyze_match_synergy(u1, u2, s1, s2, final_score)
 
+    # Return safe UserPublic models
     return {
-        "user1": u1,
-        "user2": u2,
+        "user1": UserPublic(**u1.dict()),
+        "user2": UserPublic(**u2.dict()),
         "ai_analysis": analysis_json,
         "team_rating": team_rating,
         "score": final_score
@@ -226,7 +228,17 @@ def preview_smart_team(req: PreviewSmartTeamRequest, session: Session = Depends(
     }
  
 @router.post("/teams/confirm")
-def confirm_smart_team(req: ConfirmSmartTeamRequest, session: Session = Depends(get_session)):
+def confirm_smart_team(
+    req: ConfirmSmartTeamRequest, 
+    user_id_from_token: str = Depends(verify_token), 
+    session: Session = Depends(get_session)
+):
+    # Security Check: Ensure the user creating the team is the one claiming to be leader
+    # (Or just override req.leader_id with token user)
+    if req.leader_id != user_id_from_token:
+        # Strict mode: Error out
+        raise HTTPException(status_code=403, detail="You can only create a team for yourself as leader") 
+
     # 1. Create Quest
     
     # Generate department requirements string for storage

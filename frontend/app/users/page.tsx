@@ -28,7 +28,7 @@ interface Skill {
 }
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   character_class: string;
   level: number;
@@ -47,7 +47,7 @@ function UsersListContent() {
   /* Removed duplicate state: users, loading */
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
-  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -89,7 +89,7 @@ function UsersListContent() {
   const users = data?.pages.flatMap((page) => page.users) || [];
   const totalInDb = data?.pages[0]?.total || 0;
 
-  const handlePromote = async (targetId: number, currentRole: string) => {
+  const handlePromote = async (targetId: string, currentRole: string) => {
     if (!token) return;
     const newRole = currentRole === "admin" ? "user" : "admin";
     const action = newRole === "admin" ? "Promote" : "Demote";
@@ -152,7 +152,7 @@ function UsersListContent() {
     );
   };
 
-  const handleDelete = async (targetId: number) => {
+  const handleDelete = async (targetId: string) => {
     if (!token) return;
 
     toast(

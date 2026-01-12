@@ -2,10 +2,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select, func
 from core.database import get_session
 from models import User
-from schemas import OceanSubmission, UserProfile, UpdateSkillsRequest, UserPublic
-from core.auth import create_access_token, verify_token
+from schemas import OceanSubmission, UserProfile, UpdateSkillsRequest, UserPublic, UserCandidate
+from core.auth import create_access_token, verify_token, get_current_user, get_optional_user
 from services.ai import analyze_user_profile
 from datetime import datetime
+from typing import List, Union, Optional
 import json
 
 router = APIRouter()
@@ -27,70 +28,130 @@ def check_and_release_users(session: Session):
         session.commit()
         print(f"Auto-released {released_count} heroes from duty.")
 
+def _format_user_safe(u: User, requester_role: str, requester_id: str):
+    """
+    Internal helper to sanitize user data based on requester's role.
+    - Admin: Sees EVERYTHING.
+    - Owner: Sees EVERYTHING (their own profile).
+    - Guest/Other: See only PUBLIC info (No email, No OCEAN scores if guest, etc).
+    """
+    is_admin = requester_role == "admin"
+    is_owner = u.id == requester_id
+    
+    # Base public data
+    skills = json.loads(u.skills) if u.skills and isinstance(u.skills, str) else (u.skills if u.skills else [])
+    
+    data = {
+        "id": u.id,
+        "name": u.name,
+        "character_class": u.character_class,
+        "level": u.level,
+        "skills": skills,
+        "is_available": u.is_available,
+        "role": u.role
+    }
+
+    # Add sensitive data ONLY for Admin or Owner
+    if is_admin or is_owner:
+        data["email"] = u.email
+        data["active_project_end_date"] = u.active_project_end_date
+    else:
+        # Keep sensitive personal info hidden
+        data["email"] = "HIDDEN"
+        data["active_project_end_date"] = None
+    
+    # Expose OCEAN scores for everyone so 'High [Stat]' tags show up in Directory
+    # Even guests can see these now to make the landing page look good.
+    data["ocean_openness"] = u.ocean_openness or 0
+    data["ocean_conscientiousness"] = u.ocean_conscientiousness or 0
+    data["ocean_extraversion"] = u.ocean_extraversion or 0
+    data["ocean_agreeableness"] = u.ocean_agreeableness or 0
+    data["ocean_neuroticism"] = u.ocean_neuroticism or 0
+
+    return data
+
 @router.get("/users")
-def get_users(offset: int = 0, limit: int = 12, session: Session = Depends(get_session)):
-    # Get total count
+def get_users(
+    offset: int = 0, 
+    limit: int = 12, 
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Get all users (Paginated).
+    - Everyone (even Guests) can see everyone now.
+    - Internal logic handles data masking for privacy.
+    """
+    # 1. Fetch total count
     total = session.exec(select(func.count(User.id))).one()
     
-    # ดึงข้อมูลแบบ Pagination เรียงตาม ID ล่าสุด
+    # 2. Fetch users in page
     users = session.exec(
         select(User).order_by(User.id.desc()).offset(offset).limit(limit)
     ).all()
 
+    # 3. Format with security rules
+    requester_role = current_user.role if current_user else "guest"
+    requester_id = current_user.id if current_user else ""
+
+    results = [
+        _format_user_safe(u, requester_role, requester_id) 
+        for u in users
+    ]
+    
+    return {"users": results, "total": total}
+
+@router.get("/users/roster", response_model=List[UserCandidate])
+def get_user_roster(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    """
+    Get user roster for team building (Public Safe Data).
+    - Returns minimal data (UserCandidate).
+    - Hides sensitive OCEAN scores and email.
+    """
+    check_and_release_users(session)
+    # Roster is needed for Team Builder, so it must return all available users
+    # But we strip sensitive data using UserCandidate schema
+    users = session.exec(select(User).where(User.is_available == True).order_by(User.id)).all()
+    
     results = []
     for u in users:
-        skills = json.loads(u.skills) if u.skills else []
         results.append({
             "id": u.id,
             "name": u.name,
             "character_class": u.character_class,
             "level": u.level,
-            "ocean_openness": u.ocean_openness or 0,
-            "ocean_conscientiousness": u.ocean_conscientiousness or 0,
-            "ocean_extraversion": u.ocean_extraversion or 0,
-            "ocean_agreeableness": u.ocean_agreeableness or 0,
-            "ocean_neuroticism": u.ocean_neuroticism or 0,
-            "skills": skills,
             "is_available": u.is_available,
-            "role": u.role
-        })
-    return {"users": results, "total": total}
-
-@router.get("/users/roster")
-def get_user_roster(session: Session = Depends(get_session)):
-    """Get user roster for team building"""
-    check_and_release_users(session)
-    users = session.exec(select(User).order_by(User.is_available.desc(), User.id)).all()
-    results = []
-    for u in users:
-        results.append({
-            "id": u.id,
-            "name": u.name,
-            "character_class": u.character_class,
-            "dominant_type": f"Lv.{u.level}",
-            "scores": {
-                "Openness": u.ocean_openness or 0,
-                "Conscientiousness": u.ocean_conscientiousness or 0,
-                "Extraversion": u.ocean_extraversion or 0,
-                "Agreeableness": u.ocean_agreeableness or 0,
-                "Neuroticism": u.ocean_neuroticism or 0
-            },
-            "is_available": u.is_available,
-            "active_project_end_date": u.active_project_end_date
+            "skills": u.skills # Skills are generally public/needed for filtering, but scores are hidden
         })
     return results
 
-@router.get("/users/{user_id}", response_model=UserPublic)
-def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
-    """Get user by ID"""
+@router.get("/users/{user_id}")
+def get_user_by_id(
+    user_id: str, 
+    session: Session = Depends(get_session), 
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get user by ID.
+    - Restricted to Self or Admin only (Least Privilege).
+    - If you want to see others, you must use the public /users list.
+    """
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied")
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    
+    # Still use the safe formatter just in case (e.g. for owner view vs admin view)
+    return _format_user_safe(user, current_user.role, current_user.id)
 
 @router.get("/users/{user_id}/skills")
-def get_user_skills(user_id: int, session: Session = Depends(get_session)):
-    """Get user's skills"""
+def get_user_skills(user_id: str, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    """Get user's skills (Self or Admin only)"""
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied")
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -99,9 +160,9 @@ def get_user_skills(user_id: int, session: Session = Depends(get_session)):
     return {"user_id": user_id, "skills": skills}
 
 @router.put("/users/{user_id}/skills")
-def update_user_skills(user_id: int, req: UpdateSkillsRequest, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def update_user_skills(user_id: str, req: UpdateSkillsRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     """Update user's skills (Self only)"""
-    if user_id != user_id_from_token:
+    if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="คุณไม่มีสิทธิ์แก้ไขข้อมูลผู้อื่น")
 
     user = session.get(User, user_id)
@@ -119,6 +180,7 @@ def update_user_skills(user_id: int, req: UpdateSkillsRequest, user_id_from_toke
 
 @router.post("/submit-assessment", response_model=UserProfile)
 def submit_assessment(data: OceanSubmission, session: Session = Depends(get_session)):
+    # This is for GUEST registration, so no auth required
     scores = {
         "Mage": data.openness,
         "Paladin": data.conscientiousness,
@@ -161,9 +223,12 @@ def submit_assessment(data: OceanSubmission, session: Session = Depends(get_sess
     }
 
 @router.get("/users/{user_id}/analysis")
-async def get_user_analysis(user_id: int, session: Session = Depends(get_session)):
+async def get_user_analysis(user_id: str, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    """Get AI Analysis (Self or Admin only)"""
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied")
+
     user = session.get(User, user_id)
-    print(f"DEBUG: Analyzing user {user_id}. Found? {user is not None}")
     if not user:
         raise HTTPException(status_code=404, detail="Hero not found")
 
@@ -186,8 +251,6 @@ async def get_user_analysis(user_id: int, session: Session = Depends(get_session
     if user.analysis_result:
         try:
             ai_data = json.loads(user.analysis_result)
-            print(f"✨ Load AI Analysis for {user.name} from DB")
-            print(f"   📦 character_class = {user.character_class}")
             return {
                 "user": user_data,
                 "analysis": ai_data
@@ -204,14 +267,13 @@ async def get_user_analysis(user_id: int, session: Session = Depends(get_session
     session.add(user)
     session.commit()
 
-    # ... existing code ...
     return {
         "user": user_data,
         "analysis": ai_data
     }
 
 @router.post("/users/me/assessment", response_model=UserProfile)
-def submit_my_assessment(data: OceanSubmission, user_id: int = Depends(verify_token), session: Session = Depends(get_session)):
+def submit_my_assessment(data: OceanSubmission, current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     scores = {
         "Mage": data.openness,
         "Paladin": data.conscientiousness,
@@ -221,34 +283,30 @@ def submit_my_assessment(data: OceanSubmission, user_id: int = Depends(verify_to
     }
     best_class = max(scores, key=scores.get)
     
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
     # Update Stats
-    user.ocean_openness = data.openness
-    user.ocean_conscientiousness = data.conscientiousness
-    user.ocean_extraversion = data.extraversion
-    user.ocean_agreeableness = data.agreeableness
-    user.ocean_neuroticism = data.neuroticism
-    user.character_class = best_class
-    user.analysis_result = None # Clear old analysis
+    current_user.ocean_openness = data.openness
+    current_user.ocean_conscientiousness = data.conscientiousness
+    current_user.ocean_extraversion = data.extraversion
+    current_user.ocean_agreeableness = data.agreeableness
+    current_user.ocean_neuroticism = data.neuroticism
+    current_user.character_class = best_class
+    current_user.analysis_result = None # Clear old analysis
     
-    session.add(user)
+    session.add(current_user)
     session.commit()
-    session.refresh(user)
+    session.refresh(current_user)
     
     return {
-        "id": user.id,
-        "name": user.name,
-        "character_class": user.character_class,
-        "level": user.level,
+        "id": current_user.id,
+        "name": current_user.name,
+        "character_class": current_user.character_class,
+        "level": current_user.level,
         "ocean_scores": {
-            "Openness": user.ocean_openness,
-            "Conscientiousness": user.ocean_conscientiousness,
-            "Extraversion": user.ocean_extraversion,
-            "Agreeableness": user.ocean_agreeableness,
-            "Neuroticism": user.ocean_neuroticism
+            "Openness": current_user.ocean_openness,
+            "Conscientiousness": current_user.ocean_conscientiousness,
+            "Extraversion": current_user.ocean_extraversion,
+            "Agreeableness": current_user.ocean_agreeableness,
+            "Neuroticism": current_user.ocean_neuroticism
         },
-        "access_token": "" # No new token needed, consumer ignores or optional
+        "access_token": "" # No new token needed
     }

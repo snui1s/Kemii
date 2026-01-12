@@ -65,7 +65,7 @@ def get_quests(status: str = None, session: Session = Depends(get_session)):
 
 
 @router.get("/quests/{quest_id}")
-def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
+def get_quest_detail(quest_id: str, session: Session = Depends(get_session)):
     """Get quest details including applicants"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -143,7 +143,7 @@ def get_quest_detail(quest_id: int, session: Session = Depends(get_session)):
 
 
 @router.patch("/quests/{quest_id}/team-size")
-def update_quest_team_size(quest_id: int, team_size: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def update_quest_team_size(quest_id: str, team_size: int, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Update quest team size (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -183,7 +183,7 @@ def update_quest_team_size(quest_id: int, team_size: int, user_id_from_token: in
 
 
 @router.get("/quests/{quest_id}/team-analysis")
-def get_team_analysis(quest_id: int, session: Session = Depends(get_session)):
+def get_team_analysis(quest_id: str, session: Session = Depends(get_session)):
     """Analyze team compatibility and skill coverage"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -276,8 +276,17 @@ def get_team_analysis(quest_id: int, session: Session = Depends(get_session)):
     }
 
 @router.get("/quests/{quest_id}/match/{user_id}")
-def get_quest_match_score(quest_id: int, user_id: int, session: Session = Depends(get_session)):
-    """Calculate how well a user matches a quest"""
+def get_quest_match_score(
+    quest_id: str, 
+    user_id: str, 
+    session: Session = Depends(get_session),
+    user_id_token: str = Depends(verify_token)
+):
+    """Calculate how well a user matches a quest (Self only)"""
+    if user_id != user_id_token:
+        # Prevent checking other users' scores against quests to avoid creeping
+        raise HTTPException(status_code=403, detail="Permission denied")
+
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
@@ -311,7 +320,7 @@ def get_quest_match_score(quest_id: int, user_id: int, session: Session = Depend
 
 
 @router.post("/quests/{quest_id}/kick/{user_id}")
-def kick_member(quest_id: int, user_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def kick_member(quest_id: str, user_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Remove a member from the quest team (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -350,7 +359,7 @@ def kick_member(quest_id: int, user_id: int, user_id_from_token: int = Depends(v
 
 
 @router.post("/quests/{quest_id}/status")
-def update_quest_status(quest_id: int, req: UpdateStatusRequest, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def update_quest_status(quest_id: str, req: UpdateStatusRequest, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Update quest status (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -386,7 +395,7 @@ def update_quest_status(quest_id: int, req: UpdateStatusRequest, user_id_from_to
 
 
 @router.post("/quests/{quest_id}/accept/{user_id}")
-def accept_applicant(quest_id: int, user_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def accept_applicant(quest_id: str, user_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Leader accepts an applicant"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -420,7 +429,7 @@ def accept_applicant(quest_id: int, user_id: int, user_id_from_token: int = Depe
 
 
 @router.post("/quests/{quest_id}/complete")
-def complete_quest(quest_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def complete_quest(quest_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Mark quest as completed (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -453,7 +462,7 @@ def complete_quest(quest_id: int, user_id_from_token: int = Depends(verify_token
 
 
 @router.post("/quests/{quest_id}/cancel")
-def cancel_quest(quest_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def cancel_quest(quest_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Cancel a quest (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -486,7 +495,7 @@ def cancel_quest(quest_id: int, user_id_from_token: int = Depends(verify_token),
 
 
 @router.post("/quests/{quest_id}/start")
-def start_quest(quest_id: int, user_id_from_token: int = Depends(verify_token), session: Session = Depends(get_session)):
+def start_quest(quest_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
     """Start working on a quest (leader only)"""
     quest = session.get(Quest, quest_id)
     if not quest:

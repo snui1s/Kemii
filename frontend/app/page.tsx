@@ -20,7 +20,7 @@ import ElementalLoader from "@/components/ElementalLoader";
 
 // ✅ 1. อัปเดต Interface ให้ตรงกับ Database จริง (รับค่าแบบแยกฟิลด์)
 interface User {
-  id: number;
+  id: string;
   name: string;
   character_class: string;
   level: number;
@@ -67,7 +67,7 @@ function HomeContent() {
   const users = data?.pages.flatMap((page) => page.users) || [];
   const totalInDb = data?.pages[0]?.total || 0;
 
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(
     null
   );
   const [hasMissingDept, setHasMissingDept] = useState(false);
@@ -81,7 +81,7 @@ function HomeContent() {
     }
   }, [currentUser]);
 
-  const handleCardClick = (partnerId: number) => {
+  const handleCardClick = (partnerId: string) => {
     if (!currentUser) {
       toast.error("คุณต้องเข้าสู่ระบบก่อน ถึงจะส่องสเตตัสเพื่อนได้! 🔒", {
         id: "auth-error",

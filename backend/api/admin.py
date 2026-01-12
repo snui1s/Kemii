@@ -10,7 +10,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 # RoleUpdate moved to schemas
 
 @router.put("/users/{user_id}/role", response_model=UserPublic)
-def update_user_role(user_id: int, role_data: RoleUpdate, admin: User = Depends(get_current_admin)):
+def update_user_role(user_id: str, role_data: RoleUpdate, admin: User = Depends(get_current_admin)):
     with Session(engine) as session:
         user = session.get(User, user_id)
         if not user:
@@ -28,7 +28,7 @@ def update_user_role(user_id: int, role_data: RoleUpdate, admin: User = Depends(
         return user
 
 @router.delete("/users/{user_id}")
-def delete_user(user_id: int, admin: User = Depends(get_current_admin)):
+def delete_user(user_id: str, admin: User = Depends(get_current_admin)):
     with Session(engine) as session:
         user = session.get(User, user_id)
         if not user:
@@ -106,7 +106,7 @@ def seed_production_data(authorization: str = Header(None)):
                 if not user_id:
                      raise HTTPException(status_code=401, detail="Invalid token")
                 
-                admin_user = session.get(User, int(user_id))
+                admin_user = session.get(User, str(user_id))
                 if not admin_user or admin_user.role != "admin":
                     raise HTTPException(status_code=403, detail="Admin privileges required")
                     
@@ -161,10 +161,10 @@ def seed_production_data(authorization: str = Header(None)):
         # Let's add that back for Genesis Mode!
         if existing_count == 0:
              admin_user = User(
-                name="Super Admin",
+                name="King Arthur",
                 email="admin@kemii.com",
                 hashed_password=get_password_hash("admin1234"),
-                character_class="Mage",
+                character_class="Warrior",
                 role="admin",
                 level=99,
                 ocean_openness=50, ocean_conscientiousness=50, ocean_extraversion=50, ocean_agreeableness=50, ocean_neuroticism=50,

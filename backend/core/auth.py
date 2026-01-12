@@ -22,7 +22,7 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def create_access_token(user_id: int):
+def create_access_token(user_id: str):
     expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     payload = {
         "sub": str(user_id), # sub = subject (เจ้าของบัตร)
@@ -39,7 +39,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security))
         user_id = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return int(user_id) # คืนค่า ID ของคนถือบัตร
+        return str(user_id) # คืนค่า ID ของคนถือบัตร
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -47,7 +47,28 @@ from sqlmodel import Session, select
 from core.database import engine
 from models import User
 
-def get_current_user(user_id: int = Security(verify_token)) -> User:
+from typing import Optional
+
+security_optional = HTTPBearer(auto_error=False)
+
+def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] = Security(security_optional)) -> Optional[User]:
+    """Optional Guard: ดูบัตรเฉพาะถ้ามี ถ้าไม่มีก็ไม่ไล่กลับ"""
+    if not credentials:
+        return None
+    
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+        
+        with Session(engine) as session:
+            return session.get(User, str(user_id))
+    except (JWTError, ValueError):
+        return None
+
+def get_current_user(user_id: str = Security(verify_token)) -> User:
     with Session(engine) as session:
         user = session.get(User, user_id)
         if not user:

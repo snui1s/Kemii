@@ -18,7 +18,7 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Security(sec
         user_id = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Token ไม่ถูกต้อง")
-        return int(user_id)
+        return str(user_id)
     except JWTError:
         raise HTTPException(status_code=401, detail="Token ไม่ถูกต้องหรือหมดอายุ")
 
@@ -70,7 +70,7 @@ def login(req: LoginRequest, session: Session = Depends(get_session)):
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 @router.get("/users/me", response_model=UserPublic)
-def read_users_me(user_id: int = Depends(get_current_user_id), session: Session = Depends(get_session)):
+def read_users_me(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="ไม่พบผู้ใช้งาน")

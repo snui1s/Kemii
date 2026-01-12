@@ -2,10 +2,11 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import JSON, Column, Text
+from ulid import ULID
 
 class User(SQLModel, table=True):
     __table_args__ = {"extend_existing": True}
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(default_factory=lambda: str(ULID()), primary_key=True)
     name: str
     email: Optional[str] = Field(default=None, sa_column_kwargs={"unique": True})
     hashed_password: Optional[str] = Field(default=None)
@@ -29,14 +30,14 @@ class User(SQLModel, table=True):
 
 class Quest(SQLModel, table=True):
     __table_args__ = {"extend_existing": True}
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(default_factory=lambda: str(ULID()), primary_key=True)
     title: str
     description: str = Field(sa_column=Column(Text))
     rank: str = Field(default="C")  # D, C, B, A, S
     required_skills: str = Field(default="[]")  # JSON: [{"name": "Python", "level": 3}]
     ocean_preference: str = Field(default="{}")  # JSON: {"C": "high", "N": "low"}
     team_size: int = Field(default=1)
-    leader_id: int = Field(foreign_key="user.id")
+    leader_id: str = Field(foreign_key="user.id")
     status: str = Field(default="open")  # open, in_progress, completed, cancelled
     accepted_members: str = Field(default="[]")  # JSON: [user_ids]
     start_date: Optional[datetime] = Field(default=None)

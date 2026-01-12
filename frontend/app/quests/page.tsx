@@ -254,7 +254,7 @@ function QuestBoardContent() {
                   className={`px-4 h-full rounded-lg text-sm font-bold flex items-center gap-2 transition ${
                     viewMode === "history"
                       ? "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
-                      : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                      : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                   }`}
                 >
                   <History size={16} /> History
@@ -262,15 +262,14 @@ function QuestBoardContent() {
               </div>
 
               {/* Filters & Sort */}
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/20 px-2 rounded-xl shadow-sm h-11 overflow-x-auto w-full sm:w-auto">
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-2 rounded-xl shadow-sm h-11 overflow-x-auto w-full sm:w-auto">
                 <Filter size={16} className="text-slate-400 shrink-0" />
-                {/* Filter Dropdown */}
                 {/* Filter Dropdown */}
                 <Select
                   value={filterStatus}
                   onValueChange={(val) => setFilterStatus(val)}
                 >
-                  <SelectTrigger className="h-full border-none bg-transparent shadow-none focus:ring-0 text-slate-600 dark:text-slate-300 font-bold min-w-[100px] p-0 gap-1">
+                  <SelectTrigger className="h-full border-none bg-white dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-700/50 shadow-none focus:ring-0 text-slate-600 dark:text-slate-300 font-bold min-w-[100px] p-0 gap-1">
                     <SelectValue placeholder="สถานะ" />
                   </SelectTrigger>
                   <SelectContent>
@@ -289,9 +288,7 @@ function QuestBoardContent() {
                   </SelectContent>
                 </Select>
 
-                <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-
-                {/* Sort Dropdown */}
+                <div className="w-px h-6 bg-white dark:bg-slate-800/20 mx-1"></div>
                 {/* Sort Dropdown */}
                 <Select
                   value={sortOrder}
@@ -299,7 +296,7 @@ function QuestBoardContent() {
                     setSortOrder(val as "newest" | "oldest")
                   }
                 >
-                  <SelectTrigger className="h-full border-none bg-transparent shadow-none focus:ring-0 text-slate-600 dark:text-slate-300 font-bold p-0 gap-1">
+                  <SelectTrigger className="h-full border-none bg-white dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-700/50 bg-transparent shadow-none focus:ring-0 text-slate-600 dark:text-slate-300 font-bold p-0 gap-1">
                     <SelectValue placeholder="เรียงลำดับ" />
                   </SelectTrigger>
                   <SelectContent>

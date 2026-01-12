@@ -18,13 +18,13 @@ import {
 import toast from "react-hot-toast";
 
 interface SynergyModalProps {
-  myId: number;
-  partnerId: number;
+  myId: string;
+  partnerId: string;
   onClose: () => void;
 }
 
 interface UserBase {
-  id: number;
+  id: string;
   name: string;
   character_class: string;
   level: number;

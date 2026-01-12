@@ -39,7 +39,7 @@ import {
 } from "recharts";
 
 interface UserData {
-  id: number;
+  id: string;
   name: string;
   character_class: string;
   level: number;
@@ -172,7 +172,7 @@ function ProfileContent() {
     if (!user) return null;
     const queryId = searchParams.get("id");
     if (user.role === "admin" && queryId) {
-      return parseInt(queryId);
+      return queryId;
     }
     return user.id;
   }, [user, searchParams]);
@@ -738,9 +738,7 @@ function ProfileContent() {
 
                   {/* User ID */}
                   <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between text-[10px] md:text-xs text-slate-400 dark:text-slate-500">
-                    <span>
-                      ID: #{profileUser.id.toString().padStart(4, "0")}
-                    </span>
+                    <span>ID: #{profileUser.id}</span>
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                       Online

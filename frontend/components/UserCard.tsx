@@ -35,7 +35,7 @@ interface UserCardProps {
   name?: string;
   characterClass?: string;
   type?: string;
-  id?: number;
+  id?: string;
   scores?: { [key: string]: number };
   onInspect?: () => void;
   allowFlip?: boolean;
@@ -631,7 +631,12 @@ export default function UserCard({
                     ))
                   ) : (
                     <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-dashed border-slate-200 w-full justify-center">
-                      <Sparkles size={12} /> <span>Awaiting Awakening...</span>
+                      <Sparkles size={12} />{" "}
+                      <span>
+                        {classKey === "Novice"
+                          ? "Awaiting Awakening..."
+                          : "Power Awakened"}
+                      </span>
                     </div>
                   )}
                 </div>

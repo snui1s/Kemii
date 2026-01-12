@@ -64,7 +64,7 @@ const CLASS_COLORS: Record<string, string> = {
 };
 
 interface SmartQuestUser {
-  id: number;
+  id: string;
   name: string;
   character_class: string;
   level: number;
@@ -102,10 +102,12 @@ export default function SmartQuestPage() {
   const { data: allUsers = [], isLoading: loadingConfig } = useQuery<
     SmartQuestUser[]
   >({
-    queryKey: ["users"],
+    queryKey: ["users", "roster"],
     queryFn: async () => {
-      const res = await api.get("/users", { params: { limit: 100 } });
-      return res.data.users;
+      // Use Safe Roster Endpoint (No sensitive OCEAN scores)
+      const res = await api.get("/users/roster");
+      // The backend now returns List[UserCandidate] directly, not {users: []}
+      return res.data;
     },
   });
 
@@ -122,7 +124,7 @@ export default function SmartQuestPage() {
   ]);
 
   // --- State: Right Panel (Selection) ---
-  const [selectedPoolIds, setSelectedPoolIds] = useState<Set<number>>(
+  const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(
     new Set()
   );
   const [generatedTeam, setGeneratedTeam] = useState<GeneratedTeam | null>(
@@ -207,7 +209,7 @@ export default function SmartQuestPage() {
   };
 
   // --- Handlers: Right Panel ---
-  const toggleUser = (userId: number) => {
+  const toggleUser = (userId: string) => {
     const user = allUsers.find((u) => u.id === userId);
     if (user && !user.is_available) {
       toast.error("พนักงานคนนี้ติดภารกิจอยู่ ไม่สามารถเลือกได้");
@@ -382,7 +384,7 @@ export default function SmartQuestPage() {
         description: projectDescription,
         deadline: new Date(deadline).toISOString(),
         start_date: new Date(startDate).toISOString(),
-        leader_id: currentUser?.id || 1, // Fallback
+        leader_id: currentUser?.id || "",
         requirements: requirements
           .filter((r) => r.deptId)
           .map((r) => ({ department_id: r.deptId, count: r.count })),
@@ -397,7 +399,7 @@ export default function SmartQuestPage() {
     }
   };
 
-  const handleRemoveFromPreview = (memberId: number) => {
+  const handleRemoveFromPreview = (memberId: string) => {
     if (!generatedTeam) return;
 
     toast(
@@ -847,31 +849,7 @@ export default function SmartQuestPage() {
                 </div>
 
                 <div className="flex-1 md:overflow-y-auto p-4 md:p-8 pt-4">
-                  {/* AI Team Analysis Section */}
-                  {generatedTeam && (
-                    <div className="mb-6 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in zoom-in duration-500">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-2">
-                        <Sparkles size={14} /> AI Team Analysis
-                      </h4>
-                      {isAnalyzingText ? (
-                        <div className="flex items-center gap-2 text-sm text-slate-500 animate-pulse">
-                          <Loader2 size={14} className="animate-spin" />{" "}
-                          กำลังประมวลผลบุคลิกภาพทีม...
-                        </div>
-                      ) : teamAnalysisText ? (
-                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                          {teamAnalysisText}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-slate-400 italic">
-                          ไม่สามารถดึงข้อมูลวิเคราะห์ได้
-                        </p>
-                      )}
-                    </div>
-                  )}
-
                   {/* Team Score & Visualizer */}
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8"></div>
                   <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                     <table className="w-full text-left border-collapse">
                       <thead className="bg-slate-50/50 dark:bg-slate-800/30 text-[11px] uppercase tracking-wider font-bold text-slate-400 sticky top-0">
@@ -1082,6 +1060,28 @@ export default function SmartQuestPage() {
                       </tbody>
                     </table>
                   </div>
+                  {/* AI Team Analysis Section */}
+                  {generatedTeam && (
+                    <div className="mt-6 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in zoom-in duration-500">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-2">
+                        <Sparkles size={14} /> AI Team Analysis
+                      </h4>
+                      {isAnalyzingText ? (
+                        <div className="flex items-center gap-2 text-sm text-slate-500 animate-pulse">
+                          <Loader2 size={14} className="animate-spin" />{" "}
+                          กำลังประมวลผลบุคลิกภาพทีม...
+                        </div>
+                      ) : teamAnalysisText ? (
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                          {teamAnalysisText}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-slate-400 italic">
+                          ไม่สามารถดึงข้อมูลวิเคราะห์ได้
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             )}
