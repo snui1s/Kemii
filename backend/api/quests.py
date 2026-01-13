@@ -79,7 +79,6 @@ def get_quest_detail(quest_id: str, session: Session = Depends(get_session)):
     # Get accepted members details
     accepted_members = []
     req_skills = json.loads(quest.required_skills)
-    req_skills = json.loads(quest.required_skills)
 
     for uid in accepted_ids:
         user = session.get(User, uid)

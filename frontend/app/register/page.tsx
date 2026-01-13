@@ -54,10 +54,8 @@ export default function RegisterPage() {
 
       const { access_token, user } = res.data;
       if (access_token && user) {
-        toast.success("สมัครสมาชิกสำเร็จ! 🎉");
-        // Force refresh to ensure clean state as requested
-        localStorage.setItem("access_token", access_token);
-        window.location.href = "/";
+        toast.success("สมัครสมาชิกสำเร็จ!");
+        login(access_token, user, true); // Use centralized login
       }
     } catch (err: any) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

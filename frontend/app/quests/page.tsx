@@ -262,18 +262,21 @@ function QuestBoardContent() {
               </div>
 
               {/* Filters & Sort */}
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-2 rounded-xl shadow-sm h-11 overflow-x-auto w-full sm:w-auto">
-                <Filter size={16} className="text-slate-400 shrink-0" />
+              <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl h-11 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all overflow-hidden w-full sm:w-auto">
+                <div className="px-3 h-full flex items-center bg-slate-50/50 dark:bg-slate-800/20 border-r border-slate-100 dark:border-slate-800">
+                  <Filter size={14} className="text-slate-400" />
+                </div>
+
                 {/* Filter Dropdown */}
                 <Select
                   value={filterStatus}
                   onValueChange={(val) => setFilterStatus(val)}
                 >
-                  <SelectTrigger className="h-full border-none bg-white dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-700/50 shadow-none focus:ring-0 text-slate-600 dark:text-slate-300 font-bold min-w-[100px] p-0 gap-1">
+                  <SelectTrigger className="h-full border-none bg-transparent bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-900/50 rounded-none shadow-none focus:ring-0 px-4 gap-2 text-[13px] font-bold text-slate-600 dark:text-slate-300 min-w-[120px] transition-colors">
                     <SelectValue placeholder="สถานะ" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">ทั้งหมด (All)</SelectItem>
+                    <SelectItem value="all">ทั้งหมด</SelectItem>
                     {viewMode === "active" ? (
                       <>
                         <SelectItem value="filled">คนครบแล้ว</SelectItem>
@@ -288,7 +291,8 @@ function QuestBoardContent() {
                   </SelectContent>
                 </Select>
 
-                <div className="w-px h-6 bg-white dark:bg-slate-800/20 mx-1"></div>
+                <div className="w-px h-6 bg-slate-100 dark:bg-slate-800"></div>
+
                 {/* Sort Dropdown */}
                 <Select
                   value={sortOrder}
@@ -296,7 +300,7 @@ function QuestBoardContent() {
                     setSortOrder(val as "newest" | "oldest")
                   }
                 >
-                  <SelectTrigger className="h-full border-none bg-white dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-700/50 bg-transparent shadow-none focus:ring-0 text-slate-600 dark:text-slate-300 font-bold p-0 gap-1">
+                  <SelectTrigger className="h-full border-none bg-transparent bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-900/50 rounded-none shadow-none focus:ring-0 px-4 gap-2 text-[13px] font-bold text-slate-600 dark:text-slate-300 min-w-[120px] transition-colors">
                     <SelectValue placeholder="เรียงลำดับ" />
                   </SelectTrigger>
                   <SelectContent>

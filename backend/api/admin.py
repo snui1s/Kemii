@@ -160,7 +160,8 @@ def seed_production_data(authorization: str = Header(None)):
         # The script created 'admin@kemii.com' specifically.
         # Let's add that back for Genesis Mode!
         if existing_count == 0:
-             admin_user = User(
+            # Create King Arthur
+            admin1 = User(
                 name="King Arthur",
                 email="admin@kemii.com",
                 hashed_password=get_password_hash("admin1234"),
@@ -171,9 +172,23 @@ def seed_production_data(authorization: str = Header(None)):
                 skills=json.dumps([{"name": "Admin", "level": 99}], ensure_ascii=False),
                 is_available=True
             )
-             session.add(admin_user)
-             created_count += 1
-             print("👑 Genesis: Created Super Admin")
+            # Create Merlin
+            admin2 = User(
+                name="Merlin",
+                email="merlin@kemii.com",
+                hashed_password=get_password_hash("merlin1234"),
+                character_class="Mage",
+                role="admin",
+                level=99,
+                ocean_openness=50, ocean_conscientiousness=50, ocean_extraversion=50, ocean_agreeableness=50, ocean_neuroticism=50,
+                skills=json.dumps([{"name": "Admin", "level": 99}], ensure_ascii=False),
+                is_available=True
+            )
+            
+            session.add(admin1)
+            session.add(admin2)
+            created_count += 2
+            print("👑 Genesis: Created King Arthur & Merlin (Super Admins)")
 
         session.commit()
     
