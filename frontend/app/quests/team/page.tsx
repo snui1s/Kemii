@@ -586,7 +586,7 @@ export default function SmartQuestPage() {
                               updateRow(row.id, "deptId", val)
                             }
                           >
-                            <SelectTrigger className="w-full bg-transparent border-none p-0 h-auto text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-0 shadow-none">
+                            <SelectTrigger className="w-full bg-transparent border-none p-0 h-auto text-sm bg-slate-50 dark:bg-slate-800/50 font-semibold text-slate-700 dark:text-slate-200 focus:ring-0 shadow-none">
                               <SelectValue placeholder="เลือกแผนก (Department)" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1062,74 +1062,74 @@ export default function SmartQuestPage() {
                   </div>
                   {/* AI Team Analysis Section */}
                   {generatedTeam && (
-                    <div className="mt-6 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in zoom-in duration-500">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-2">
-                        <Sparkles size={14} /> AI Team Analysis
-                      </h4>
-                      {isAnalyzingText ? (
-                        <div className="flex items-center gap-2 text-sm text-slate-500 animate-pulse">
-                          <Loader2 size={14} className="animate-spin" />{" "}
-                          กำลังประมวลผลบุคลิกภาพทีม...
+                    <>
+                      <div className="mt-6 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in zoom-in duration-500">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-2">
+                          <Sparkles size={14} /> AI Team Analysis
+                        </h4>
+                        {isAnalyzingText ? (
+                          <div className="flex items-center gap-2 text-sm text-slate-500 animate-pulse">
+                            <Loader2 size={14} className="animate-spin" />{" "}
+                            กำลังประมวลผลบุคลิกภาพทีม...
+                          </div>
+                        ) : teamAnalysisText ? (
+                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                            {teamAnalysisText}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-slate-400 italic">
+                            ไม่สามารถดึงข้อมูลวิเคราะห์ได้
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Results Footer (Now Relative) if generated */}
+                      <div className="mt-4 flex justify-center">
+                        <div className="inline-flex backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-full shadow-xl border border-slate-200/50 dark:border-slate-700/50 items-center gap-4 pr-6 animate-in slide-in-from-top-2 duration-500">
+                          <div className="w-12 h-12 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center">
+                            <span className="text-white dark:text-slate-900 font-black text-sm">
+                              {generatedTeam.harmony_score}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-slate-400">
+                              คะแนนความเข้ากันได้
+                            </span>
+                            {/* Dynamic Label Logic */}
+                            {(() => {
+                              const score = generatedTeam.harmony_score || 0;
+                              let label = "เข้ากันได้ปานกลาง";
+                              let colorClass =
+                                "text-yellow-600 dark:text-yellow-400";
+
+                              if (score >= 80) {
+                                label = "เข้ากันได้ดีเยี่ยม";
+                                colorClass =
+                                  "text-green-600 dark:text-green-400";
+                              } else if (score >= 60) {
+                                label = "เข้ากันได้ดี";
+                                colorClass =
+                                  "text-indigo-600 dark:text-indigo-400";
+                              } else if (score < 40) {
+                                label = "ความเข้ากันได้ต่ำ";
+                                colorClass = "text-red-500 dark:text-red-400";
+                              }
+
+                              return (
+                                <span
+                                  className={`text-sm font-bold ${colorClass}`}
+                                >
+                                  {label}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
-                      ) : teamAnalysisText ? (
-                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                          {teamAnalysisText}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-slate-400 italic">
-                          ไม่สามารถดึงข้อมูลวิเคราะห์ได้
-                        </p>
-                      )}
-                    </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </>
-            )}
-
-            {/* Results Footer (Floating) if generated */}
-            {generatedTeam && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-full shadow-2xl border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-4 pr-6 animate-in slide-in-from-bottom-6 zoom-in-95 duration-500">
-                <div className="w-12 h-12 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center">
-                  <span className="text-white dark:text-slate-900 font-black text-sm">
-                    {generatedTeam.harmony_score}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">
-                    คะแนนความเข้ากันได้
-                  </span>
-                  {/* Dynamic Label Logic */}
-                  {(() => {
-                    const score = generatedTeam.harmony_score || 0;
-                    let label = "เข้ากันได้ปานกลาง";
-                    let colorClass = "text-yellow-600 dark:text-yellow-400";
-
-                    if (score >= 80) {
-                      label = "เข้ากันได้ดีเยี่ยม";
-                      colorClass = "text-green-600 dark:text-green-400";
-                    } else if (score >= 60) {
-                      label = "เข้ากันได้ดี";
-                      colorClass = "text-indigo-600 dark:text-indigo-400";
-                    } else if (score < 40) {
-                      label = "ความเข้ากันได้ต่ำ";
-                      colorClass = "text-red-500 dark:text-red-400";
-                    }
-
-                    return (
-                      <span className={`text-sm font-bold ${colorClass}`}>
-                        {label}
-                      </span>
-                    );
-                  })()}
-                </div>
-                <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2" />
-                <button
-                  onClick={handleConfirmTeam}
-                  className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-                >
-                  ยืนยัน <ArrowRight size={14} />
-                </button>
-              </div>
             )}
           </div>
         </div>

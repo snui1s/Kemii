@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 
 export default function Footer() {
-  const APP_VERSION = "v3.4";
+  const APP_VERSION = "Beta 3.5";
   const { user, logout } = useAuth();
 
   const toastCooldown = useRef(false);

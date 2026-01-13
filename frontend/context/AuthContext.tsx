@@ -74,6 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (newToken: string, newUser: User, rememberMe: boolean) => {
+    // Clear both first to avoid confusion
+    localStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token");
+
     if (rememberMe) {
       localStorage.setItem("access_token", newToken);
     } else {
