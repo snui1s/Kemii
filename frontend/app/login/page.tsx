@@ -39,28 +39,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="p-8 text-center bg-indigo-600 text-white">
-          <h1 className="text-3xl font-bold mb-2">เข้าสู่ระบบ</h1>
-          <p className="text-indigo-200">ยินดีต้อนรับกลับสู่ Kemii Guild</p>
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+      <div className="bg-[var(--background)]/50 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="p-8 text-center border-b border-black/5 dark:border-white/5">
+          <h1 className="text-3xl font-medium opacity-80 mb-2 text-[var(--foreground)]">เข้าสู่ระบบ</h1>
+          <p className="text-[var(--muted)] opacity-80">ยินดีต้อนรับกลับสู่ Kemii Guild</p>
         </div>
 
         <div className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                 อีเมล (Email)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-3 text-slate-700 dark:text-slate-300">
+                <span className="absolute left-3 top-3 text-[var(--muted)]">
                   <Mail size={20} />
                 </span>
                 <input
                   required
                   type="email"
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 text-slate-700 dark:text-slate-300 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                  className="w-full pl-10 pr-4 py-2.5 bg-black/5 dark:bg-white/5 text-[var(--foreground)] border border-transparent focus:border-[var(--highlight)] rounded-xl outline-none transition placeholder:text-[var(--muted)]/50"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -68,25 +68,25 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                 รหัสผ่าน (Password)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-3 text-slate-700 dark:text-slate-300">
+                <span className="absolute left-3 top-3 text-[var(--muted)]">
                   <Lock size={20} />
                 </span>
                 <input
                   required
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-12 py-2.5 bg-slate-50 text-slate-700 dark:text-slate-300 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                  className="w-full pl-10 pr-12 py-2.5 bg-black/5 dark:bg-white/5 text-[var(--foreground)] border border-transparent focus:border-[var(--highlight)] rounded-xl outline-none transition placeholder:text-[var(--muted)]/50"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors bg-transparent border-none p-0.5"
+                  className="absolute right-3 top-2.5 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors bg-transparent border-none p-0.5"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -94,16 +94,16 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-[var(--muted)] cursor-pointer hover:text-[var(--foreground)] transition-colors">
                 <input
                   type="checkbox"
-                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-black/10 dark:border-white/10 text-[var(--highlight)] focus:ring-[var(--highlight)]"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 จดจำฉันไว้
               </label>
-              <a href="#" className="text-indigo-600 font-bold hover:underline">
+              <a href="#" className="text-[var(--highlight)] font-bold hover:underline opacity-80 hover:opacity-100 transition-opacity">
                 ลืมรหัสผ่าน?
               </a>
             </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[var(--highlight)] hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl hover:shadow-[var(--highlight)]/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 className="animate-spin" />
@@ -123,11 +123,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center">
-            <p className="text-slate-500 mb-4">ยังไม่มีบัญชีใช่ไหม?</p>
+          <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5 text-center">
+            <p className="text-[var(--muted)] mb-4">ยังไม่มีบัญชีใช่ไหม?</p>
             <Link
               href="/register"
-              className="block w-full border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 font-bold py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition"
+              className="block w-full border border-[var(--highlight)] text-[var(--highlight)] font-bold py-2.5 rounded-xl hover:bg-[var(--highlight)] hover:text-white transition"
             >
               สมัครสมาชิกใหม่
             </Link>

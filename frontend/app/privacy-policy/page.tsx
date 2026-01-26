@@ -3,20 +3,20 @@ import { Shield } from "lucide-react";
 
 export default function PrivacyPolicy() {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 font-[family-name:var(--font-line-seed)]">
+      <div className="bg-[var(--background)]/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-black/5 dark:border-white/5">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600 dark:text-green-400">
+          <div className="p-3 bg-[var(--highlight)]/10 rounded-full text-[var(--highlight)]">
             <Shield size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">
             นโยบายความเป็นส่วนตัว (Privacy Policy)
           </h1>
         </div>
 
-        <div className="space-y-6 text-slate-600 dark:text-slate-300 leading-relaxed">
+        <div className="space-y-6 text-[var(--foreground)] opacity-90 leading-relaxed">
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               1. ข้อมูลที่เราเก็บรวบรวม
             </h2>
             <p>
@@ -42,10 +42,10 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               2. การประมวลผลด้วย AI (Artificial Intelligence)
             </h2>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-200 text-sm">
+            <div className="bg-[var(--highlight)]/5 p-4 rounded-xl border border-[var(--highlight)]/10 text-[var(--foreground)] text-sm">
               <p>
                 ⚠️ <strong>สำคัญ:</strong> ระบบมีการส่งข้อมูลของท่าน (ชื่อ,
                 ผลคะแนนบุคลิกภาพ) ไปยังระบบ AI (Google Gemini)
@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               3. การเปิดเผยข้อมูล
             </h2>
             <p>
@@ -74,7 +74,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               4. การลบข้อมูล (Data Deletion)
             </h2>
             <p>
@@ -85,7 +85,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
-          <p className="text-sm text-slate-400 mt-8 pt-4 border-t border-slate-200 dark:border-slate-800">
+          <p className="text-sm text-[var(--muted)] mt-8 pt-4 border-t border-black/5 dark:border-white/5">
             ประกาศ ณ วันที่ 15/12/2025
           </p>
         </div>

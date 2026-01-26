@@ -19,21 +19,20 @@ export function ThemeToggle() {
   // ถ้ายังไม่ Mount (รันที่ Server หรือกำลังโหลด) ไม่ต้องโชว์อะไรเลย (กัน Icon กระพริบผิดอัน)
   if (!mounted) {
     return (
-      <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 opacity-50 animate-pulse" />
+      <div className="w-9 h-9 rounded-full bg-black/5 dark:bg-white/5 opacity-50 animate-pulse" />
     );
   }
 
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors group"
+      className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
       aria-label="Toggle Theme"
     >
-      {/* ใช้ Logic ง่ายๆ เช็คว่าถ้าเป็น dark ให้โชว์พระอาทิตย์ (ไว้กดกลับ) */}
       {theme === "dark" ? (
-        <Sun className="w-5 h-5 text-yellow-400 group-hover:rotate-90 transition-transform duration-500" />
+        <Sun className="w-5 h-5 text-[var(--highlight)] group-hover:rotate-90 transition-transform duration-500" />
       ) : (
-        <Moon className="w-5 h-5 text-slate-600 group-hover:-rotate-12 transition-transform duration-500" />
+        <Moon className="w-5 h-5 text-[var(--foreground)] group-hover:-rotate-12 transition-transform duration-500" />
       )}
     </button>
   );

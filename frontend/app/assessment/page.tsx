@@ -231,7 +231,7 @@ const ratingOptions = [
   {
     value: 3,
     label: "เฉยๆ",
-    glow: "shadow-slate-400/50",
+    glow: "shadow-slate-400/50  ",
     ring: "ring-slate-400",
     bg: "bg-slate-400",
   },
@@ -429,27 +429,26 @@ function AssessmentContent() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950/20 relative overflow-hidden transition-colors">
+      <div className="min-h-screen bg-[var(--background)] relative overflow-hidden transition-colors">
         {/* Ambient Background */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-200/30 dark:bg-indigo-900/20 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-200/20 dark:bg-purple-900/15 rounded-full blur-[100px]" />
-          <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-slate-200/30 dark:bg-slate-800/30 rounded-full blur-[80px]" />
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[var(--zen-sand)]/30 dark:bg-white/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[var(--highlight)]/10 rounded-full blur-[100px]" />
         </div>
 
         {/* --- Tutorial Modal --- */}
         {showGuide && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-black/30 backdrop-blur-md">
-            <div className="bg-white dark:bg-slate-900/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[75vh] shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--background)]/80 backdrop-blur-md">
+            <div className="bg-[var(--background)]/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden flex flex-col max-h-[75vh] shadow-2xl">
               {/* Header */}
-              <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-3">
+              <div className="p-4 sm:p-6 border-b border-black/5 dark:border-white/5 text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--highlight)]/10 border border-[var(--highlight)]/20 text-[var(--highlight)] text-xs font-bold mb-3">
                   <Sparkles size={12} /> AWAKENING RITUAL
                 </div>
-                <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-wide">
+                <h2 className="text-2xl font-light text-[var(--foreground)] tracking-wide">
                   {tutorialStep === 1 ? "Class System" : "How to Play"}
                 </h2>
-                <p className="text-slate-500 dark:text-slate-500 text-sm mt-1">
+                <p className="text-[var(--muted)] text-sm mt-1 opacity-80">
                   {tutorialStep === 1
                     ? "ทำความรู้จักสายอาชีพของคุณ"
                     : "วิธีการทำแบบทดสอบ"}
@@ -457,7 +456,7 @@ function AssessmentContent() {
               </div>
 
               {/* Content */}
-              <div className="p-4 sm:p-6 overflow-y-auto">
+              <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
                 {tutorialStep === 1 ? (
                   <div className="space-y-3">
                     {[
@@ -494,18 +493,18 @@ function AssessmentContent() {
                     ].map((cls) => (
                       <div
                         key={cls.name}
-                        className={`flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-${cls.color}-500/50 transition-colors`}
+                        className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-xl bg-black/5 dark:bg-white/5 border border-transparent hover:border-[var(--highlight)]/30 transition-colors"
                       >
                         <div
-                          className={`p-2 rounded-lg bg-${cls.color}-500/20 text-${cls.color}-400`}
+                          className="p-2 rounded-lg bg-[var(--background)] border border-black/5 dark:border-white/5 text-[var(--foreground)]"
                         >
                           <cls.icon size={20} />
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-800 dark:text-white text-sm">
+                          <h4 className="font-bold text-[var(--foreground)] text-sm">
                             {cls.name}
                           </h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-500">
+                          <p className="text-xs text-[var(--muted)]">
                             {cls.desc}
                           </p>
                         </div>
@@ -514,7 +513,7 @@ function AssessmentContent() {
                   </div>
                 ) : (
                   <div className="text-center space-y-6">
-                    <p className="text-slate-600 dark:text-slate-400">
+                    <p className="text-[var(--muted)]">
                       ให้คะแนนความเป็นตัวคุณ จาก 1 ถึง 5<br />
                       เลือก Spirit Orb ตามความจริง
                     </p>
@@ -522,16 +521,16 @@ function AssessmentContent() {
                     {/* Demo Orbs */}
                     <div className="flex justify-center items-end gap-4">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-red-500 shadow-lg shadow-red-500/30" />
-                        <span className="text-[10px] text-red-400">1</span>
+                        <div className="w-8 h-8 rounded-full bg-[var(--background)] border-2 border-[var(--highlight)] shadow-lg shadow-[var(--highlight)]/20" />
+                        <span className="text-[10px] text-[var(--muted)]">1</span>
                       </div>
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500 border-2 border-emerald-400 shadow-lg shadow-emerald-500/50" />
-                        <span className="text-[10px] text-emerald-400">5</span>
+                        <div className="w-12 h-12 rounded-full bg-[var(--highlight)] border-2 border-[var(--highlight)] shadow-lg shadow-[var(--highlight)]/50" />
+                        <span className="text-[10px] text-[var(--highlight)]">5</span>
                       </div>
                     </div>
 
-                    <div className="bg-indigo-50 dark:bg-indigo-500/10 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/20 text-sm text-indigo-700 dark:text-indigo-300">
+                    <div className="bg-[var(--highlight)]/10 p-4 rounded-xl border border-[var(--highlight)]/20 text-sm text-[var(--foreground)]">
                       💡 <b>Tip:</b> ตอบตามสัญชาตญาณแรก ไม่ต้องคิดนาน
                     </div>
                   </div>
@@ -543,14 +542,14 @@ function AssessmentContent() {
                 {tutorialStep === 1 ? (
                   <button
                     onClick={() => setTutorialStep(2)}
-                    className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                    className="w-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 text-[var(--foreground)] py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
                   >
                     ต่อไป <ChevronRight size={18} />
                   </button>
                 ) : (
                   <button
                     onClick={() => setShowGuide(false)}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 border border-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 transition-all"
+                    className="w-full bg-[var(--highlight)] hover:opacity-90 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--highlight)]/30 transition-all"
                   >
                     <Sparkles size={16} /> เริ่มพิธีปลุกพลัง
                   </button>
@@ -563,8 +562,8 @@ function AssessmentContent() {
         {/* --- Main Content --- */}
         <div className="max-w-2xl mx-auto py-10 px-4 relative z-10">
           {/* Debug Tools */}
-          <div className="mb-6 p-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur">
-            <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
+          <div className="mb-6 p-4 border border-dashed border-black/10 dark:border-white/10 rounded-xl bg-black/5 dark:bg-white/5 backdrop-blur">
+            <p className="text-xs font-bold text-[var(--muted)] mb-2 uppercase tracking-wider opacity-70">
               🚧 DEV DEBUG
             </p>
             <div className="flex flex-wrap gap-2">
@@ -577,7 +576,7 @@ function AssessmentContent() {
                       btn.label.split(" ")[0]
                     )
                   }
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition ${btn.color}`}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-black/5 dark:border-white/5 bg-[var(--background)] hover:bg-black/5 dark:hover:bg-white/5 transition text-[var(--muted)]"
                 >
                   {btn.label}
                 </button>
@@ -587,13 +586,13 @@ function AssessmentContent() {
 
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--highlight)]/10 border border-[var(--highlight)]/20 text-[var(--highlight)] text-xs font-bold mb-4">
               <Sparkles size={12} /> SOUL AWAKENING
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-800 dark:text-white mb-2 tracking-wide">
+            <h1 className="text-3xl sm:text-4xl font-light text-[var(--foreground)] mb-2 tracking-wide">
               พิธีปลุกพลัง
             </h1>
-            <p className="text-slate-500">
+            <p className="text-[var(--muted)] opacity-80">
               ตอบคำถาม 50 ข้อ เพื่อค้นหาอาชีพและสเตตัสที่แท้จริงของคุณ
             </p>
           </div>
@@ -607,11 +606,11 @@ function AssessmentContent() {
                 style={{ animationDelay: `${idx * 50}ms` }}
               >
                 {/* Question Card */}
-                <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                <div className="bg-[var(--background)]/50 backdrop-blur-xl p-6 rounded-2xl border border-black/5 dark:border-white/5 mb-6 shadow-sm">
+                  <span className="text-xs font-bold text-[var(--highlight)] uppercase tracking-widest opacity-80">
                     Question {idx + 1}/50
                   </span>
-                  <h3 className="text-lg sm:text-xl font-medium text-slate-800 dark:text-white mt-2 leading-relaxed text-center">
+                  <h3 className="text-lg sm:text-xl font-medium text-[var(--foreground)] mt-2 leading-relaxed text-center">
                     {q.text}
                   </h3>
                 </div>
@@ -635,7 +634,7 @@ function AssessmentContent() {
                           ${
                             isSelected
                               ? `${opt.bg} ring-2 ${opt.ring} shadow-lg ${opt.glow}`
-                              : "bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 group-hover:border-slate-400 dark:group-hover:border-slate-500"
+                              : "bg-black/5 dark:bg-white/5 border-2 border-transparent group-hover:border-[var(--highlight)]/50"
                           }
                         `}
                           style={{
@@ -650,8 +649,8 @@ function AssessmentContent() {
                         <span
                           className={`text-[10px] sm:text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                             isSelected
-                              ? "opacity-100 text-slate-800 dark:text-white"
-                              : "opacity-0 group-hover:opacity-100 text-slate-500"
+                              ? "opacity-100 text-[var(--foreground)]"
+                              : "opacity-0 group-hover:opacity-100 text-[var(--muted)]"
                           }`}
                         >
                           {opt.label}
@@ -663,7 +662,7 @@ function AssessmentContent() {
 
                 {/* Divider */}
                 {idx < questions.length - 1 && (
-                  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-800 to-transparent mt-12" />
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-black/5 dark:via-white/5 to-transparent mt-12" />
                 )}
               </div>
             ))}
@@ -674,7 +673,7 @@ function AssessmentContent() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/40 transition-all disabled:opacity-50"
+              className="w-full bg-[var(--highlight)] hover:opacity-90 text-white py-5 rounded-2xl font-bold text-xl shadow-xl shadow-[var(--highlight)]/30 transition-all disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -698,7 +697,7 @@ export default function AssessmentPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
           <ElementalLoader />
         </div>
       }

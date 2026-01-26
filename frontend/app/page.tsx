@@ -130,161 +130,87 @@ function HomeContent() {
   return (
     <div className="relative h-full w-full max-w-5xl mx-auto mb-12 mt-5 px-4 sm:px-0">
       {/* Header Section (Hero Banner) ... lines 102-256 ... */}
-      <div className="relative bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors duration-500">
+      <div className="relative mb-12 py-10 text-center animate-fade-in-up">
         {hasMissingDept && (
           <div
-            className="absolute top-0 left-0 w-full bg-red-500 text-white px-4 py-2 flex items-center justify-center gap-2 z-50 text-sm font-bold animate-pulse cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium cursor-pointer hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] hover:border-[var(--highlight)]/20 transition-colors border border-red-100 dark:border-red-900/50"
             onClick={() => router.push("/profile")}
           >
-            <AlertTriangle size={16} className="text-white" />
-            <span>
-              คุณยังไม่ได้เลือกสังกัด (Department)!
-              คลิกที่นี่เพื่อไปตั้งค่าที่หน้าโปรไฟล์ก่อนเริ่มใช้งาน
-            </span>
+            <AlertTriangle size={14} />
+            <span>กรุณาเลือกสังกัด (Department) ที่หน้าโปรไฟล์</span>
           </div>
         )}
 
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 dark:from-blue-600/20 dark:to-purple-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-yellow-100/50 to-red-100/50 dark:from-yellow-600/10 dark:to-red-600/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+        <div className="space-y-6">
+          <h1 className="text-4xl md:text-5xl font-light tracking-tight text-[var(--foreground)]">
+            Kemii{" "}
+            <span style={{ color: "var(--highlight)" }} className="font-semibold">
+              Guild
+            </span>
+          </h1>
 
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tight mb-3">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
-                Kemii
-              </span>{" "}
-              <span className="text-slate-700 dark:text-slate-200">
-                Guild Assembly
-              </span>
-            </h1>
-
-            {currentUser?.id ? (
-              <div className="animate-fade-in-up">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white mt-6 mb-6 leading-tight">
-                  ยินดีต้อนรับกลับ...{" "}
-                  <span className="text-blue-600 dark:text-blue-400 mx-2">
-                    ลงดันไหม?
-                  </span>
-                </h1>
-                <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
-                  เตรียมปาร์ตี้ของคุณให้พร้อม แล้วออกไปพิชิต{" "}
-                  <span className="font-bold text-slate-800 dark:text-white">
-                    ดันเจี้ยนแห่งการทำงาน
-                  </span>{" "}
-                  <br className="hidden sm:block" /> ด้วยพลังแห่งความเข้ากันได้!
-                </p>
-              </div>
-            ) : (
-              <p className="text-slate-500 dark:text-slate-400 text-lg max-w-xl leading-relaxed animate-fade-in-up">
-                เข้าร่วมกิลด์ ค้นหาคลาสของคุณ{" "}
-                <br className="hidden md:inline" />{" "}
-                และสร้างปาร์ตี้ที่แข็งแกร่งที่สุดด้วย{" "}
-                <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                  AI Analysis
-                </span>{" "}
-                ⚡
+          {currentUser?.id ? (
+            <div className="max-w-xl mx-auto space-y-4">
+              <p className="text-lg text-[var(--muted)] font-medium leading-relaxed">
+                ยินดีต้อนรับ, <span className="font-medium">{currentUser.name}</span>
+                <br />
+                หาเคมีที่ลงตัวด้วยความ <span className="font-semibold text-[var(--highlight)]">"</span><span className="font-semibold decoration">Minimal</span><span className="font-semibold text-[var(--highlight)]">"</span>
               </p>
-            )}
-
-            <div className="mt-6 flex items-center justify-center md:justify-start gap-4">
-              <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/50 border border-transparent dark:border-slate-700 rounded-full text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2 shadow-sm">
-                <Users
-                  size={16}
-                  className="text-indigo-500 dark:text-indigo-400"
-                />{" "}
-                สมาชิกกิลด์ทั้งหมด{" "}
-                <span className="text-slate-900 dark:text-white font-bold">
-                  {totalInDb}
-                </span>{" "}
-                ท่าน
+              
+              <div className="flex justify-center pt-4">
+                {currentUser.character_class === "Novice" ? (
+                  <button
+                     onClick={() => router.push("/assessment")}
+                     className="px-8 py-2.5 rounded-full border border-[var(--highlight)] text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white transition-all text-sm tracking-wide font-medium"
+                  >
+                    เริ่มค้นหาตัวตน
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                     <span className="text-xs text-[var(--muted)] uppercase tracking-widest">Character Class</span>
+                     <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 backdrop-blur-sm">
+                       {getClassIcon(currentUser.character_class)}
+                       <div className="text-left">
+                          <div className="text-sm font-semibold">{currentUser.character_class}</div>
+                          <div className="text-xs text-[var(--muted)]">Lv.{currentUser.level}</div>
+                       </div>
+                     </div>
+                     <Link href={`/assessment/result/${currentUser.id}`} className="text-xs text-[var(--muted)] hover:text-[var(--highlight)] transition-colors mt-2">
+                       ดูสเตตัสของคุณ
+                     </Link>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          <div className="shrink-0 w-full md:w-auto flex justify-center">
-            {currentUser ? (
-              currentUser.character_class === "Novice" ? (
-                <div className="bg-indigo-50/80 dark:bg-indigo-900/20 backdrop-blur-sm p-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex flex-col items-center gap-4 w-64 text-center transition-colors animate-pulse-slow">
-                  <div className="text-4xl animate-bounce text-indigo-600 dark:text-indigo-400">
-                    🔮
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-indigo-900 dark:text-indigo-200 text-lg">
-                      ค้นหาตัวตนของคุณ
-                    </h3>
-                    <p className="text-xs text-indigo-600/80 dark:text-indigo-300/70 mt-1">
-                      คุณยังไม่ได้ทำแบบทดสอบเพื่อค้นหาอาชีพ
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => router.push("/assessment")}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition transform hover:-translate-y-1 active:scale-95"
-                  >
-                    เริ่มทำพิธีปลุกพลัง ➔
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-3 w-64 animate-fade-in-up">
-                  <div className="text-xs font-bold uppercase tracking-widest opacity-70 text-slate-800 dark:text-slate-200">
-                    Character Status
-                  </div>
-                  <div className="bg-white dark:bg-slate-700 p-4 rounded-full shadow-inner mt-2">
-                    {getClassIcon(currentUser.character_class)}
-                  </div>
-                  <div className="text-center mb-2">
-                    <div className="font-bold text-lg text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2">
-                      {currentUser.name}{" "}
-                      <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full text-slate-700 dark:text-slate-300">
-                        Lv.{currentUser.level}
-                      </span>
-                    </div>
-                    <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                      {currentUser.character_class}
-                    </div>
-                  </div>
-                  <Link
-                    href={`/assessment/result/${currentUser.id}`}
-                    className="w-full text-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 shadow-sm hover:text-indigo-500 transition"
-                  >
-                    ดูผลการทดสอบของคุณ
-                  </Link>
-                </div>
-              )
-            ) : (
-              <div className="bg-indigo-50/80 dark:bg-indigo-900/20 backdrop-blur-sm p-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex flex-col items-center gap-4 w-64 text-center transition-colors">
-                <div className="text-4xl animate-pulse text-indigo-600 dark:text-indigo-400">
-                  🛡️
-                </div>
-                <div>
-                  <h3 className="font-bold text-indigo-900 dark:text-indigo-200 text-lg">
-                    เข้าร่วมกิลด์
-                  </h3>
-                  <p className="text-xs text-indigo-600/80 dark:text-indigo-300/70 mt-1">
-                    เข้าสู่ระบบเพื่อค้นหาปาร์ตี้ของคุณ
-                  </p>
-                </div>
-                <div className="w-full flex flex-col gap-2">
-                  <Link
-                    href="/login"
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition transform hover:-translate-y-1 block"
-                  >
-                    เข้าสู่ระบบ
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-bold py-2.5 rounded-xl border border-indigo-100 dark:border-indigo-800 transition block"
-                  >
-                    สมัครสมาชิก
-                  </Link>
-                </div>
+          ) : (
+            <div className="max-w-xl mx-auto space-y-6">
+               <p className="text-lg text-[var(--muted)] font-medium">
+                พื้นที่สำหรับการทำงานร่วมกันอย่างลงตัว
+                <br className="hidden sm:block" />
+                ค้นหาเพื่อนร่วมทีมที่ใช่ด้วย <span className="font-medium text-[var(--highlight)]">AI Analysis</span>
+              </p>
+              <div className="flex justify-center gap-4">
+                 <Link href="/login" className="px-8 py-2.5 rounded-full bg-[var(--highlight)] text-white hover:opacity-90 hover:shadow-[0_0_15px_rgba(250,129,18,0.4)] transition-all text-sm font-medium">
+                   เข้าสู่ระบบ
+                 </Link>
+                 <Link href="/register" className="px-8 py-2.5 rounded-full border border-[var(--highlight)] text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white hover:shadow-[0_0_15px_rgba(250,129,18,0.2)] transition-all text-sm font-medium">
+                   สมัครสมาชิก
+                 </Link>
               </div>
-            )}
+            </div>
+          )}
+          
+          <div className="pt-8">
+            <span className="text-sm font-mono text-[var(--muted)] flex items-center justify-center gap-2 opacity-80">
+              <Users size={12} />
+              Guild Members: {totalInDb}
+            </span>
           </div>
         </div>
       </div>
 
       {isLoading && users.length === 0 ? (
-        <div className="text-center p-10 text-zinc-900 dark:text-zinc-200 text-3xl animate-pulse">
+        <div className="flex justify-center p-10">
           <ElementalLoader />
         </div>
       ) : (
@@ -316,26 +242,23 @@ function HomeContent() {
           </div>
 
           {hasNextPage && (
-            <div className="mt-12 flex justify-center">
+            <div className="mt-12 flex justify-center pb-12">
               <button
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                className="group relative px-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                className="px-8 py-3 rounded-full border border-[var(--highlight)] text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white hover:shadow-[0_0_20px_rgba(250,129,18,0.3)] transition-all duration-300 disabled:opacity-50 text-sm font-medium flex items-center gap-2 group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                <span className="relative flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
-                  {isFetchingNextPage ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                      กำลังเรียกพวก...
-                    </>
-                  ) : (
-                    <>
-                      <Users size={18} className="text-indigo-500" />
-                      เรียกพวกเพิ่ม (Load More)
-                    </>
-                  )}
-                </span>
+                {isFetchingNextPage ? (
+                  <>
+                    <div className="w-3 h-3 border border-[var(--background)] border-t-transparent rounded-full animate-spin"></div>
+                    กำลังเรียก...
+                  </>
+                ) : (
+                  <>
+                    <Users size={16} className="group-hover:scale-110 transition-transform" />
+                    โหลดเพิ่มเติม
+                  </>
+                )}
               </button>
             </div>
           )}
@@ -351,8 +274,8 @@ function HomeContent() {
       )}
 
       {users.length === 0 && !isLoading && (
-        <div className="text-center text-gray-400 dark:text-gray-500 mt-10">
-          ยังไม่มีสมาชิกในกิลด์
+        <div className="text-center text-[var(--muted)] mt-10 opacity-60 font-light">
+          — ยังไม่มีสมาชิกในกิลด์ —
         </div>
       )}
 
@@ -367,7 +290,7 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className="text-center p-10 text-zinc-900 dark:text-zinc-200 text-3xl animate-pulse">
+        <div className="flex justify-center p-12">
           <ElementalLoader />
         </div>
       }

@@ -5,55 +5,56 @@ from core.config import get_llm
 
 llm = get_llm()
 
+
 async def analyze_user_profile(user):
-    prompt = ChatPromptTemplate.from_template("""
-        Role: You are the "Grand Guild Master". Analyze the adventurer {name} (Class: {rpg_class}) based on their OCEAN stats: O={openness}, C={conscientiousness}, E={extraversion}, A={agreeableness}, N={neuroticism}.
+    prompt = ChatPromptTemplate.from_template(
+        """
+        Role: You are a "Guild Strategist & Career Mentor" (Expert in HR Psychology & RPG Mechanics).
+        Goal: Decode the user's OCEAN stats into a unique RPG Class Identity and professional advice.
+        Tone: Professional, Empowering, and slightly Gamified (Thai Language).
 
-        Goal: Create a Thai Fantasy RPG profile that feels deeply personal ("This is literally me!").
+        User: {name} (Class: {rpg_class})
+        Stats: O={openness}, C={conscientiousness}, E={extraversion}, A={agreeableness}, N={neuroticism}
 
-        **ANALYSIS LOGIC (Analyze Stat Interactions):**
-        Do not judge stats in isolation. Look for the interaction between the highest/lowest stats:
-        1. The Conflict: High ambition (O) vs Low discipline (C) = "Inner Struggle".
-        2. The Synergy: High Energy (E) + High Empathy (A) = "Ultimate Combo" (but maybe a people pleaser).
-        3. The Extremes: If one stat is very high/low, make it their superpower and their curse.
+        **INTERPRETATION GUIDELINES (HR + RPG):**
+        - High O + Low C = "Wild Mage" (Innovative but needs focus).
+        - High E + High A = "Paladin of Unity" (Leader who connects people).
+        - Low E + High C = "Shadow Sniper" (Quiet, deep focus, precise).
+        - **General Rule**: Find their "Superpower" (Highest Stat) and "Kryptonite" (Lowest Stat).
 
-        **OUTPUT RULES (Strictly Thai Language):**
-        1. class_title: Creative Thai RPG class (e.g., "จอมเวทย์จอมปั่น").
-        2. prophecy (3-4 sentences):
-        - START IMMEDIATELY with "{name}" or "เจ้า".
-        - NO prefixes (e.g., NO "คำทำนาย:", NO "บทวิเคราะห์:").
-        - Describe their inner nature vs outer work style.
-        3. strengths (3 items): Format as [RPG Metaphor] -> [Real Work Scenario]. (2 sentences max).
-        4. weaknesses (2 items): Focus on the side effects of their unique stats.
-        5. best_partner: "[Class Name] - [Reason]"
+        **OUTPUT RULES (Strictly Thai):**
+        1. **class_title**: Cool Thai RPG Title (e.g., "เนโครแมนเซอร์จอมโปรเจกต์").
+        2. **prophecy**: 3-4 sentences describing their work style as if reading a legend.
+           - "คุณเปรียบเสมือนจอมเวทย์ผู้..." (Blend RPG metaphor with real work habits).
+        3. **strengths**: 3 Key Professional Skills.
+        4. **weaknesses**: 2 Areas for Growth (Constructive).
+        5. **best_partner**: A Class that covers their blind spots.
 
-        **CONSTRAINTS:**
-        - JSON FORMAT ONLY.
-        - NO English text in values.
-        - NO Markdown (no bold, no italics), NO bullet symbols in strings.
-
-        **JSON TEMPLATE:**
+        **JSON FORMAT ONLY:**
         {{
-        "class_title": "...",
-        "prophecy": "...",
-        "strengths": ["...", "...", "..."],
-        "weaknesses": ["...", "..."],
-        "best_partner": "..."
+            "class_title": "...",
+            "prophecy": "...",
+            "strengths": ["...", "...", "..."],
+            "weaknesses": ["...", "..."],
+            "best_partner": "..."
         }}
-    """)
+    """
+    )
 
     chain = prompt | llm | StrOutputParser()
 
     try:
-        raw_res = await chain.ainvoke({
-            "name": user.name,
-            "rpg_class": user.character_class,
-            "openness": user.ocean_openness,
-            "conscientiousness": user.ocean_conscientiousness,
-            "extraversion": user.ocean_extraversion,
-            "agreeableness": user.ocean_agreeableness,
-            "neuroticism": user.ocean_neuroticism
-        })
+        raw_res = await chain.ainvoke(
+            {
+                "name": user.name,
+                "rpg_class": user.character_class,
+                "openness": user.ocean_openness,
+                "conscientiousness": user.ocean_conscientiousness,
+                "extraversion": user.ocean_extraversion,
+                "agreeableness": user.ocean_agreeableness,
+                "neuroticism": user.ocean_neuroticism,
+            }
+        )
 
         # Clean & Parse JSON
         clean_json = raw_res.replace("```json", "").replace("```", "").strip()
@@ -67,58 +68,68 @@ async def analyze_user_profile(user):
             "prophecy": "พลังของท่านยังคลุมเครือ... โปรดลองใหม่อีกครั้ง",
             "strengths": ["Unknown"],
             "weaknesses": ["Unknown"],
-            "best_partner": "Unknown"
+            "best_partner": "Unknown",
         }
 
+
 async def analyze_match_synergy(u1, u2, s1, s2, final_score):
-    match_prompt = ChatPromptTemplate.from_template("""
-   Role: You are a "Guild Strategy Consultant" expert in HR Dynamics and RPG Parties.
-    Tone: Epic Fantasy RPG mixed with Professional Work Insight (Thai Language).
+    match_prompt = ChatPromptTemplate.from_template(
+        """
+        Role: You are a "Guild Strategy Consultant" (Expert in Party Synergy & HR Dynamics).
+        Goal: Analyze the chemistry between two members and predict their teamwork effectiveness.
+        Tone: Epic, Constructive, and Insightful (Thai Language).
 
-    **Hero 1:** {name1} (Class: {class1})
-    - Stats: O={o1}, C={c1}, E={e1}, A={a1}, N={n1}
+        **Party Members:**
+        1. {name1} ({class1}) [Stats: O={o1}, C={c1}, E={e1}, A={a1}, N={n1}]
+        2. {name2} ({class2}) [Stats: O={o2}, C={c2}, E={e2}, A={a2}, N={n2}]
+        **Chemistry Score:** {score}%
 
-    **Hero 2:** {name2} (Class: {class2})
-    - Stats: O={o2}, C={c2}, E={e2}, A={a2}, N={n2}
+        **ANALYSIS FRAMEWORK:**
+        - **Mage (O)** = Vision/Innovation vs **Paladin (C)** = Structure/Discipline.
+        - **Warrior (E)** = Action/Speed vs **Cleric (A)** = Harmony/Support.
+        - **Rogue (N)** = Risk Aware/Detail vs **Mage (O)** = Optimistic/Big Picture.
 
-    **Calculated Synergy:** {score}%
+        **TASK:**
+        - Identify if they are "Complements" (Cover each other's weaknesses) or "Clashes" (Too similar or too conflicting).
+        - **Speak like a Guild Master consulting on team formation.**
 
-    # 🧠 WORK-STYLE MAPPING (Interpret classes this way):
-    - **Mage (High Openness):** The "Visionary". Creates ideas, strategy, and innovation.
-    - **Paladin (High Conscientiousness):** The "Anchor". Manages structure, discipline, and handles pressure.
-    - **Warrior (High Extraversion):** The "Driver". Pushes execution, sales, and communication.
-    - **Cleric (High Agreeableness):** The "Healer". Maintains team harmony and supports others.
-    - **Rogue (Neuroticism/Detail):** The "Auditor". Spots errors, risks, and details that others miss.
+        **OUTPUT RULES (Strictly Thai):**
+        1. **synergy_name**: Creative Duo Title (e.g., "คู่หูหยินหยาง", "กำแพงเหล็กและหอกสายฟ้า").
+        2. **analysis**: 2-3 sentences blending RPG roles with work styles.
+        3. **pro_tip**: One solid advice for them to work better together.
 
-    **TASK:**
-    Analyze the chemistry between these two. Explain how their working styles (Classes) support or clash with each other in a professional guild setting.
-
-    **OUTPUT JSON RULES:**
-    1. **synergy_name**: Creative Thai Combo Name (e.g., "คู่หูวิสัยทัศน์เหล็ก", "ดาบและโล่พิทักษ์งาน").
-    2. **analysis**: Write 2-3 sentences in Thai.
-       - Blend RPG metaphors with Work benefits.
-       - Example: "คนหนึ่งเปรียบเสมือน Mage ที่คอยร่ายเวทย์ไอเดียใหม่ๆ ส่วนอีกคนคือ Paladin ที่คอยกางโล่ป้องกันความเสี่ยงและคุมเดดไลน์ให้ ทำให้งานทั้งสร้างสรรค์และมั่นคง"
-    3. **pro_tip**: One actionable advice for working together effectively (1-2 sentences).
-
-    **JSON FORMAT ONLY (No Markdown):**
-    {{
-      "synergy_score": {score},
-      "synergy_name": "...",
-      "analysis": "...",
-      "pro_tip": "..."
-    }}
-    """)
+        **JSON FORMAT ONLY:**
+        {{
+          "synergy_score": {score},
+          "synergy_name": "...",
+          "analysis": "...",
+          "pro_tip": "..."
+        }}
+    """
+    )
 
     chain = match_prompt | llm | StrOutputParser()
 
     try:
-        raw_result = await chain.ainvoke({
-            "name1": u1.name, "class1": u1.character_class,
-            "o1": s1["O"], "c1": s1["C"], "e1": s1["E"], "a1": s1["A"], "n1": s1["N"],
-            "name2": u2.name, "class2": u2.character_class,
-            "o2": s2["O"], "c2": s2["C"], "e2": s2["E"], "a2": s2["A"], "n2": s2["N"],
-            "score": final_score
-        })
+        raw_result = await chain.ainvoke(
+            {
+                "name1": u1.name,
+                "class1": u1.character_class,
+                "o1": s1["O"],
+                "c1": s1["C"],
+                "e1": s1["E"],
+                "a1": s1["A"],
+                "n1": s1["N"],
+                "name2": u2.name,
+                "class2": u2.character_class,
+                "o2": s2["O"],
+                "c2": s2["C"],
+                "e2": s2["E"],
+                "a2": s2["A"],
+                "n2": s2["N"],
+                "score": final_score,
+            }
+        )
 
         cleaned_json = raw_result.replace("```json", "").replace("```", "").strip()
         return json.loads(cleaned_json)
@@ -132,96 +143,35 @@ async def analyze_match_synergy(u1, u2, s1, s2, final_score):
             "pro_tip": "ลองให้ทั้งคู่ลงดันเจี้ยนง่ายๆ ร่วมกันดูก่อน",
         }
 
-# generate_team_name removed (Unused)
-
-# =========================
-# Quest Generation Logic (Moved from quest_ai.py)
-# =========================
-
-QUEST_GENERATION_PROMPT = """
-คุณคือ AI ที่ช่วยสร้าง Quest (ภารกิจ) สำหรับระบบ HR Gamification
-
-จาก prompt ของผู้ใช้ ให้สร้าง Quest ในรูปแบบ JSON ดังนี้:
-
-**Input Prompt:**
-{prompt}
-
-**ระยะเวลา:** {deadline_days} วัน
-
-**Skills ที่มีในระบบ (เลือกจากนี้เท่านั้น):**
-{available_skills}
-
-**กรุณา Generate JSON:**
-```json
-{{
-  "title": "ชื่อ Quest ที่ดึงดูด (ภาษาไทย)",
-  "description": "คำอธิบายงานภาษาไทยแบบ Professional (2-3 ประโยค ตรงประเด็น)",
-  "rank": "<ตัดสินใจเอง ตาม Rank Guidelines ด้านล่าง>",
-  "team_size": "<ตัดสินใจเอง 1-5 คน>",
-  "required_skills": [
-    {{"name": "Skill ที่ต้องมี", "level": 3}}
-  ],
-  "ocean_preference": {{
-    "high": ["C"],
-    "low": ["N"]
-  }}
-}}
-```
-
-**Rank Guidelines (เลือกให้เหมาะกับงานและ deadline):**
-- **S**: deadline กระชั้นมาก (1-2 วัน) หรืองานสำคัญมากๆ
-- **A**: deadline สั้น (3-5 วัน) หรือต้องการ expert
-- **B**: deadline ปกติ (6-10 วัน) งานซับซ้อนพอสมควร
-- **C**: deadline ยืดหยุ่น (10-20 วัน) งานทั่วไป
-- **D**: deadline ยาว (20+ วัน) หรืองานง่าย beginner friendly
-
-**Team Size Guidelines:**
-- งานง่ายๆ 1-2 คน: งานเอกสาร, รายงาน, งาน D/C
-- งานปานกลาง 2-3 คน: โปรเจคเล็ก, งาน B/C
-- งานซับซ้อน 3-5 คน: โปรเจคใหญ่, งาน A/S
-
-**OCEAN Preference:**
-- High C: งานต้องการความละเอียด
-- High E: งานต้องติดต่อคนมาก
-- Low N: งานกดดัน ต้องใจเย็น
-- High O: งานต้องการความคิดสร้างสรรค์
-- High A: งานต้องประสานงานมาก
-
-**Important:**
-- เลือก rank ตาม deadline_days และความซับซ้อนของงาน อย่าเลือก A ทุกครั้ง
-- เลือก Skills ที่เสริมกัน ไม่ใช่ซ้ำกัน
-
-ตอบเป็น JSON เท่านั้น ไม่ต้องมีคำอธิบายเพิ่มเติม
-"""
-
-# generate_quest removed (Unused)
 
 async def generate_team_overview(team_stats: dict) -> str:
-    prompt = ChatPromptTemplate.from_template("""
-    คุณเป็นระบบวิเคราะห์คุณภาพทีมจากบุคลิกภาพ Big Five (OCEAN)
-    หน้าที่ของคุณคือสรุปภาพรวมของทีมในเชิงการทำงานร่วมกัน
-    โดยเน้นจุดแข็งและความเหมาะสมของทีมในบริบทองค์กรธุรกิจ
+    prompt = ChatPromptTemplate.from_template(
+        """
+        Role: You are a "Senior Party Tactician" (Expert in Organizational Psychology & RPG Mechanics).
+        Goal: Analyze this team composition (Party) and explain how they will perform in a business quest.
+        Tone: Professional, Insightful, yet Engaging (Thai Language).
 
-    ข้อมูลทีม:
-    - คะแนนเฉลี่ย: {score}/100
-    - Openness: {avg_o}
-    - Conscientiousness: {avg_c}
-    - Extraversion: {avg_e}
-    - Agreeableness: {avg_a}
-    - Neuroticism: {avg_n}
+        Team Stats:
+        - Score: {score}/100
+        - Openness: {avg_o}
+        - Conscientiousness: {avg_c}
+        - Extraversion: {avg_e}
+        - Agreeableness: {avg_a}
+        - Neuroticism: {avg_n}
 
-    แนวทางการตอบ:
-    - อธิบายภาพรวมของทีม ไม่ลงรายละเอียดรายบุคคล
-    - ให้ความสำคัญกับ Conscientiousness, Agreeableness และ Neuroticism เป็นหลัก
-    - หาก Conscientiousness หรือ Agreeableness เฉลี่ยอยู่ในระดับสูง ให้ชี้ว่าเป็นจุดแข็งของทีม
-    - หาก Neuroticism เฉลี่ยอยู่ในระดับต่ำ ให้ชี้ว่าเป็นข้อดีด้านความมั่นคงทางอารมณ์
-    - สามารถกล่าวถึง Extraversion หรือ Openness ได้หากช่วยเสริมภาพรวม
-    - ห้ามกล่าวถึงสูตรคำนวณ คำว่า variance, cost function, normalize หรือ threshold
-    - ใช้ภาษาทางการ กระชับ อ่านเข้าใจง่าย
-    - ความยาว 2-4 ประโยค
-
-    เป้าหมายคือทำให้ผู้อ่านเข้าใจว่าทีมนี้มีคุณภาพอย่างไร และเหมาะสมต่อการทำงานร่วมกันหรือไม่
-    """)
+        **ANALYSIS GUIDELINES:**
+        1. **Team Spirit (Agreeableness)**: High = "Harmonious Guild", Low = "Debate Club".
+        2. **Execution Power (Conscientiousness)**: High = "Disciplined Army", Low = "Adaptive Mercenaries".
+        3. **Stability (Neuroticism)**: Low = "Rock-solid Morale", High = "High Alert / Sensitive".
+        
+        **INSTRUCTIONS:**
+        - Summarize the team's "Vibe" in 2-3 sentences.
+        - Highlight the Strongest trait as the team's "Superpower".
+        - Mention one potential blind spot (e.g., "Great at ideas but might miss deadlines" if C is low).
+        - Use "Team" or "Party" interchangeably.
+        - **Speak like a tactician analyzing a battle formation, but for office work.**
+        """
+    )
 
     chain = prompt | llm | StrOutputParser()
 

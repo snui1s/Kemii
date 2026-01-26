@@ -69,21 +69,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex top items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-4xl overflow-hidden flex justify-center">
-        <div className="w-full md:w-7/12 p-8 md:p-12">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6">
+    <div className="min-h-screen bg-[var(--background)] flex top items-center justify-center p-4">
+      <div className="bg-[var(--background)]/50 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex justify-center">
+        <div className="w-full p-8 md:p-12">
+          <h2 className="text-2xl font-medium opacity-80 text-[var(--foreground)] mb-6 text-center">
             สร้างบัญชีใหม่
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   ชื่อที่ใช้แสดง (Display Name)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-3 text-slate-700 dark:text-slate-300">
+                  <span className="absolute left-3 top-3 text-[var(--muted)]">
                     <User size={20} />
                   </span>
                   <input
@@ -91,7 +91,7 @@ export default function RegisterPage() {
                     type="text"
                     maxLength={10}
                     placeholder="เบส, เอิร์ธ"
-                    className="w-full pl-10 pr-4 py-2.5 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 text-[var(--foreground)] bg-black/5 dark:bg-white/5 border border-transparent focus:border-[var(--highlight)] rounded-xl outline-none transition placeholder:text-[var(--muted)]/50"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -101,18 +101,18 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   อีเมล (Email)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-3 text-slate-400">
+                  <span className="absolute left-3 top-3 text-[var(--muted)]">
                     <Mail size={20} />
                   </span>
                   <input
                     required
                     type="email"
                     placeholder="name@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 text-[var(--foreground)] bg-black/5 dark:bg-white/5 border border-transparent focus:border-[var(--highlight)] rounded-xl outline-none transition placeholder:text-[var(--muted)]/50"
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -122,18 +122,18 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   รหัสผ่าน (Password)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-3 text-slate-400">
+                  <span className="absolute left-3 top-3 text-[var(--muted)]">
                     <Lock size={20} />
                   </span>
                   <input
                     required
                     type="password"
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 text-[var(--foreground)] bg-black/5 dark:bg-white/5 border border-transparent focus:border-[var(--highlight)] rounded-xl outline-none transition placeholder:text-[var(--muted)]/50"
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
@@ -145,11 +145,11 @@ export default function RegisterPage() {
 
             {/* Department Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
                 สังกัด (เลือกได้มากกว่า 1){" "}
                 <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-black/5 dark:border-white/5 rounded-xl bg-black/5 dark:bg-white/5 custom-scrollbar">
                 {DEPARTMENTS.map((dept) => {
                   const isSelected = selectedDepts.includes(dept.name);
                   return (
@@ -159,8 +159,8 @@ export default function RegisterPage() {
                       onClick={() => toggleDept(dept.name)}
                       className={`text-xs p-2 rounded-lg border text-left flex items-center justify-between transition-all ${
                         isSelected
-                          ? "bg-indigo-600 border-indigo-600 text-slate-50 dark:text-slate-200"
-                          : "bg-white text-slate-700 dark:text-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:border-indigo-400 dark:text-slate-200"
+                          ? "bg-[var(--highlight)] border-[var(--highlight)] text-white"
+                          : "bg-[var(--background)] text-[var(--muted)] border-transparent hover:border-[var(--highlight)] hover:text-[var(--highlight)]"
                       }`}
                     >
                       <span className="truncate">{dept.name}</span>
@@ -174,7 +174,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[var(--highlight)] hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl hover:shadow-[var(--highlight)]/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 className="animate-spin" />
@@ -186,11 +186,11 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-slate-500">
+          <div className="mt-6 text-center text-sm text-[var(--muted)]">
             มีบัญชีอยู่แล้ว?{" "}
             <Link
               href="/login"
-              className="text-indigo-600 font-bold hover:underline"
+              className="text-[var(--highlight)] font-bold hover:underline"
             >
               เข้าสู่ระบบ
             </Link>

@@ -25,11 +25,10 @@ export default function InfoModal({ onClose }: InfoModalProps) {
       icon: (
         <BrainCircuit
           size={32}
-          className="text-indigo-500 dark:text-indigo-400"
         />
       ),
       content: (
-        <div className="space-y-4 text-slate-600 dark:text-slate-300">
+        <div className="space-y-4 text-[var(--muted)]">
           <p>
             เราใช้โมเดลทางจิตวิทยา <b>Big Five (OCEAN)</b>{" "}
             ซึ่งเป็นมาตรฐานสากลที่ได้รับความเชื่อถือสูงสุดในการวิเคราะห์บุคลิกภาพ
@@ -72,28 +71,28 @@ export default function InfoModal({ onClose }: InfoModalProps) {
     },
     {
       title: "2. การคำนวณคะแนน (The Scoring)",
-      icon: <Target size={32} className="text-red-500 dark:text-red-400" />,
+      icon: <Target size={32} />,
       content: (
-        <div className="space-y-4 text-slate-600 dark:text-slate-300">
+        <div className="space-y-4 text-[var(--muted)]">
           <p>
             คะแนนถูกคำนวณจากชุดคำถามมาตรฐานสากล (IPIP)
             เพื่อหาค่าพลังของคุณในแต่ละด้าน:
           </p>
-          <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs md:text-sm">
+          <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10 font-mono text-xs md:text-sm">
             <div className="flex justify-between mb-2">
               <span>📈 High Score (&gt;60%)</span>
               <span className="text-green-600 dark:text-green-400 font-bold">
                 บุคลิกภาพเด่นชัด
               </span>
             </div>
-            <div className="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
+            <div className="flex justify-between border-t border-black/5 dark:border-white/10 pt-2">
               <span>📉 Low Score (&lt;40%)</span>
-              <span className="text-slate-500 dark:text-slate-400 font-bold">
+              <span className="text-[var(--muted)] font-bold">
                 มีลักษณะตรงข้าม
               </span>
             </div>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 italic">
+          <p className="text-sm text-[var(--muted)] italic opacity-80">
             *ไม่มีนิสัยที่ &quot;ดี&quot; หรือ &quot;แย่&quot;
             ทุกอย่างคือจุดเด่นที่คุณมี
           </p>
@@ -102,9 +101,9 @@ export default function InfoModal({ onClose }: InfoModalProps) {
     },
     {
       title: "3. อาชีพในเกม RPG (Gamification)",
-      icon: <Scale size={32} className="text-green-500 dark:text-green-400" />,
+      icon: <Scale size={32} />,
       content: (
-        <div className="space-y-4 text-slate-600 dark:text-slate-300">
+        <div className="space-y-4 text-[var(--muted)]">
           <p>
             เราแปลงค่าพลัง OCEAN ให้เป็น <b>Class อาชีพ</b>{" "}
             เพื่อให้เห็นภาพการทำงานร่วมกัน:
@@ -131,9 +130,9 @@ export default function InfoModal({ onClose }: InfoModalProps) {
     },
     {
       title: "4. ความเข้ากันได้ (Compatibility)",
-      icon: <Zap size={32} className="text-yellow-500 dark:text-yellow-400" />,
+      icon: <Zap size={32} />,
       content: (
-        <div className="space-y-4 text-slate-600 dark:text-slate-300">
+        <div className="space-y-4 text-[var(--muted)]">
           <p>
             อัลกอริทึมจัดทีมของเราใช้หลักการ <b>Similarity</b> และ{" "}
             <b>Complementarity</b>:
@@ -165,60 +164,60 @@ export default function InfoModal({ onClose }: InfoModalProps) {
     {
       title: "5. งานวิจัยอ้างอิง (Hall of Fame)",
       icon: (
-        <BookOpen size={32} className="text-slate-700 dark:text-slate-300" />
+        <BookOpen size={32} />
       ),
       content: (
         <div className="space-y-3 overflow-y-auto max-h-[40vh] pr-2 custom-scrollbar">
-          <p className="text-xs font-bold text-slate-500 uppercase">
+          <p className="text-xs font-bold text-[var(--muted)] uppercase opacity-70">
             Scientific Foundation
           </p>
 
           <div className="space-y-4 text-xs">
-            <div className="border-l-2 border-indigo-400 pl-3">
-              <p className="font-bold text-slate-800 dark:text-slate-100">
+            <div className="border-l-2 border-indigo-400/50 pl-3">
+              <p className="font-bold text-[var(--foreground)]">
                 Barrick & Mount (1991)
               </p>
-              <p className="text-slate-800 dark:text-slate-100">
+              <p className="text-[var(--muted)]">
                 พิสูจน์ว่า <b>Conscientiousness</b>{" "}
                 คือตัวทำนายความสำเร็จในการทำงานที่แม่นยำที่สุดในทุกอาชีพ
               </p>
             </div>
 
-            <div className="border-l-2 border-blue-400 pl-3">
-              <p className="font-bold text-slate-800 dark:text-slate-100">
+            <div className="border-l-2 border-blue-400/50 pl-3">
+              <p className="font-bold text-[var(--foreground)]">
                 Tett et al. (1991)
               </p>
-              <p className="text-slate-800 dark:text-slate-100">
+              <p className="text-[var(--muted)]">
                 ยืนยันว่าการล็อคเป้าหมายนิสัยให้ตรงกับงาน (Confirmatory)
                 แม่นยำกว่าการสุ่มตรวจทั่วไป
               </p>
             </div>
 
-            <div className="border-l-2 border-green-400 pl-3">
-              <p className="font-bold text-slate-800 dark:text-slate-100">
+            <div className="border-l-2 border-green-400/50 pl-3">
+              <p className="font-bold text-[var(--foreground)]">
                 Peeters et al. (2006)
               </p>
-              <p className="text-slate-800 dark:text-slate-100">
+              <p className="text-[var(--muted)]">
                 พบว่าทีมที่ <b>Agreeableness</b> และ <b>Conscientiousness</b>{" "}
                 สูงและคล้ายกัน จะทำงานได้ดีที่สุด
               </p>
             </div>
 
-            <div className="border-l-2 border-rose-400 pl-3">
-              <p className="font-bold text-slate-800 dark:text-slate-100">
+            <div className="border-l-2 border-rose-400/50 pl-3">
+              <p className="font-bold text-[var(--foreground)]">
                 Peeters (Satisfaction Study)
               </p>
-              <p className="text-slate-800 dark:text-slate-100">
+              <p className="text-[var(--muted)]">
                 คน <b>Introvert</b>{" "}
                 จะพึงพอใจน้อยลงมากหากต้องอยู่ในทีมที่มีระดับการเข้าสังคมต่างจากตนมากไป
               </p>
             </div>
 
-            <div className="border-l-2 border-purple-400 pl-3 pb-2">
-              <p className="font-bold text-slate-800 dark:text-slate-100">
+            <div className="border-l-2 border-purple-400/50 pl-3 pb-2">
+              <p className="font-bold text-[var(--foreground)]">
                 Curşeu et al. (2019)
               </p>
-              <p className="text-slate-800 dark:text-slate-100">
+              <p className="text-[var(--muted)]">
                 เตือนเรื่อง <b>TMGT Effect</b>: นิสัยดีๆ
                 หากมีสูงสุดโต่งเกินไปอาจส่งผลลบต่อการทำงานเป็นทีม
               </p>
@@ -231,68 +230,68 @@ export default function InfoModal({ onClose }: InfoModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-transparent dark:border-slate-800 transition-colors">
+      <div className="bg-[var(--background)] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-black/5 dark:border-white/5 transition-colors">
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold">
-            <Info size={20} className="text-blue-500 dark:text-blue-400" />
+        <div className="p-4 border-b border-black/5 dark:border-white/5 flex justify-between items-center bg-black/5 dark:bg-white/5">
+          <div className="flex items-center gap-2 text-[var(--foreground)] font-bold">
+            <Info size={20} className="text-[var(--highlight)]" />
             <span>ระบบวิเคราะห์บุคลิกภาพ Kemii</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition text-[var(--muted)] hover:text-[var(--foreground)]"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 flex-1 overflow-y-auto">
+        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-full mb-4 animate-bounce-slow">
+            <div className="p-4 bg-black/5 dark:bg-white/5 rounded-full mb-4 animate-bounce-slow text-[var(--highlight)]">
               {slides[step].icon}
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 leading-tight">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2 leading-tight">
               {slides[step].title}
             </h2>
           </div>
-          <div className="text-left bg-white dark:bg-slate-900 rounded-xl">
+          <div className="text-left bg-[var(--background)] rounded-xl">
             {slides[step].content}
           </div>
         </div>
 
         {/* Navigation Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
-          <div className="flex gap-1.5 absolute left-1/2 -translate-x-1/2">
+        <div className="p-4 border-t border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 flex justify-between items-center relative">
+          <button
+            onClick={() => setStep(Math.max(0, step - 1))}
+            disabled={step === 0}
+            className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-30 transition text-[var(--muted)] hover:text-[var(--foreground)]"
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          <div className="flex gap-1.5">
             {slides.map((_, i) => (
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
                   i === step
-                    ? "bg-blue-600 dark:bg-blue-500 w-4"
-                    : "bg-slate-300 dark:bg-slate-600"
+                    ? "bg-[var(--highlight)] w-4"
+                    : "bg-[var(--muted)]/30"
                 }`}
               />
             ))}
           </div>
 
           <button
-            onClick={() => setStep(Math.max(0, step - 1))}
-            disabled={step === 0}
-            className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 transition text-slate-600 dark:text-slate-300"
-          >
-            <ChevronLeft size={24} />
-          </button>
-
-          <button
             onClick={() => {
               if (step < slides.length - 1) setStep(step + 1);
               else onClose();
             }}
-            className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 font-bold"
+            className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition text-[var(--muted)] hover:text-[var(--foreground)] flex items-center gap-1 font-bold"
           >
             {step === slides.length - 1 ? (
-              <span className="text-blue-600 dark:text-blue-400">
+              <span className="text-[var(--highlight)]">
                 เสร็จสิ้น
               </span>
             ) : (

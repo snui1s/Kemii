@@ -38,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ElementalLoader from "@/components/ElementalLoader";
 
 // API_URL removed (using centralized api instance)
 
@@ -445,7 +446,7 @@ export default function SmartQuestPage() {
       {
         duration: 4000,
         className:
-          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
+          "!bg-[var(--background)]/95 !backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-2xl text-[var(--foreground)]",
         style: { color: "inherit" },
       }
     );
@@ -453,25 +454,25 @@ export default function SmartQuestPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/20 flex flex-col font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900/30">
+      <div className="min-h-screen bg-[var(--background)] flex flex-col font-[family-name:var(--font-line-seed)] selection:bg-[var(--highlight)]/30 text-[var(--foreground)]">
         {/* Main Split Layout */}
         <div className="flex-1 flex flex-col md:flex-row min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] md:overflow-hidden">
           {/* === LEFT PANEL: INPUTS (40%) === */}
-          <div className="w-full md:w-[400px] lg:w-[450px] p-8 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 md:overflow-y-auto z-20 shadow-xl md:shadow-none flex flex-col">
+          <div className="w-full md:w-[400px] lg:w-[450px] p-8 bg-[var(--background)] border-r border-black/5 dark:border-white/5 md:overflow-y-auto z-20 shadow-xl md:shadow-none flex flex-col">
             <div className="flex-1 space-y-10">
               {/* Header */}
               <div className="space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none mb-4">
+                <div className="w-10 h-10 rounded-xl bg-[var(--highlight)] flex items-center justify-center shadow-lg shadow-[var(--highlight)]/20 mb-4">
                   <Sparkles
                     className="text-white"
                     size={20}
                     strokeWidth={1.5}
                   />
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
                   ระบบจัดปาร์ตี้
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                <p className="text-[var(--muted)] text-sm leading-relaxed opacity-80">
                   ระบุรายละเอียดโปรเจกต์และโครงสร้างทีม <br />
                   AI
                   ของเราจะคัดเลือกคนที่เหมาะสมที่สุดทั้งความสามารถและความเข้ากันได้
@@ -480,8 +481,8 @@ export default function SmartQuestPage() {
 
               {/* Project Info */}
               <div className="space-y-5 animate-in slide-in-from-left-2 duration-500 delay-100">
-                <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 flex items-center gap-2">
-                  <Scroll size={14} className="text-indigo-500" /> ข้อมูลภารกิจ
+                <h2 className="text-xs uppercase tracking-widest font-semibold text-[var(--muted)] flex items-center gap-2 opacity-70">
+                  <Scroll size={14} className="text-[var(--highlight)]" /> ข้อมูลภารกิจ
                   (Quest Info)
                 </h2>
                 <div className="space-y-4">
@@ -491,27 +492,27 @@ export default function SmartQuestPage() {
                       placeholder="ชื่อภารกิจ"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
-                      className="peer w-full px-0 py-2 bg-transparent border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 font-medium text-lg"
+                      className="peer w-full px-0 py-2 bg-transparent border-b border-black/10 dark:border-white/10 text-[var(--foreground)] focus:border-[var(--highlight)] outline-none transition-all placeholder-[var(--muted)]/40 font-medium text-lg"
                     />
-                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-500 transition-all peer-focus:w-full" />
+                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--highlight)] transition-all peer-focus:w-full" />
                   </div>
 
                   <div className="group relative pt-2">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 group-focus-within:text-indigo-500 transition-colors mb-1 block">
+                    <label className="text-[10px] uppercase font-bold text-[var(--muted)] group-focus-within:text-[var(--highlight)] transition-colors mb-1 block">
                       รายละเอียด (Description)
                     </label>
                     <textarea
                       placeholder="ระบุขอบเขตงาน, เป้าหมาย หรือสิ่งที่ต้องทำ..."
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}
-                      className="peer w-full px-0 py-2 bg-transparent border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 text-sm resize-none h-20"
+                      className="peer w-full px-0 py-2 bg-transparent border-b border-black/10 dark:border-white/10 text-[var(--foreground)] focus:border-[var(--highlight)] outline-none transition-all placeholder-[var(--muted)]/40 text-sm resize-none h-20"
                     />
-                    <div className="absolute bottom-1.5 left-0 w-0 h-0.5 bg-indigo-500 transition-all peer-focus:w-full" />
+                    <div className="absolute bottom-1.5 left-0 w-0 h-0.5 bg-[var(--highlight)] transition-all peer-focus:w-full" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1 group">
-                      <label className="text-[10px] uppercase font-bold text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                      <label className="text-[10px] uppercase font-bold text-[var(--muted)] group-focus-within:text-[var(--highlight)] transition-colors">
                         วันเริ่ม
                       </label>
                       <div className="relative">
@@ -519,13 +520,13 @@ export default function SmartQuestPage() {
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full py-2 bg-transparent border-b border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none transition text-sm font-medium text-slate-700 dark:text-slate-200"
+                          className="w-full py-2 bg-transparent border-b border-black/10 dark:border-white/10 focus:border-[var(--highlight)] outline-none transition text-sm font-medium text-[var(--foreground)]"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1 group">
-                      <label className="text-[10px] uppercase font-bold text-slate-400 group-focus-within:text-pink-500 transition-colors">
+                      <label className="text-[10px] uppercase font-bold text-[var(--muted)] group-focus-within:text-pink-500 transition-colors">
                         กำหนดส่ง
                       </label>
                       <div className="relative">
@@ -536,7 +537,7 @@ export default function SmartQuestPage() {
                             startDate || new Date().toISOString().split("T")[0]
                           }
                           onChange={(e) => setDeadline(e.target.value)}
-                          className="w-full py-2 bg-transparent border-b border-slate-200 dark:border-slate-700 focus:border-pink-500 outline-none transition text-sm font-medium text-slate-700 dark:text-slate-200"
+                          className="w-full py-2 bg-transparent border-b border-black/10 dark:border-white/10 focus:border-pink-500 outline-none transition text-sm font-medium text-[var(--foreground)]"
                         />
                       </div>
                     </div>
@@ -547,13 +548,13 @@ export default function SmartQuestPage() {
               {/* Department Requirements */}
               <div className="space-y-5 animate-in slide-in-from-left-2 duration-500 delay-200">
                 <div className="flex justify-between items-end">
-                  <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 flex items-center gap-2">
-                    <Users size={14} className="text-indigo-500" /> จัดปาร์ตี้
+                  <h2 className="text-xs uppercase tracking-widest font-semibold text-[var(--muted)] flex items-center gap-2 opacity-70">
+                    <Users size={14} className="text-[var(--highlight)]" /> จัดปาร์ตี้
                     (Party Setup)
                   </h2>
                   <button
                     onClick={addRow}
-                    className="text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 rounded-full px-3 py-1 transition flex items-center gap-1"
+                    className="text-[10px] font-bold bg-[var(--highlight)]/10 text-[var(--highlight)] hover:bg-[var(--highlight)]/20 rounded-full px-3 py-1 transition flex items-center gap-1"
                   >
                     <Plus size={12} strokeWidth={3} /> เพิ่มตำแหน่ง
                   </button>
@@ -561,12 +562,10 @@ export default function SmartQuestPage() {
 
                 <div className="space-y-3">
                   {requirements.map((row, idx) => {
-                    // Get available users for this specific row's department using the pre-calculated map
                     const availableCount = row.deptId
                       ? deptAvailabilityMap[row.deptId] || 0
                       : 0;
 
-                    // Filter out departments already selected in other rows
                     const availableOptions = DEPARTMENTS.filter((d) => {
                       const isSelectedInOtherRow = requirements.some(
                         (r) => r.id !== row.id && r.deptId === d.id
@@ -577,7 +576,7 @@ export default function SmartQuestPage() {
                     return (
                       <div
                         key={row.id}
-                        className="group flex gap-3 items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900 transition-all"
+                        className="group flex gap-3 items-center p-3 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 hover:border-[var(--highlight)]/30 transition-all backdrop-blur-sm"
                       >
                         <div className="flex-1 min-w-0">
                           <Select
@@ -586,10 +585,10 @@ export default function SmartQuestPage() {
                               updateRow(row.id, "deptId", val)
                             }
                           >
-                            <SelectTrigger className="w-full bg-transparent border-none p-0 h-auto text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-0 shadow-none">
+                            <SelectTrigger className="w-full bg-transparent dark:bg-transparent border-none p-0 h-auto text-sm font-semibold text-[var(--foreground)] focus:ring-0 shadow-none">
                               <SelectValue placeholder="เลือกแผนก (Department)" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)] shadow-xl">
                               {availableOptions.map((d) => (
                                 <SelectItem key={d.id} value={d.id}>
                                   {d.label || d.name}
@@ -598,7 +597,7 @@ export default function SmartQuestPage() {
                             </SelectContent>
                           </Select>
                           {row.deptId && (
-                            <p className="text-[10px] text-slate-400 mt-1">
+                            <p className="text-[10px] text-[var(--muted)] mt-1">
                               ว่างตอนนี้:{" "}
                               <span className="font-bold text-emerald-500">
                                 {availableCount}
@@ -608,7 +607,7 @@ export default function SmartQuestPage() {
                           )}
                         </div>
 
-                        <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10" />
 
                         <div className="flex items-center">
                           <button
@@ -616,7 +615,7 @@ export default function SmartQuestPage() {
                               const val = Math.max(1, row.count - 1);
                               updateRow(row.id, "count", val);
                             }}
-                            className="w-7 h-7 flex items-center justify-center rounded-l-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors border border-r-0 border-slate-200 dark:border-slate-700"
+                            className="w-7 h-7 flex items-center justify-center rounded-l-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--muted)] transition-colors border border-r-0 border-black/5 dark:border-white/5"
                           >
                             <Minus size={12} />
                           </button>
@@ -626,13 +625,13 @@ export default function SmartQuestPage() {
                             max={row.deptId ? availableCount : undefined}
                             value={row.count}
                             onChange={(e) => {
-                              let val = parseInt(e.target.value) || 0; // Allow 0/empty while typing, but clamp on blur if needed
+                              let val = parseInt(e.target.value) || 0;
                               if (val < 1) val = 1;
                               if (row.deptId && val > availableCount)
                                 val = availableCount;
                               updateRow(row.id, "count", val);
                             }}
-                            className="w-10 h-7 bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700 text-xs font-bold text-center text-slate-900 dark:text-white outline-none focus:border-indigo-500 z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-10 h-7 bg-transparent border-y border-black/5 dark:border-white/5 text-xs font-bold text-center text-[var(--foreground)] outline-none focus:border-[var(--highlight)]/50 z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button
                             onClick={() => {
@@ -641,7 +640,7 @@ export default function SmartQuestPage() {
                                 val = availableCount;
                               updateRow(row.id, "count", val);
                             }}
-                            className="w-7 h-7 flex items-center justify-center rounded-r-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors border border-l-0 border-slate-200 dark:border-slate-700"
+                            className="w-7 h-7 flex items-center justify-center rounded-r-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--muted)] transition-colors border border-l-0 border-black/5 dark:border-white/5"
                           >
                             <Plus size={12} />
                           </button>
@@ -650,7 +649,7 @@ export default function SmartQuestPage() {
                         {requirements.length > 1 && (
                           <button
                             onClick={() => removeRow(row.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all ml-1"
+                            className="opacity-0 group-hover:opacity-100 p-1.5 text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all ml-1"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -663,12 +662,12 @@ export default function SmartQuestPage() {
             </div>
 
             {/* Action Area (Sticky Bottom on Desktop) */}
-            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5">
               {!generatedTeam ? (
                 <button
                   onClick={handleGenerate}
                   disabled={analyzing}
-                  className="w-full h-14 bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-14 bg-[var(--highlight)] hover:opacity-90 text-white rounded-2xl font-bold text-base shadow-xl hover:shadow-[var(--highlight)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {analyzing ? (
                     <>
@@ -692,7 +691,7 @@ export default function SmartQuestPage() {
                   </button>
                   <button
                     onClick={handleTryAgain}
-                    className="w-full h-12 bg-white border border-slate-200 hover:border-slate-300 dark:bg-transparent dark:border-slate-700 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 rounded-2xl font-semibold text-sm transition-all"
+                    className="w-full h-12 bg-transparent border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 text-[var(--muted)] rounded-2xl font-semibold text-sm transition-all"
                   >
                     ล้างค่า & เริ่มใหม่
                   </button>
@@ -702,25 +701,26 @@ export default function SmartQuestPage() {
           </div>
 
           {/* === RIGHT PANEL: TABLE & RESULTS (60%) === */}
-          <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 relative flex flex-col">
+          <div className="flex-1 bg-[var(--background)] relative flex flex-col">
             {loadingConfig ? (
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="flex items-center gap-3 text-indigo-600 font-medium animate-pulse">
-                  <Loader2 className="animate-spin" /> กำลังร่ายเวทย์ค้นหา...
-                </div>
+                <ElementalLoader />
+                <p className="mt-4 text-[var(--muted)] font-medium animate-pulse">
+                  กำลังร่ายเวทย์ค้นหา...
+                </p>
               </div>
             ) : candidates.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-10 text-center animate-in fade-in zoom-in duration-500">
-                <div className="w-24 h-24 bg-white dark:bg-slate-900 rounded-full shadow-sm flex items-center justify-center mb-6">
+                <div className="w-24 h-24 bg-black/5 dark:bg-white/5 rounded-full shadow-sm flex items-center justify-center mb-6">
                   <Users
                     size={40}
-                    className="text-slate-200 dark:text-slate-700"
+                    className="text-[var(--muted)]"
                   />
                 </div>
-                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">
+                <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">
                   จัดปาร์ตี้ในฝันของคุณ
                 </h3>
-                <p className="text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">
+                <p className="text-[var(--muted)] max-w-sm mx-auto text-sm leading-relaxed opacity-70">
                   เริ่มโดยการเพิ่มอาชีพ (Roles) ทางด้านซ้าย <br />
                   กิลด์จะคัดเลือกนักผจญภัยที่เหมาะสมให้ทันที
                 </p>
@@ -728,7 +728,7 @@ export default function SmartQuestPage() {
             ) : (
               <>
                 {/* Minimal Header */}
-                <div className="h-20 px-8 flex items-center justify-between sticky top-0 bg-slate-50/20 dark:bg-slate-900/20 backdrop-blur-md z-10 border-b border-slate-200/50 dark:border-slate-800/50">
+                <div className="h-20 px-8 flex items-center justify-between sticky top-0 bg-[var(--background)]/80 backdrop-blur-md z-10 border-b border-black/5 dark:border-white/5">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-3">
                       {generatedTeam
@@ -773,8 +773,8 @@ export default function SmartQuestPage() {
                           key={user.id}
                           className={`p-4 rounded-xl border transition-all ${
                             isSelected
-                              ? "bg-indigo-50/50 border-indigo-200 dark:bg-indigo-900/10 dark:border-indigo-800"
-                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800"
+                              ? "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10"
+                              : "bg-transparent border-black/5 dark:border-white/5"
                           } ${
                             !user.is_available
                               ? "opacity-60 grayscale-[0.5]"
@@ -850,15 +850,15 @@ export default function SmartQuestPage() {
 
                 <div className="flex-1 md:overflow-y-auto p-4 md:p-8 pt-4">
                   {/* Team Score & Visualizer */}
-                  <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  <div className="hidden md:block overflow-hidden rounded-xl border border-black/5 dark:border-white/5">
                     <table className="w-full text-left border-collapse">
-                      <thead className="bg-slate-50/50 dark:bg-slate-800/30 text-[11px] uppercase tracking-wider font-bold text-slate-400 sticky top-0">
+                      <thead className="bg-black/5 dark:bg-white/5 text-[11px] uppercase tracking-wider font-bold text-[var(--muted)] sticky top-0 backdrop-blur-md z-10">
                         <tr>
                           {!generatedTeam && (
-                            <th className="px-6 py-4 w-16 text-center border-b border-slate-100 dark:border-slate-800">
+                            <th className="px-6 py-4 w-16 text-center border-b border-black/5 dark:border-white/5">
                               <button
                                 onClick={toggleAll}
-                                className="hover:text-indigo-500 transition-colors"
+                                className="hover:text-[var(--highlight)] transition-colors"
                               >
                                 {selectedPoolIds.size ===
                                   candidates.filter((u) => u.is_available)
@@ -870,21 +870,21 @@ export default function SmartQuestPage() {
                               </button>
                             </th>
                           )}
-                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                          <th className="px-6 py-4 border-b border-black/5 dark:border-white/5 text-[var(--foreground)]">
                             นักผจญภัย
                           </th>
-                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                          <th className="px-6 py-4 border-b border-black/5 dark:border-white/5 text-[var(--foreground)]">
                             คลาส/อาชีพ
                           </th>
-                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                          <th className="px-6 py-4 border-b border-black/5 dark:border-white/5 text-[var(--foreground)]">
                             สถานะ (Status)
                           </th>
-                          <th className="px-6 py-4 text-center border-b border-slate-100 dark:border-slate-800">
+                          <th className="px-6 py-4 text-center border-b border-black/5 dark:border-white/5 text-[var(--foreground)]">
                             Level
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                      <tbody className="divide-y divide-black/5 dark:divide-white/5">
                         {(generatedTeam
                           ? generatedTeam.members
                           : candidates
@@ -899,13 +899,13 @@ export default function SmartQuestPage() {
                               key={user.id}
                               className={`group transition-all duration-200 ${
                                 generatedTeam
-                                  ? "hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10"
+                                  ? "hover:bg-black/5 dark:hover:bg-white/5"
                                   : isSelected
-                                  ? "bg-slate-50/30 dark:bg-slate-800/30"
-                                  : "hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                  ? "bg-black/5 dark:bg-white/5"
+                                  : "hover:bg-black/5 dark:hover:bg-white/5"
                               } ${
                                 !user.is_available
-                                  ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/50"
+                                  ? "opacity-50 cursor-not-allowed grayscale"
                                   : ""
                               }`}
                               style={{ animationDelay: `${i * 50}ms` }}
@@ -917,8 +917,8 @@ export default function SmartQuestPage() {
                                     disabled={!user.is_available}
                                     className={`transition ${
                                       isSelected
-                                        ? "text-indigo-600 scale-110"
-                                        : "text-slate-300 hover:text-indigo-400"
+                                        ? "text-[var(--highlight)] scale-110"
+                                        : "text-[var(--muted)] hover:text-[var(--highlight)]"
                                     }`}
                                   >
                                     {isSelected ? (
@@ -932,13 +932,13 @@ export default function SmartQuestPage() {
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ring-2 ring-white dark:ring-slate-800 ${
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ring-2 ring-[var(--background)] ${
                                       generatedTeam
-                                        ? "bg-slate-50 dark:bg-slate-900"
-                                        : "bg-white dark:bg-slate-800"
+                                        ? "bg-black/5 dark:bg-white/5"
+                                        : "bg-black/5 dark:bg-white/5"
                                     } ${
                                       CLASS_COLORS[user.character_class] ||
-                                      "text-slate-400"
+                                      "text-[var(--muted)]"
                                     }`}
                                   >
                                     {CLASS_ICONS[user.character_class] || (
@@ -949,8 +949,8 @@ export default function SmartQuestPage() {
                                     <p
                                       className={`text-sm font-semibold ${
                                         generatedTeam
-                                          ? "text-indigo-900 dark:text-indigo-100"
-                                          : "text-slate-700 dark:text-slate-200"
+                                          ? "text-[var(--foreground)]"
+                                          : "text-[var(--foreground)]"
                                       } `}
                                     >
                                       {user.name}
@@ -1062,21 +1062,21 @@ export default function SmartQuestPage() {
                   </div>
                   {/* AI Team Analysis Section */}
                   {generatedTeam && (
-                    <div className="mt-6 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in zoom-in duration-500">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-2">
+                    <div className="mt-6 p-4 rounded-2xl bg-[var(--highlight)]/5 border border-[var(--highlight)]/10 animate-in fade-in zoom-in duration-500">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--highlight)] mb-2 flex items-center gap-2">
                         <Sparkles size={14} /> AI Team Analysis
                       </h4>
                       {isAnalyzingText ? (
-                        <div className="flex items-center gap-2 text-sm text-slate-500 animate-pulse">
+                        <div className="flex items-center gap-2 text-sm text-[var(--muted)] animate-pulse">
                           <Loader2 size={14} className="animate-spin" />{" "}
                           กำลังประมวลผลบุคลิกภาพทีม...
-                        </div>
+                         </div>
                       ) : teamAnalysisText ? (
-                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                        <p className="text-sm text-[var(--foreground)] leading-relaxed font-medium opacity-90">
                           {teamAnalysisText}
                         </p>
                       ) : (
-                        <p className="text-sm text-slate-400 italic">
+                        <p className="text-sm text-[var(--muted)] italic">
                           ไม่สามารถดึงข้อมูลวิเคราะห์ได้
                         </p>
                       )}
@@ -1088,14 +1088,14 @@ export default function SmartQuestPage() {
 
             {/* Results Footer (Floating) if generated */}
             {generatedTeam && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-full shadow-2xl border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-4 pr-6 animate-in slide-in-from-bottom-6 zoom-in-95 duration-500">
-                <div className="w-12 h-12 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center">
-                  <span className="text-white dark:text-slate-900 font-black text-sm">
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-[var(--background)]/80 p-1.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 flex items-center gap-4 pr-6 animate-in slide-in-from-bottom-6 zoom-in-95 duration-500">
+                <div className="w-12 h-12 rounded-full bg-[var(--foreground)] flex items-center justify-center">
+                  <span className="text-[var(--background)] font-black text-sm">
                     {generatedTeam.harmony_score}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">
+                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">
                     คะแนนความเข้ากันได้
                   </span>
                   {/* Dynamic Label Logic */}
@@ -1109,7 +1109,7 @@ export default function SmartQuestPage() {
                       colorClass = "text-green-600 dark:text-green-400";
                     } else if (score >= 60) {
                       label = "เข้ากันได้ดี";
-                      colorClass = "text-indigo-600 dark:text-indigo-400";
+                      colorClass = "text-[var(--highlight)]";
                     } else if (score < 40) {
                       label = "ความเข้ากันได้ต่ำ";
                       colorClass = "text-red-500 dark:text-red-400";
@@ -1122,10 +1122,10 @@ export default function SmartQuestPage() {
                     );
                   })()}
                 </div>
-                <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2" />
+                <div className="h-8 w-[1px] bg-black/10 dark:bg-white/10 mx-2" />
                 <button
                   onClick={handleConfirmTeam}
-                  className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                  className="text-sm font-bold text-[var(--highlight)] hover:opacity-80 flex items-center gap-1"
                 >
                   ยืนยัน <ArrowRight size={14} />
                 </button>

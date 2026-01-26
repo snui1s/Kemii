@@ -65,7 +65,7 @@ const CLASS_THEMES = {
     border: "border-purple-500",
     statColor: "#a855f7",
     softBg:
-      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
+      "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5",
     softText: "text-purple-700 dark:text-purple-300",
   },
   Paladin: {
@@ -74,7 +74,7 @@ const CLASS_THEMES = {
     border: "border-yellow-500",
     statColor: "#eab308",
     softBg:
-      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
+      "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5",
     softText: "text-yellow-700 dark:text-yellow-300",
   },
   Warrior: {
@@ -83,7 +83,7 @@ const CLASS_THEMES = {
     border: "border-red-500",
     statColor: "#ef4444",
     softBg:
-      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
+      "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5",
     softText: "text-red-700 dark:text-red-300",
   },
   Cleric: {
@@ -92,7 +92,7 @@ const CLASS_THEMES = {
     border: "border-green-500",
     statColor: "#22c55e",
     softBg:
-      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
+      "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5",
     softText: "text-green-700 dark:text-green-300",
   },
   Rogue: {
@@ -101,7 +101,7 @@ const CLASS_THEMES = {
     border: "border-blue-900",
     statColor: "#1e3a5f",
     softBg:
-      "bg-slate-50 dark:bg-slate-50/20 border-slate-200 dark:border-slate-700",
+      "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5",
     softText: "text-blue-900 dark:text-blue-300",
   },
 } as const;
@@ -166,43 +166,41 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
   const theme = getTheme(user.character_class);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900/20 text-slate-800 dark:text-slate-100 p-4 md:p-8 font-sans flex justify-center items-center relative overflow-hidden transition-colors duration-300">
-      {/* Background FX */}
-      {/* Background FX Removed */}
-
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] p-4 md:p-8 font-[family-name:var(--font-line-seed)] flex justify-center items-center relative overflow-hidden transition-colors duration-300">
+      
       <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
         {/* --- LEFT: HERO CARD --- */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           <div
-            className={`relative p-[2px] rounded-3xl bg-slate-200 dark:bg-slate-700 shadow-md`}
+            className={`relative p-[1px] rounded-3xl bg-gradient-to-b from-black/5 to-black/0 dark:from-white/10 dark:to-white/0`}
           >
-            <div className="bg-white dark:bg-slate-900 rounded-[22px] p-6 flex flex-col items-center text-center h-full relative overflow-hidden">
+            <div className="bg-[var(--background)]/80 backdrop-blur-xl rounded-[22px] p-6 flex flex-col items-center text-center h-full relative overflow-hidden border border-black/5 dark:border-white/5">
               {/* Badge */}
-              <div className="absolute top-4 right-4 bg-black/40 px-3 py-1 rounded-full text-xs font-mono text-yellow-400 border border-white/10">
+              <div className="absolute top-4 right-4 bg-black/5 dark:bg-white/10 px-3 py-1 rounded-full text-xs font-mono text-[var(--highlight)] border border-transparent">
                 LV. {user.level || 1}
               </div>
 
               {/* Class Icon */}
               <div
-                className={`mt-4 mb-4 p-5 rounded-full bg-slate-100 dark:bg-slate-800 border-2 ${theme.border} shadow-lg`}
+                className={`mt-4 mb-4 p-5 rounded-full bg-black/5 dark:bg-white/5 border border-transparent ${theme.border} shadow-sm`}
               >
-                <div className="text-slate-700 dark:text-white drop-shadow-md">
+                <div className="text-[var(--foreground)] drop-shadow-sm">
                   {theme.icon}
                 </div>
               </div>
 
               {/* Titles */}
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-1">
+              <h2 className="text-2xl font-light text-[var(--foreground)] mb-1">
                 {user.name}
               </h2>
               <div
-                className={`px-4 py-1 rounded-lg text-sm font-bold bg-gradient-to-r ${theme.color} text-white mb-4 shadow-lg inline-block`}
+                className={`px-4 py-1 rounded-lg text-sm font-bold bg-gradient-to-r ${theme.color} text-white mb-4 shadow-md inline-block`}
               >
                 {cleanText(analysis.class_title) || user.character_class}
               </div>
 
               {/* Stats Graph */}
-              <div className="w-full h-[220px] relative mt-2">
+              <div className="w-full h-[220px] relative mt-2 opacity-90">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart
                     cx="50%"
@@ -210,11 +208,11 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
                     outerRadius="70%"
                     data={statsData}
                   >
-                    <PolarGrid stroke="#94a3b8" />
+                    <PolarGrid stroke="var(--muted)" strokeOpacity={0.3} />
                     <PolarAngleAxis
                       dataKey="subject"
                       tick={{
-                        fill: "#64748b",
+                        fill: "var(--muted)",
                         fontSize: 11,
                         fontWeight: "bold",
                       }}
@@ -237,7 +235,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
               </div>
 
               {/* Legend */}
-              <div className="mt-6 grid grid-cols-1 gap-1 text-[12px] text-slate-500 dark:text-slate-400 text-left w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+              <div className="mt-6 grid grid-cols-1 gap-1 text-[12px] text-[var(--muted)] text-left w-full px-4 py-3 bg-black/5 dark:bg-white/5 rounded-xl border border-transparent">
                 <div className="flex justify-between">
                   <span>
                     <b>O</b>penness
@@ -272,11 +270,8 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
             </div>
           </div>
 
-          {/* Skills Button */}
-          {/* Skills Button Removed */}
-
           <Link href="/" className="block">
-            <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md">
+            <button className="w-full bg-[var(--background)]/80 hover:bg-black/5 dark:hover:bg-white/5 border border-black/5 dark:border-white/5 text-[var(--muted)] hover:text-[var(--foreground)] py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm">
               <ChevronRight size={18} /> ข้ามไปหน้าหลัก
             </button>
           </Link>
@@ -285,23 +280,23 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
         {/* --- RIGHT: AI ANALYSIS --- */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           {/* 1. The Prophecy */}
-          <div className="rounded-3xl p-8 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-xl relative overflow-hidden backdrop-blur-sm">
-            <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none scale-150">
+          <div className="rounded-3xl p-8 bg-[var(--background)]/80 border border-black/5 dark:border-white/5 shadow-lg relative overflow-hidden backdrop-blur-xl">
+            <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none scale-150 text-[var(--foreground)]">
               {theme.icon}
             </div>
 
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-              <Scroll className="text-yellow-500" /> Guild Master&apos;s
+            <h3 className="text-xl font-bold text-[var(--foreground)] mb-4 flex items-center gap-2 opacity-80">
+              <Scroll className="text-[var(--highlight)]" /> Guild Master&apos;s
               Prophecy
             </h3>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-lg font-medium italic">
-              &quot;{cleanText(analysis.prophecy)}&quot;
+            <p className="text-[var(--foreground)] opacity-60 leading-relaxed text-lg font-medium">
+              {cleanText(analysis.prophecy)}
             </p>
           </div>
 
           {/* 2. Combat Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/60 dark:bg-slate-900/80 p-6 rounded-2xl border border-green-500/30 shadow-sm">
+            <div className="bg-[var(--background)]/60 backdrop-blur-md p-6 rounded-2xl border border-green-500/20 shadow-sm">
               <h4 className="text-green-600 dark:text-green-400 font-bold mb-4 flex items-center gap-2 uppercase text-sm tracking-wider">
                 <Star size={16} /> Heroic Strengths
               </h4>
@@ -309,7 +304,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
                 {analysis.strengths?.map((s, i) => (
                   <li
                     key={i}
-                    className="flex gap-3 text-slate-600 dark:text-slate-300 text-sm"
+                    className="flex gap-3 text-[var(--muted)] text-sm"
                   >
                     <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
                     {cleanText(s)}
@@ -318,7 +313,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
               </ul>
             </div>
 
-            <div className="bg-white/60 dark:bg-slate-900/80 p-6 rounded-2xl border border-red-500/30 shadow-sm">
+            <div className="bg-[var(--background)]/60 backdrop-blur-md p-6 rounded-2xl border border-red-500/20 shadow-sm">
               <h4 className="text-red-600 dark:text-red-400 font-bold mb-4 flex items-center gap-2 uppercase text-sm tracking-wider">
                 <AlertTriangle size={16} /> Fatal Flaws
               </h4>
@@ -326,7 +321,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
                 {analysis.weaknesses?.map((w, i) => (
                   <li
                     key={i}
-                    className="flex gap-3 text-slate-600 dark:text-slate-300 text-sm"
+                    className="flex gap-3 text-[var(--muted)] text-sm"
                   >
                     <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                     {cleanText(w)}
@@ -338,18 +333,18 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
 
           {/* 3. Soulmate */}
           <div
-            className={`p-6 rounded-2xl ${theme.softBg} border flex items-start gap-4 shadow-sm`}
+            className={`p-6 rounded-2xl bg-[var(--background)]/60 backdrop-blur-md border border-black/5 dark:border-white/5 flex items-start gap-4 shadow-sm`}
           >
             <div
-              className={`p-3 rounded-xl ${theme.softText} bg-white dark:bg-slate-800`}
+              className={`p-3 rounded-xl bg-black/5 dark:bg-white/5 text-[var(--foreground)]`}
             >
               <Users size={24} />
             </div>
             <div>
-              <h4 className={`${theme.softText} font-bold mb-1`}>
+              <h4 className={`text-[var(--foreground)] font-bold mb-1 opacity-80`}>
                 Recommended Party Member
               </h4>
-              <p className="text-slate-600 dark:text-slate-300 text-sm">
+              <p className="text-[var(--muted)] text-sm opacity-80">
                 {cleanText(analysis.best_partner)}
               </p>
             </div>
