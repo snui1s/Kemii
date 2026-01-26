@@ -96,7 +96,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ### 1. Clone & Prepare
 
 ```bash
-git clone https://github.com/snailsqz/Kemii.git
+git clone https://github.com/snui1s/Kemii.git
 cd Kemii
 ```
 
