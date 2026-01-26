@@ -31,7 +31,7 @@ interface MatchingSkill {
 }
 
 interface AcceptedMember {
-  id: number;
+  id: string; // ULID
   name: string;
   character_class: string;
   department?: string;
@@ -40,7 +40,7 @@ interface AcceptedMember {
 }
 
 interface QuestDetail {
-  id: number;
+  id: string; // ULID
   title: string;
   description: string;
   rank: string;
@@ -48,12 +48,12 @@ interface QuestDetail {
   optional_skills: { name: string; level: number }[];
   ocean_preference: { high?: string[]; low?: string[] };
   team_size: number;
-  leader_id: number;
+  leader_id: string; // ULID
   leader_name: string;
   leader_class: string;
   status: string;
   accepted_members: AcceptedMember[];
-  accepted_member_ids: number[];
+  accepted_member_ids: string[]; // ULID
   start_date: string | null;
   deadline: string | null;
   created_at: string;
@@ -152,7 +152,7 @@ export default function QuestDetailPage({
     queryClient.invalidateQueries({ queryKey: ["quests"] });
   };
 
-  const handleKick = async (memberId: number) => {
+  const handleKick = async (memberId: string) => {
     toast(
       (t) => (
         <div className="flex flex-col items-center gap-4 min-w-[260px] py-2 font-[family-name:var(--font-line-seed)]">
