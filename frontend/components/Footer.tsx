@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 
 export default function Footer() {
-  const APP_VERSION = "Beta 3.5";
+  const APP_VERSION = "v4.0";
   const { user, logout } = useAuth();
 
   const toastCooldown = useRef(false);
@@ -34,23 +34,23 @@ export default function Footer() {
   };
 
   return (
-    <footer
+      <footer
       id="site-footer"
-      className="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 py-8 sm:py-10 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300"
+      className="bg-[var(--background)] text-[var(--muted)] py-8 sm:py-10 border-t border-black/5 dark:border-white/5 mt-auto transition-colors duration-300 backdrop-blur-sm"
     >
       <div className="container mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Column 1: Brand & Version */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-slate-800 dark:text-white">
+              <span className="text-xl font-bold text-[var(--foreground)]">
                 Kemii
               </span>
-              <span className="text-xs bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-mono border border-transparent dark:border-slate-700">
+              <span className="text-xs bg-black/5 dark:bg-white/10 text-[var(--muted)] px-2 py-0.5 rounded-full font-mono border border-transparent">
                 {APP_VERSION}
               </span>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
+            <p className="text-sm text-[var(--muted)] leading-relaxed max-w-xs opacity-80">
               ค้นหาเคมีที่ลงตัว ปลดล็อกศักยภาพทีมด้วย AI
               เครื่องมือวิเคราะห์บุคลิกภาพที่ช่วยให้การทำงานร่วมกันง่ายขึ้น
             </p>
@@ -58,14 +58,14 @@ export default function Footer() {
 
           {/* Column 2: Quick Links */}
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+            <h3 className="font-semibold text-[var(--foreground)] mb-3">
               เมนูหลัก
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  className="hover:text-[var(--highlight)] transition-colors"
                 >
                   หน้าแรก
                 </Link>
@@ -74,10 +74,10 @@ export default function Footer() {
                 <Link
                   href="/quests"
                   onClick={(e) => handleProtectedLink(e, "/quests")}
-                  className={`hover:text-indigo-600 dark:hover:text-indigo-400 transition ${
+                  className={`transition-colors ${
                     user
-                      ? "hover:text-indigo-600 dark:hover:text-indigo-400"
-                      : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                      ? "hover:text-[var(--highlight)]"
+                      : "cursor-not-allowed opacity-50"
                   }`}
                 >
                   <span>เควส</span>
@@ -87,10 +87,10 @@ export default function Footer() {
                 <Link
                   href="/users"
                   onClick={(e) => handleProtectedLink(e, "/users")}
-                  className={`hover:text-indigo-600 dark:hover:text-indigo-400 transition ${
+                  className={`transition-colors ${
                     user
-                      ? "hover:text-indigo-600 dark:hover:text-indigo-400"
-                      : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                      ? "hover:text-[var(--highlight)]"
+                      : "cursor-not-allowed opacity-50"
                   }`}
                 >
                   <span>สมาชิกกิลด์</span>
@@ -101,14 +101,14 @@ export default function Footer() {
 
           {/* Column 3: Legal */}
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+            <h3 className="font-semibold text-[var(--foreground)] mb-3">
               กฎหมายและความเป็นส่วนตัว
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/privacy-policy"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  className="hover:text-[var(--highlight)] transition-colors"
                 >
                   นโยบายความเป็นส่วนตัว
                 </Link>
@@ -116,7 +116,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/disclaimer"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  className="hover:text-[var(--highlight)] transition-colors"
                 >
                   ข้อจำกัดความรับผิดชอบ
                 </Link>
@@ -124,7 +124,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  className="hover:text-[var(--highlight)] transition-colors"
                 >
                   ข้อตกลงการใช้งาน
                 </Link>
@@ -134,14 +134,14 @@ export default function Footer() {
 
           {/* Column 4: Contact */}
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+            <h3 className="font-semibold text-[var(--foreground)] mb-3">
               ช่วยเหลือ
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/contact"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                  className="hover:text-[var(--highlight)] transition-colors"
                 >
                   ติดต่อเรา
                 </Link>
@@ -151,14 +151,14 @@ export default function Footer() {
                   href="https://github.com/snailsqz/Kemii"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition group"
+                  className="flex items-center gap-2 hover:text-[var(--highlight)] transition-colors group"
                 >
                   <Image
                     src="/Octicons-mark-github.svg"
                     alt="GitHub"
                     width={24}
                     height={24}
-                    className="dark:invert"
+                    className="dark:invert opacity-70 group-hover:opacity-100 transition-opacity"
                   />
                   <span>GitHub Repository</span>
                 </a>
@@ -167,8 +167,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-center sm:text-left">
+        <div className="pt-8 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-center sm:text-left opacity-60">
             © {new Date().getFullYear()} Kemii Team Chemistry. All rights
             reserved.
           </p>

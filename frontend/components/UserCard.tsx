@@ -352,381 +352,115 @@ export default function UserCard({
   id,
   scores,
   onInspect,
-  allowFlip = false,
   compactMode = false,
   currentUserRole,
   userRole = "user",
   onPromote,
   onDelete,
-  showFullStats = false,
-  isOwnCard = false,
   departments = [],
+  isOwnCard = false,
 }: UserCardProps) {
   const router = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [particles, setParticles] = useState<
-    Array<{
-      id: number;
-      left: number;
-      top: number;
-      delay: number;
-      size: number;
-    }>
-  >([]);
-
+  
   const classKey = getClassKey(characterClass);
   const config = CLASS_CONFIG[classKey];
   const IconComponent = config.icon;
-
+  
   const normScores = useMemo(() => normalizeScores(scores), [scores]);
   const topStats = useMemo(() => getTopStats(scores), [scores]);
-
-  useEffect(() => {
-    setIsMounted(true);
-    setParticles(
-      Array.from({ length: 5 }, (_, i) => ({
-        id: i,
-        left: Math.random() * 80 + 10,
-        top: Math.random() * 80 + 10,
-        delay: Math.random() * 2000,
-        size: Math.random() * 4 + 2,
-      }))
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const isNovice = classKey === "Novice";
-
-    // 1. Block Novice Comparison/View (unless it's me)
-    if (isNovice && !isOwnCard) {
-      toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้น้าา", {
-        icon: "✨",
-        style: {
-          borderRadius: "12px",
-          background: "#334155",
-          color: "#fff",
-        },
-      });
+    if (classKey === "Novice" && !isOwnCard) {
+      toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้น้าา", { icon: "✨" });
       return;
     }
-
-    // 2. Perform Action
-    if (allowFlip && !compactMode) {
-      setIsFlipped(!isFlipped);
-    } else if (onInspect) {
-      // Synergy/Comparison is allowed for everyone!
+    
+    if (onInspect) {
       onInspect();
-    } else if (id) {
-      // Visiting full profile page is restricted to Admin or Me
-      if (isOwnCard || currentUserRole === "admin") {
-        router.push(`/profile?id=${id}`);
-      }
+    } else if (id && (isOwnCard || currentUserRole === "admin")) {
+      router.push(`/profile?id=${id}`);
     }
   };
 
-  const chartData = useMemo(
-    () =>
-      normScores
-        ? [
-            { subject: "O", A: normScores.Openness, fullMark: 50 },
-            { subject: "C", A: normScores.Conscientiousness, fullMark: 50 },
-            { subject: "E", A: normScores.Extraversion, fullMark: 50 },
-            { subject: "A", A: normScores.Agreeableness, fullMark: 50 },
-            { subject: "N", A: normScores.Neuroticism, fullMark: 50 },
-          ]
-        : [],
-    [normScores]
-  );
-
-  const cardHeight = compactMode ? "160px" : "240px";
-
-  if (!isMounted)
-    return (
-      <div
-        className="relative w-full bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"
-        style={{ height: cardHeight }}
-      />
-    );
-
   return (
     <div
-      className="relative w-full group user-card cursor-pointer"
-      style={{ perspective: "1000px", height: cardHeight }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
+      className={`
+        group relative w-full cursor-pointer transition-all duration-300
+        border rounded-xl overflow-hidden
+        ${isOwnCard 
+          ? "bg-[var(--background)] border-[var(--highlight)] shadow-[0_0_15px_rgba(250,129,18,0.15)]" 
+          : "bg-white/50 dark:bg-white/5 border-black/10 dark:border-white/10 hover:border-[var(--highlight)] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(250,129,18,0.1)]"
+        }
+      `}
     >
-      <div
-        className="relative w-full h-full transition-all duration-500"
-        style={{
-          transformStyle: "preserve-3d",
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
-      >
-        <div
-          className={`absolute inset-0 w-full h-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-xl ${
-            isHovered ? config.glow : ""
-          } transition-all duration-300 flex flex-col`}
-          style={{ backfaceVisibility: "hidden" }}
+      <div className="p-5 flex items-start gap-4">
+        {/* Icon Box */}
+        <div 
+          className="shrink-0 p-3 rounded-lg flex items-center justify-center transition-colors"
+          style={{ 
+            backgroundColor: isOwnCard ? 'var(--highlight)' : 'rgba(0,0,0,0.03)',
+            color: isOwnCard ? '#fff' : config.color 
+          }}
         >
-          {/* --- Effects Wrapper (Clipped) --- */}
-          <div className="absolute inset-0 w-full h-full overflow-hidden rounded-xl pointer-events-none z-0">
-            <div
-              className={`h-1.5 w-full bg-gradient-to-r ${config.gradient} shrink-0 relative z-20`}
-            />
-
-            <div className="absolute -right-6 -bottom-6 opacity-[0.15] dark:opacity-[0.2] transform rotate-12 pointer-events-none transition-transform group-hover:scale-110 duration-500 z-0">
-              <IconComponent size={140} color={config.color} />
-            </div>
-
-            <div className="effect-layer">
-              {isHovered && <ClassHoverEffect classKey={classKey} />}
-            </div>
-
-            {classKey === "Novice" &&
-              isHovered &&
-              particles.map((p) => (
-                <div
-                  key={p.id}
-                  className="absolute pointer-events-none animate-float-up"
-                  style={{
-                    left: `${p.left}%`,
-                    top: `${p.top}%`,
-                    color: config.color,
-                    animationDelay: `${p.delay}ms`,
-                    zIndex: 1,
-                  }}
-                >
-                  <Sparkles size={p.size} className="opacity-60" />
-                </div>
-              ))}
-          </div>
-
-          <div className="p-5 flex-1 flex flex-col relative z-10">
-            <div className="flex items-start gap-4">
-              <div
-                className="p-3 rounded-xl shrink-0 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 shadow-sm"
-                style={{
-                  backgroundColor: `${config.color}15`,
-                  color: config.color,
-                }}
-              >
-                <IconComponent className="w-8 h-8" />
-              </div>
-              <div className="flex-1 min-w-0 pt-1">
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {name}
-                </h3>
-                <div className="flex items-center gap-2 mt-2">
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm tracking-wide"
-                    style={{ backgroundColor: config.color }}
-                  >
-                    {characterClass}
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                    {type}
-                  </span>
-                  {userRole === "admin" && (
-                    <span className="flex items-center gap-1 text-[9px] font-bold text-yellow-600 bg-yellow-100 border border-yellow-200 px-1.5 py-0.5 rounded-full">
-                      <Crown size={8} fill="currentColor" /> GOD
-                    </span>
-                  )}
-                </div>
-                {departments.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap gap-1.5 opacity-90 relative z-30">
-                    {departments.slice(0, 3).map((dept, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-1 text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
-                      >
-                        <Briefcase size={10} className="shrink-0" />
-                        <span className="truncate max-w-[120px]">{dept}</span>
-                      </div>
-                    ))}
-                    {departments.length > 3 && (
-                      <div className="relative group/tooltip">
-                        <div className="flex items-center gap-1 text-[10px] bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 cursor-help font-medium">
-                          <span>+{departments.length - 3} more</span>
-                        </div>
-
-                        {/* Cool Tooltip */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] hidden group-hover/tooltip:block z-50">
-                          <div className="bg-slate-800 text-white text-[10px] rounded-lg py-2 px-3 shadow-xl border border-slate-700 flex flex-col gap-1 relative animate-in fade-in zoom-in-95 duration-200">
-                            {/* Arrow */}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
-
-                            {departments.slice(3).map((dept, idx) => (
-                              <span
-                                key={idx}
-                                className="border-b border-slate-700 last:border-0 pb-1 last:pb-0"
-                              >
-                                {dept}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-auto pt-4">
-              {showFullStats && normScores ? (
-                <div className="mb-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
-                  <div className="flex justify-between items-center text-xs">
-                    <div className="flex flex-col items-center">
-                      <span className="text-purple-600 font-bold">
-                        {normScores.Openness}
-                      </span>
-                      <span className="text-[9px] text-slate-400">O</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-blue-600 font-bold">
-                        {normScores.Conscientiousness}
-                      </span>
-                      <span className="text-[9px] text-slate-400">C</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-amber-600 font-bold">
-                        {normScores.Extraversion}
-                      </span>
-                      <span className="text-[9px] text-slate-400">E</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-emerald-600 font-bold">
-                        {normScores.Agreeableness}
-                      </span>
-                      <span className="text-[9px] text-slate-400">A</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-rose-600 font-bold">
-                        {normScores.Neuroticism}
-                      </span>
-                      <span className="text-[9px] text-slate-400">N</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {topStats.length > 0 ? (
-                    topStats.map((stat, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
-                      >
-                        <TrendingUp size={12} className="text-emerald-500" />
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                          High {stat.key}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-dashed border-slate-200 w-full justify-center">
-                      <Sparkles size={12} />{" "}
-                      <span>
-                        {classKey === "Novice"
-                          ? "Awaiting Awakening..."
-                          : "Power Awakened"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {!compactMode && (
-              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center opacity-60 group-hover:opacity-100 transition-opacity">
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  {allowFlip && (
-                    <>
-                      <Eye size={12} /> Click for Stats
-                    </>
-                  )}
-                </span>
-
-                {/* Admin Controls */}
-                {currentUserRole === "admin" && (
-                  <div className="flex items-center gap-2 pointer-events-auto">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPromote?.();
-                      }}
-                      title={
-                        userRole === "admin"
-                          ? "Demote to User"
-                          : "Promote to Admin"
-                      }
-                      className={`p-1.5 rounded-full transition-colors ${
-                        userRole === "admin"
-                          ? "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
-                          : "bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
-                      }`}
-                    >
-                      <Crown
-                        size={14}
-                        fill={userRole === "admin" ? "currentColor" : "none"}
-                      />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.();
-                      }}
-                      title="Delete User"
-                      className="p-1.5 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <IconComponent size={24} />
         </div>
 
-        {allowFlip && !compactMode && (
-          <div
-            className="absolute inset-0 w-full h-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-            }}
-          >
-            <div
-              className={`h-1.5 w-full bg-gradient-to-r ${config.gradient} shrink-0`}
-            />
-            <div className="flex-1 flex flex-col p-2 relative z-10">
-              <div className="flex items-center justify-between px-3 pb-2 border-b border-slate-200 dark:border-slate-700 shrink-0 mt-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <TrendingUp size={12} /> Battle Stats
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  {name}
-                </span>
-              </div>
-              <div className="flex-1 w-full min-h-0 relative mt-1">
-                {/* Only render Chart if flipped to save resources, or we can use the Dynamic import with ssr:false */}
-                {isFlipped && (
-                  <UserStatsRadar
-                    name={name}
-                    chartData={chartData}
-                    config={config}
-                  />
-                )}
-              </div>
-            </div>
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start">
+            <h3 className="font-medium text-lg text-[var(--foreground)] truncate pr-2">
+              {name}
+            </h3>
+            {userRole === 'admin' && <Crown size={12} className="text-yellow-500 mt-1 shrink-0" />}
           </div>
-        )}
+
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+             <span className="text-xs font-mono text-[var(--muted)]">{type}</span>
+             <span className="text-xs font-mono px-1.5 py-0.5 rounded border border-black/5 dark:border-white/10 text-[var(--muted)]">
+               {characterClass}
+             </span>
+          </div>
+
+          {/* Departments */}
+          {departments.length > 0 && (
+             <div className="mt-3 flex flex-wrap gap-1">
+               {departments.slice(0, 2).map((dept, i) => (
+                 <span key={i} className="text-[10px] px-2 py-0.5 bg-black/5 dark:bg-white/5 rounded text-[var(--foreground)] opacity-70 truncate max-w-[100px]">
+                   {dept}
+                 </span>
+               ))}
+               {departments.length > 2 && (
+                 <span className="text-[10px] px-1.5 py-0.5 text-[var(--muted)]">+{departments.length - 2}</span>
+               )}
+             </div>
+          )}
+          
+          {/* Stats Preview (Minimal) */}
+          <div className="mt-4 flex gap-2">
+             {topStats.slice(0, 2).map((stat, i) => (
+               <div key={i} className="flex items-center gap-1 text-xs font-bold text-[var(--foreground)] opacity-60">
+                 <TrendingUp size={10} />
+                 {stat.key}
+               </div>
+             ))}
+          </div>
+        
+          {/* Admin Actions */}
+          {currentUserRole === 'admin' && !compactMode && (
+             <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={(e) => { e.stopPropagation(); onPromote?.(); }} className="p-1.5 hover:bg-yellow-100 rounded text-yellow-600">
+                  <Crown size={14} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onDelete?.(); }} className="p-1.5 hover:bg-red-100 rounded text-red-500">
+                  <Trash2 size={14} />
+                </button>
+             </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -3,20 +3,20 @@ import { Scale } from "lucide-react";
 
 export default function Terms() {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 font-[family-name:var(--font-line-seed)]">
+      <div className="bg-[var(--background)]/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-black/5 dark:border-white/5">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400">
+          <div className="p-3 bg-[var(--highlight)]/10 rounded-full text-[var(--highlight)]">
             <Scale size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">
             ข้อตกลงการใช้งาน (Terms of Service)
           </h1>
         </div>
 
-        <div className="space-y-6 text-slate-600 dark:text-slate-300 leading-relaxed">
+        <div className="space-y-6 text-[var(--foreground)] opacity-90 leading-relaxed">
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               1. ข้อตกลงการใช้งาน
             </h2>
             <p>ในการใช้งานเว็บไซต์ Kemii ท่านตกลงที่จะปฏิบัติตามกฎดังนี้:</p>
@@ -37,7 +37,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               2. กฎกติกาการใช้งาน
             </h2>
             <p>
@@ -48,7 +48,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               3. ข้อจำกัดความรับผิดชอบ
             </h2>
             <ul className="list-disc list-inside mt-2 ml-4 space-y-2">
@@ -66,7 +66,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               4. สิทธิ์ในการระงับการใช้งาน
             </h2>
             <p>
@@ -76,7 +76,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               5. การเปลี่ยนแปลงข้อตกลง
             </h2>
             <p>

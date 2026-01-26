@@ -83,7 +83,7 @@ export default function Navbar() {
       {
         duration: 3000,
         className:
-          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
+          "!bg-[var(--background)]/90 !backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-2xl text-[var(--foreground)]",
         style: { color: "inherit" },
       }
     );
@@ -122,11 +122,12 @@ export default function Navbar() {
       }, 3000);
 
       toast.error("🔒 กรุณาทำพิธีปลุกพลังก่อนใช้งานครับ", {
+        className: "!bg-[var(--background)]/90 !backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-2xl text-[var(--foreground)]",
         style: {
-          background: "#334155",
-          color: "#fff",
+          background: "transparent",
+          color: "inherit",
+          boxShadow: "none",
         },
-        id: "assessment-error",
         duration: 3000,
       });
     }
@@ -136,12 +137,12 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-slate-100 dark:bg-slate-900 backdrop-blur-md text-slate-600 dark:text-slate-300 p-3 sm:p-4 sticky top-0 z-50 shadow-sm border-b border-slate-200/50 dark:border-slate-800 transition-colors duration-300">
+      <nav className="bg-[var(--background)]/80 backdrop-blur-md text-[var(--muted)] p-3 sm:p-4 sticky top-0 z-50 shadow-sm border-b border-black/5 dark:border-white/5 transition-colors duration-300">
         <div className="container mx-auto flex justify-between items-center gap-2">
           {/* LOGO AREA */}
           <Link
             href="/"
-            className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white hover:text-indigo-400 transition shrink-0"
+            className="text-xl font-bold flex items-center gap-2 text-[var(--foreground)] hover:text-[var(--highlight)] transition shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -174,7 +175,7 @@ export default function Navbar() {
               </defs>
             </svg>
             {/* ซ่อนชื่อในมือถือ (hidden) โชว์ใน Tablet ขึ้นไป (sm:inline) */}
-            <span className="hidden sm:inline font-banana">Kemii</span>
+            <span className="hidden sm:inline font-medium">Kemii</span>
           </Link>
 
           {/* RIGHT SIDE ACTIONS */}
@@ -186,12 +187,12 @@ export default function Navbar() {
                 onClick={(e) => handleProtectedLink(e, "/quests")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
                   user
-                    ? "hover:text-amber-600 dark:hover:text-amber-400"
-                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                    ? "text-[var(--foreground)] hover:text-[var(--highlight)]"
+                    : "text-[var(--muted)] cursor-not-allowed opacity-50"
                 }`}
               >
                 {user ? (
-                  <Scroll size={18} className="text-amber-500" />
+                  <Scroll size={18} className="text-[var(--highlight)]" />
                 ) : (
                   <Lock size={18} />
                 )}
@@ -203,8 +204,8 @@ export default function Navbar() {
                 onClick={(e) => handleProtectedLink(e, "/users")}
                 className={`flex items-center gap-1.5 transition text-base font-medium ${
                   user
-                    ? "hover:text-indigo-600 dark:hover:text-indigo-400"
-                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                    ? "text-[var(--foreground)] hover:text-[var(--highlight)]"
+                    : "text-[var(--muted)] cursor-not-allowed opacity-50"
                 }`}
               >
                 {user ? <Users size={18} /> : <Lock size={18} />}
@@ -216,12 +217,12 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-2">
               <button
                 onClick={() => setShowInfo(true)}
-                className="text-slate-400 hover:text-indigo-400 transition-colors p-1"
+                className="text-[var(--muted)] hover:text-[var(--highlight)] transition-colors p-1"
                 title="คู่มือคลาส"
               >
                 <HelpCircle size={20} />
               </button>
-              <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+              <div className="h-6 w-px bg-black/10 dark:bg-white/10 mx-1"></div>
               <ThemeToggle />
             </div>
 
@@ -231,31 +232,31 @@ export default function Navbar() {
                 <div className="pl-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger className="outline-none">
-                      <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm min-w-[120px] hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer">
+                      <div className="flex items-center gap-2 bg-[var(--background)] px-3 py-1.5 rounded-full border border dark:border-white/20 shadow-sm min-w-[120px] hover:border-[var(--highlight)] transition cursor-pointer">
                         {/* Icon Class */}
-                        <div className="p-1 bg-slate-100 dark:bg-slate-700 rounded-full">
+                        <div className="p-1 bg-black/5 dark:bg-white/5 rounded-full">
                           {getClassIcon(user.character_class)}
                         </div>
 
                         <div className="flex flex-col leading-none text-left">
-                          <span className="font-bold text-slate-700 dark:text-indigo-300 text-sm truncate max-w-[80px]">
+                          <span className="font-bold text-[var(--foreground)] text-sm truncate max-w-[80px]">
                             {user.name}
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-[var(--muted)]">
                             Lv.{user.level}
                           </span>
                         </div>
                       </div>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className="w-56 bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 shadow-xl">
                       <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      <DropdownMenuSeparator className="bg-black/5 dark:bg-white/5" />
+                      <DropdownMenuItem onClick={() => router.push("/profile")} className="cursor-pointer hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)]">
                         <UserIcon className="mr-2 h-4 w-4" /> Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                        className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
                       >
                         <LogOut className="mr-2 h-4 w-4" /> Logout
                       </DropdownMenuItem>
@@ -266,13 +267,13 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-400 dark:hover:text-indigo-400 transition"
+                    className="px-4 py-2 rounded-xl text-sm font-bold text-[var(--muted)] hover:text-[var(--highlight)] transition"
                   >
                     เข้าสู่ระบบ
                   </Link>
                   <Link
                     href="/register"
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-md shadow-indigo-500/20 active:scale-95"
+                    className="flex items-center gap-2 bg-[var(--highlight)] hover:opacity-90 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-md active:scale-95"
                   >
                     <UserPlus size={18} />
                     <span>สมัครสมาชิก</span>
@@ -287,7 +288,7 @@ export default function Navbar() {
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                className="p-2 text-[var(--muted)] hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] rounded-lg transition"
               >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -297,22 +298,22 @@ export default function Navbar() {
 
         {/* MOBILE MENU DROPDOWN */}
         {isMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-xl p-4 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-[var(--background)]/95 backdrop-blur-xl border-b border-black/5 dark:border-white/5 shadow-xl p-4 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
             {user && (
-              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
+              <div className="flex items-center justify-between bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-transparent">
                 <Link
                   href="/profile"
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 flex-1"
                 >
-                  <div className="p-2 bg-white dark:bg-slate-700 rounded-full shadow-sm">
+                  <div className="p-2 bg-[var(--background)] rounded-full shadow-sm">
                     {getClassIcon(user.character_class)}
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                    <span className="font-bold text-[var(--foreground)]">
                       {user.name}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-[var(--muted)]">
                       {user.character_class} (Lv.{user.level})
                     </span>
                   </div>
@@ -335,11 +336,11 @@ export default function Navbar() {
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
                   user
-                    ? "hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-300"
-                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                    ? "hover:bg-[var(--highlight)]/10 text-[var(--foreground)] hover:text-[var(--highlight)]"
+                    : "text-[var(--muted)] cursor-not-allowed opacity-50"
                 }`}
               >
-                {user ? <Scroll size={20} /> : <Lock size={20} />}
+                {user ? <Scroll size={20} className="text-[var(--highlight)]" /> : <Lock size={20} />}
                 เควส
               </Link>
 
@@ -351,8 +352,8 @@ export default function Navbar() {
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl font-medium transition ${
                   user
-                    ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
-                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                    ? "hover:bg-[var(--highlight)]/10 text-[var(--foreground)] hover:text-[var(--highlight)]"
+                    : "text-[var(--muted)] cursor-not-allowed opacity-50"
                 }`}
               >
                 {user ? <Users size={20} /> : <Lock size={20} />}
@@ -360,14 +361,14 @@ export default function Navbar() {
               </Link>
             </div>
 
-            <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+            <div className="h-px bg-black/5 dark:bg-white/5 my-1"></div>
 
             <button
               onClick={() => {
                 setShowInfo(true);
                 setIsMenuOpen(false);
               }}
-              className="flex items-center gap-3 p-3 rounded-xl font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition w-full text-left"
+              className="flex items-center gap-3 p-3 rounded-xl font-medium hover:bg-[var(--highlight)]/10 text-[var(--muted)] hover:text-[var(--highlight)] transition w-full text-left"
             >
               <HelpCircle size={20} />
               คู่มือคลาส
@@ -378,14 +379,14 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex justify-center w-full py-3 rounded-xl font-bold bg-slate-100  hover:text-indigo-400 dark:hover:text-indigo-400 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  className="flex justify-center w-full py-3 rounded-xl font-bold bg-black/5 dark:bg-white/5 hover:text-[var(--highlight)] text-[var(--foreground)]"
                 >
                   เข้าสู่ระบบ
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex justify-center items-center gap-2 w-full py-3 rounded-xl font-bold bg-indigo-600 text-white"
+                  className="flex justify-center items-center gap-2 w-full py-3 rounded-xl font-bold bg-[var(--highlight)] text-white hover:opacity-90"
                 >
                   <UserPlus size={18} />
                   สมัครสมาชิก

@@ -3,20 +3,20 @@ import { AlertTriangle } from "lucide-react";
 
 export default function Disclaimer() {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 font-[family-name:var(--font-line-seed)]">
+      <div className="bg-[var(--background)]/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-black/5 dark:border-white/5">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full text-yellow-600 dark:text-yellow-400">
+          <div className="p-3 bg-[var(--highlight)]/10 rounded-full text-[var(--highlight)]">
             <AlertTriangle size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">
             ข้อจำกัดความรับผิดชอบ (Disclaimer)
           </h1>
         </div>
 
-        <div className="space-y-6 text-slate-600 dark:text-slate-300 leading-relaxed">
+        <div className="space-y-6 text-[var(--foreground)] opacity-90 leading-relaxed">
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               1. เพื่อความบันเทิงและการพัฒนาทีมเท่านั้น
             </h2>
             <p>
@@ -28,7 +28,7 @@ export default function Disclaimer() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               2. ไม่ใช่คำแนะนำทางการแพทย์หรือจิตวิทยา
             </h2>
             <p>
@@ -45,7 +45,7 @@ export default function Disclaimer() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               3. ความแม่นยำของ AI
             </h2>
             <p>
@@ -56,7 +56,7 @@ export default function Disclaimer() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-3">
               4. Kemii Golden Formula (Algorithm Transparency)
             </h2>
             <p className="mb-4">
@@ -65,11 +65,11 @@ export default function Disclaimer() {
               (Normalized Variance) และค่าเฉลี่ย (Normalized Mean)
               เพื่อสร้างทีมที่มีความสมดุล โดยอ้างอิงจากโค้ดต้นฉบับ:
             </p>
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg font-mono text-xs md:text-sm text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-pre">
+            <div className="bg-black/5 dark:bg-white/5 p-4 rounded-lg font-mono text-xs md:text-sm text-[var(--foreground)] border border-black/5 dark:border-white/5 overflow-x-auto whitespace-pre">
               {`Cost = 1.5 * Var*(C) + 1.5 * Var*(A) + 1.0 * Var*(E) + 1.0 * Var*(O) + 1.0 * Mean*(N) + 2.0 * max(0, 0.625 - Mean*(A))`}
             </div>
-            <div className="mt-4 space-y-2 text-sm text-slate-500">
-              <h4 className="font-bold text-slate-700 dark:text-slate-300">
+            <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+              <h4 className="font-bold text-[var(--foreground)]">
                 ตัวแปรสำคัญ (Variables):
               </h4>
               <ul className="list-disc list-inside space-y-1 ml-2">

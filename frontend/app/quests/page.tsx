@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -64,46 +64,52 @@ const CLASS_ICONS: Record<string, React.ReactNode> = {
   Rogue: <Skull size={16} />,
 };
 
+import ElementalLoader from "@/components/ElementalLoader";
+
+// ...existing imports...
+// Note: imports above are preserved, just adding ElementalLoader if missing, but since I am replacing the whole function, I will rewrite imports slightly or assume they are there.
+// Actually I need to make sure I don't break imports. I will verify if I can just replace the component.
+
 const STATUS_LABELS: Record<
   string,
   { label: string; color: string; icon: any }
 > = {
   open: {
     label: "Pending",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     icon: Users,
   },
   filled: {
     label: "Pending (Ready)",
     color:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400",
     icon: Check,
   },
   in_progress: {
     label: "In Progress",
     color:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+      "bg-purple-500/10 text-purple-600 dark:text-purple-400",
     icon: Zap,
   },
   completed: {
     label: "Finished",
     color:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     icon: Star,
   },
   failed: {
     label: "Failed",
-    color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    color: "bg-red-500/10 text-red-600 dark:text-red-400",
     icon: X,
   },
   cancelled: {
     label: "Failed",
-    color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    color: "bg-red-500/10 text-red-600 dark:text-red-400",
     icon: X,
   },
   late: {
     label: "Late",
-    color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+    color: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
     icon: AlertCircle,
   },
 };
@@ -127,9 +133,6 @@ const getDisplayStatus = (q: Quest) => {
 
   return q.status;
 };
-
-import { Suspense } from "react";
-
 function QuestBoardContent() {
   const router = useRouter();
   const { user } = useAuth();
@@ -213,23 +216,23 @@ function QuestBoardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
+        <ElementalLoader />
       </div>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
+      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-3 py-4 md:p-8 transition-colors font-[family-name:var(--font-line-seed)]">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-4xl font-black text-slate-800 dark:text-white mb-2 flex items-center justify-center gap-2">
+            <h1 className="text-2xl md:text-4xl font-black text-[var(--foreground)] mb-2 flex items-center justify-center gap-2">
               Guild Quest Board
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base">
-              รับเควสที่เหมาะกับคุณ
+            <p className="text-[var(--muted)] text-sm md:text-base opacity-80">
+              รีบทำเควสให้เสร็จเด้อ
             </p>
           </div>
 
@@ -238,13 +241,13 @@ function QuestBoardContent() {
             {/* Top/Left Group: Toggles + Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
               {/* View Toggle */}
-              <div className="flex bg-white dark:bg-slate-800/20 p-1 rounded-xl shadow-sm h-11 self-start sm:self-auto">
+              <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl shadow-sm h-11 self-start sm:self-auto backdrop-blur-sm">
                 <button
                   onClick={() => handleViewChange("active")}
                   className={`px-4 h-full rounded-lg text-sm font-bold flex items-center gap-2 transition ${
                     viewMode === "active"
-                      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                      : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                      ? "bg-[var(--highlight)] text-white shadow-md"
+                      : "text-[var(--muted)] hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)]"
                   }`}
                 >
                   <LayoutGrid size={16} /> Active
@@ -253,8 +256,8 @@ function QuestBoardContent() {
                   onClick={() => handleViewChange("history")}
                   className={`px-4 h-full rounded-lg text-sm font-bold flex items-center gap-2 transition ${
                     viewMode === "history"
-                      ? "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
-                      : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                      ? "bg-[var(--highlight)] text-white shadow-md"
+                      : "text-[var(--muted)] hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)]"
                   }`}
                 >
                   <History size={16} /> History
@@ -262,21 +265,18 @@ function QuestBoardContent() {
               </div>
 
               {/* Filters & Sort */}
-              <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl h-11 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all overflow-hidden w-full sm:w-auto">
-                <div className="px-3 h-full flex items-center bg-slate-50/50 dark:bg-slate-800/20 border-r border-slate-100 dark:border-slate-800">
-                  <Filter size={14} className="text-slate-400" />
-                </div>
-
+              <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-2 rounded-xl shadow-sm h-11 overflow-x-auto w-full sm:w-auto backdrop-blur-sm">
+                <Filter size={16} className="text-[var(--muted)] shrink-0" />
                 {/* Filter Dropdown */}
                 <Select
                   value={filterStatus}
                   onValueChange={(val) => setFilterStatus(val)}
                 >
-                  <SelectTrigger className="h-full border-none bg-transparent bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-900/50 rounded-none shadow-none focus:ring-0 px-4 gap-2 text-[13px] font-bold text-slate-600 dark:text-slate-300 min-w-[120px] transition-colors">
+                  <SelectTrigger className="h-full border-0 !bg-transparent hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] shadow-none focus:ring-0 focus:ring-offset-0 text-[var(--foreground)] font-bold min-w-[130px] px-3 transition-colors">
                     <SelectValue placeholder="สถานะ" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">ทั้งหมด</SelectItem>
+                  <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
+                    <SelectItem value="all">ทั้งหมด (All)</SelectItem>
                     {viewMode === "active" ? (
                       <>
                         <SelectItem value="filled">คนครบแล้ว</SelectItem>
@@ -291,8 +291,7 @@ function QuestBoardContent() {
                   </SelectContent>
                 </Select>
 
-                <div className="w-px h-6 bg-slate-100 dark:bg-slate-800"></div>
-
+                <div className="w-px h-6 bg-[var(--muted)]/20 mx-1"></div>
                 {/* Sort Dropdown */}
                 <Select
                   value={sortOrder}
@@ -300,10 +299,10 @@ function QuestBoardContent() {
                     setSortOrder(val as "newest" | "oldest")
                   }
                 >
-                  <SelectTrigger className="h-full border-none bg-transparent bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-900/50 rounded-none shadow-none focus:ring-0 px-4 gap-2 text-[13px] font-bold text-slate-600 dark:text-slate-300 min-w-[120px] transition-colors">
+                  <SelectTrigger className="h-full border-0 !bg-transparent hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] shadow-none focus:ring-0 focus:ring-offset-0 text-[var(--foreground)] font-bold min-w-[130px] px-3 transition-colors">
                     <SelectValue placeholder="เรียงลำดับ" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
                     <SelectItem value="newest">ใหม่สุด</SelectItem>
                     <SelectItem value="oldest">เก่าสุด</SelectItem>
                   </SelectContent>
@@ -315,7 +314,7 @@ function QuestBoardContent() {
             <div className="flex flex-1 gap-3">
               {/* Search */}
               <div className="relative flex-1">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center justify-center">
+                <div className="absolute left-3 top-[13px] z-10 text-[var(--muted)] pointer-events-none">
                   <Search size={18} />
                 </div>
                 <input
@@ -323,14 +322,14 @@ function QuestBoardContent() {
                   placeholder="ค้นหาเควส..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                  className="w-full h-11 pl-10 pr-4 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-[var(--foreground)] text-sm placeholder-[var(--muted)]/50 focus:outline-none focus:border-[var(--highlight)]/50 transition-all shadow-sm backdrop-blur-sm"
                 />
               </div>
 
               {user && (
                 <button
                   onClick={() => router.push("/quests/team")}
-                  className="h-11 px-4 lg:px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:scale-105 whitespace-nowrap"
+                  className="h-11 px-4 lg:px-6 bg-[var(--highlight)] hover:opacity-90 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-[var(--highlight)]/30 transition-all transform hover:scale-105 whitespace-nowrap"
                 >
                   <Scroll size={18} />{" "}
                   <span className="hidden sm:inline">Create Quest</span>{" "}
@@ -351,7 +350,7 @@ function QuestBoardContent() {
               return (
                 <div
                   key={quest.id}
-                  className="group relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer overflow-hidden p-5 flex flex-col"
+                  className="group relative bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 hover:border-[var(--highlight)]/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer overflow-hidden p-5 flex flex-col backdrop-blur-sm"
                   onClick={() =>
                     router.push(`/quests/${quest.id}?return_view=${viewMode}`)
                   }
@@ -359,10 +358,10 @@ function QuestBoardContent() {
                   {/* Status Badge (Top Right) */}
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1 pr-2">
-                      <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h3 className="text-lg font-bold text-[var(--foreground)] leading-tight group-hover:text-[var(--highlight)] transition-colors">
                         {quest.title}
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                      <p className="text-xs text-[var(--muted)] mt-1 line-clamp-1">
                         {quest.description &&
                         quest.description.startsWith("Auto-generated")
                           ? ""
@@ -388,7 +387,7 @@ function QuestBoardContent() {
                   <div className="flex-1 space-y-4">
                     {/* Roles / Departments */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                      <span className="text-[10px] uppercase font-bold text-[var(--muted)] flex items-center gap-1 opacity-70">
                         <Scroll size={10} /> Roles
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -402,8 +401,8 @@ function QuestBoardContent() {
                               key={i}
                               className={`px-2 py-1 rounded-md text-[10px] font-medium flex items-center gap-1 ${
                                 isDept
-                                  ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                                  : "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-300"
+                                  ? "bg-black/5 dark:bg-white/5 text-[var(--foreground)] border border-black/5 dark:border-white/5"
+                                  : "bg-[var(--highlight)]/10 text-[var(--highlight)]"
                               }`}
                             >
                               {isDept && <Users size={10} />}
@@ -412,7 +411,7 @@ function QuestBoardContent() {
                           );
                         })}
                         {quest.required_skills.length > 3 && (
-                          <span className="px-1.5 py-1 text-[10px] text-slate-400">
+                          <span className="px-1.5 py-1 text-[10px] text-[var(--muted)]">
                             +{quest.required_skills.length - 3}
                           </span>
                         )}
@@ -423,24 +422,24 @@ function QuestBoardContent() {
                     {quest.harmony_score ? (
                       <div className="space-y-1">
                         <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-bold text-slate-400">
+                          <span className="font-bold text-[var(--muted)]">
                             Harmony (ความเข้ากันได้)
                           </span>
                           <span
                             className={`font-bold ${
                               quest.harmony_score >= 80
-                                ? "text-green-500"
+                                ? "text-emerald-500"
                                 : "text-amber-500"
                             }`}
                           >
                             {Math.round(quest.harmony_score)}%
                           </span>
                         </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-full bg-black/5 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${
                               quest.harmony_score >= 80
-                                ? "bg-green-500"
+                                ? "bg-emerald-500"
                                 : quest.harmony_score >= 60
                                 ? "bg-amber-500"
                                 : "bg-red-500"
@@ -450,7 +449,7 @@ function QuestBoardContent() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-xs text-slate-400 py-1">
+                      <div className="flex items-center gap-2 text-xs text-[var(--muted)] py-1 opacity-80">
                         <Clock size={12} /> Deadline:{" "}
                         {quest.deadline
                           ? new Date(quest.deadline).toLocaleDateString("th-TH")
@@ -460,25 +459,25 @@ function QuestBoardContent() {
                   </div>
 
                   {/* Footer: Leader & Party Size */}
-                  <div className="mt-5 pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                  <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm border border-slate-200 dark:border-slate-700">
+                      <div className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-[var(--foreground)] shadow-sm">
                         {CLASS_ICONS[quest.leader_class] || <Users size={12} />}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-none">
+                        <span className="text-[10px] font-bold text-[var(--foreground)] leading-none">
                           {quest.leader_name}
                         </span>
-                        <span className="text-[9px] text-slate-400 leading-none mt-0.5">
+                        <span className="text-[9px] text-[var(--muted)] leading-none mt-0.5 opacity-80">
                           {quest.leader_class}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--muted)] bg-black/5 dark:bg-white/5 px-2 py-1 rounded-md">
                       <Users size={12} />
                       <span>{quest.team_size}</span>
-                      <span className="text-[10px] font-normal text-slate-400">
+                      <span className="text-[10px] font-normal opacity-70">
                         Slots
                       </span>
                     </div>
@@ -490,8 +489,8 @@ function QuestBoardContent() {
 
           {filteredQuests.length === 0 && (
             <div className="text-center py-16">
-              <Scroll className="mx-auto mb-4 text-amber-500" size={48} />
-              <p className="text-slate-500 dark:text-slate-400">ยังไม่มีเควส</p>
+              <Scroll className="mx-auto mb-4 text-[var(--highlight)] opacity-50" size={48} />
+              <p className="text-[var(--muted)]">ยังไม่มีเควส</p>
             </div>
           )}
         </div>
@@ -504,8 +503,8 @@ export default function QuestBoardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
+          <ElementalLoader />
         </div>
       }
     >

@@ -96,12 +96,12 @@ function UsersListContent() {
 
     toast(
       (t) => (
-        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
+        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2 font-[family-name:var(--font-line-seed)]">
           <div className="text-center">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
+            <h3 className="font-bold text-lg text-[var(--foreground)] flex items-center justify-center gap-2">
               {action === "Promote" ? "แต่งตั้ง Admin? 👑" : "ปลดตำแหน่ง? 📉"}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-[var(--muted)] mt-1">
               {action === "Promote"
                 ? "คุณแน่ใจนะว่าจะมอบพลัง GOD ให้เขา?"
                 : "ต้องการดึงเขากลับมาเป็นคนธรรมดาใช่มั้ย?"}
@@ -111,7 +111,7 @@ function UsersListContent() {
           <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
+              className="px-4 py-2 text-sm font-medium bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--foreground)] rounded-lg transition"
             >
               ยกเลิก
             </button>
@@ -136,7 +136,7 @@ function UsersListContent() {
                   setActionLoadingId(null);
                 }
               }}
-              className="px-4 py-2 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition transform active:scale-95"
+              className="px-4 py-2 text-sm font-bold bg-[var(--highlight)] hover:opacity-90 text-white rounded-lg shadow-md transition transform active:scale-95"
             >
               ยืนยัน
             </button>
@@ -146,8 +146,8 @@ function UsersListContent() {
       {
         duration: 3000,
         className:
-          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
-        style: { color: "inherit" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
+        style: { color: "var(--foreground)" },
       }
     );
   };
@@ -157,12 +157,12 @@ function UsersListContent() {
 
     toast(
       (t) => (
-        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
+        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2 font-[family-name:var(--font-line-seed)]">
           <div className="text-center">
             <h3 className="font-bold text-lg text-red-600 dark:text-red-400 flex items-center justify-center gap-2">
               ลบผู้ใช้ถาวร? <span className="text-2xl">🗑️</span>
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-[var(--muted)] mt-1">
               ข้อมูลจะหายไปตลอดกาล แน่ใจนะ?
             </p>
           </div>
@@ -170,7 +170,7 @@ function UsersListContent() {
           <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
+              className="px-4 py-2 text-sm font-medium bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--foreground)] rounded-lg transition"
             >
               เก็บไว้ก่อน
             </button>
@@ -199,8 +199,8 @@ function UsersListContent() {
       {
         duration: 3000,
         className:
-          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
-        style: { color: "inherit" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
+        style: { color: "var(--foreground)" },
       }
     );
   };
@@ -223,25 +223,30 @@ function UsersListContent() {
     return matchesSearch && matchesDept;
   });
 
+// ...existing imports...
+// Note: imports are maintained, just styles are replaced below
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
+        <ElementalLoader />
       </div>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50/20 dark:bg-slate-900/20 px-4 py-6 md:px-8">
+      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-4 py-6 md:px-8 font-[family-name:var(--font-line-seed)] transition-colors">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-              <Users className="text-indigo-500" />
+            <h1 className="text-2xl md:text-3xl font-black text-[var(--foreground)] flex items-center gap-2">
+              <div className="p-2 bg-[var(--highlight)]/10 rounded-lg text-[var(--highlight)]">
+                <Users size={24} />
+              </div>
               รายชื่อพนักงาน
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            <p className="text-[var(--muted)] text-sm mt-1 opacity-80 pl-12">
               ดูข้อมูล Skills และ OCEAN ของทุกคน
             </p>
           </div>
@@ -250,25 +255,24 @@ function UsersListContent() {
           <div className="mb-6 flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
-              />
+             <div className="absolute left-3 top-[13px] z-10 text-[var(--muted)] pointer-events-none">
+                  <Search size={18} />
+                </div>
               <input
                 type="text"
                 placeholder="ค้นหาชื่อ..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full h-11 pl-10 pr-4 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--highlight)]/50 placeholder:text-[var(--muted)]/50 transition-colors backdrop-blur-sm"
               />
             </div>
 
             {/* Department Dropdown */}
             <Select value={deptFilter} onValueChange={setDeptFilter}>
-              <SelectTrigger className="w-[180px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white h-11 rounded-xl">
+              <SelectTrigger className="w-[180px] bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 text-[var(--foreground)] h-11 rounded-xl backdrop-blur-sm">
                 <SelectValue placeholder="เลือกแผนก" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
                 <SelectItem value="all">ทั้งหมด</SelectItem>
                 {DEPARTMENTS.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
@@ -280,7 +284,7 @@ function UsersListContent() {
           </div>
 
           {/* Stats */}
-          <div className="mb-4 text-sm text-slate-500">
+          <div className="mb-4 text-sm text-[var(--muted)] opacity-70">
             แสดง {filteredUsers.length} จาก {totalInDb} คน
           </div>
 
@@ -331,18 +335,18 @@ function UsersListContent() {
               <button
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                className="group relative px-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                className="group relative px-8 py-3 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-2xl shadow-sm hover:bg-black/10 dark:hover:bg-white/10 transition-all duration-300 disabled:opacity-50 overflow-hidden backdrop-blur-sm"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                <span className="relative flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
+                <div className="absolute inset-0 bg-gradient-to-r from-[var(--highlight)]/0 via-[var(--highlight)]/10 to-[var(--highlight)]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                <span className="relative flex items-center gap-2 font-bold text-[var(--foreground)]">
                   {isFetchingNextPage ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-[var(--highlight)] border-t-transparent rounded-full animate-spin"></div>
                       กำลังเรียกพวก...
                     </>
                   ) : (
                     <>
-                      <Users size={18} className="text-indigo-500" />
+                      <Users size={18} className="text-[var(--highlight)]" />
                       เรียกพวกเพิ่ม (Load More)
                     </>
                   )}
@@ -352,7 +356,7 @@ function UsersListContent() {
           )}
 
           {filteredUsers.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-[var(--muted)] opacity-50">
               <Users className="mx-auto mb-2" size={40} />
               <p>ไม่พบข้อมูล</p>
             </div>
@@ -370,7 +374,7 @@ export default function UsersPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
           <ElementalLoader />
         </div>
       }

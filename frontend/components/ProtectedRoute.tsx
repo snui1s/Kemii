@@ -20,7 +20,7 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
         <ElementalLoader />
       </div>
     );

@@ -61,6 +61,16 @@ interface QuestDetail {
 
 // Removed unused Candidate interface
 
+// ...existing imports...
+import ElementalLoader from "@/components/ElementalLoader";
+// Note: Imports preserved automatically by ...existing imports... or manual restoration below if needed.
+// Ideally I should keep the imports.
+
+// ...existing imports...
+// Note: imports above should be maintained.
+
+// ...existing interfaces...
+
 const CLASS_ICONS: Record<string, React.ReactNode> = {
   Mage: <Wand size={20} />,
   Paladin: <Shield size={20} />,
@@ -69,37 +79,29 @@ const CLASS_ICONS: Record<string, React.ReactNode> = {
   Rogue: <Skull size={20} />,
 };
 
-const CLASS_COLORS: Record<string, string> = {
-  Mage: "text-purple-500",
-  Paladin: "text-amber-500",
-  Warrior: "text-rose-500",
-  Cleric: "text-emerald-500",
-  Rogue: "text-blue-500",
-};
-
 const STATUS_LABELS: Record<
   string,
   { label: string; color: string; icon: any }
 > = {
-  open: { label: "Pending", color: "bg-blue-500 text-white", icon: Users },
+  open: { label: "Pending", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400", icon: Users },
   filled: {
     label: "Pending (Ready)",
-    color: "bg-amber-500 text-white",
+    color: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
     icon: Check,
   },
   in_progress: {
     label: "In Progress",
-    color: "bg-purple-500 text-white",
+    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
     icon: Zap,
   },
   completed: {
     label: "Finished",
-    color: "bg-emerald-500 text-white",
+    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     icon: Star,
   },
-  late: { label: "Late", color: "bg-rose-600 text-white", icon: AlertCircle },
-  failed: { label: "Failed", color: "bg-red-500 text-white", icon: X },
-  cancelled: { label: "Failed", color: "bg-red-500 text-white", icon: X },
+  late: { label: "Late", color: "bg-rose-500/10 text-rose-600 dark:text-rose-400", icon: AlertCircle },
+  failed: { label: "Failed", color: "bg-red-500/10 text-red-600 dark:text-red-400", icon: X },
+  cancelled: { label: "Failed", color: "bg-red-500/10 text-red-600 dark:text-red-400", icon: X },
 };
 
 export default function QuestDetailPage({
@@ -153,12 +155,12 @@ export default function QuestDetailPage({
   const handleKick = async (memberId: string) => {
     toast(
       (t) => (
-        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
+        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2 font-[family-name:var(--font-line-seed)]">
           <div className="text-center">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
+            <h3 className="font-bold text-lg text-[var(--foreground)] flex items-center justify-center gap-2">
               เตะออกจากทีม? <span className="text-2xl">👢</span>
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-[var(--muted)] mt-1">
               ต้องการปลดคนนี้ออกจากปาร์ตี้ใช่หรือไม่?
             </p>
           </div>
@@ -166,7 +168,7 @@ export default function QuestDetailPage({
           <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
+              className="px-4 py-2 text-sm font-medium bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--foreground)] rounded-lg transition"
             >
               ยกเลิก
             </button>
@@ -191,8 +193,8 @@ export default function QuestDetailPage({
       {
         duration: 4000,
         className:
-          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
-        style: { color: "inherit" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
+        style: { color: "var(--foreground)" },
       }
     );
   };
@@ -221,12 +223,12 @@ export default function QuestDetailPage({
   const handleCancel = async () => {
     toast(
       (t) => (
-        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
+        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2 font-[family-name:var(--font-line-seed)]">
           <div className="text-center">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
+            <h3 className="font-bold text-lg text-[var(--foreground)] flex items-center justify-center gap-2">
               ยกเลิกเควส? <span className="text-2xl">❌</span>
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-[var(--muted)] mt-1">
               ภารกิจนี้จะล้มเหลวทันที แน่ใจนะ?
             </p>
           </div>
@@ -234,7 +236,7 @@ export default function QuestDetailPage({
           <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
+              className="px-4 py-2 text-sm font-medium bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--foreground)] rounded-lg transition"
             >
               ไม่ยกเลิก
             </button>
@@ -259,8 +261,8 @@ export default function QuestDetailPage({
       {
         duration: 4000,
         className:
-          "!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl",
-        style: { color: "inherit" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
+        style: { color: "var(--foreground)" },
       }
     );
   };
@@ -290,8 +292,8 @@ export default function QuestDetailPage({
         <div className="p-8 text-center text-red-500">Error loading quest</div>
       );
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
+        <ElementalLoader />
       </div>
     );
   }
@@ -310,10 +312,6 @@ export default function QuestDetailPage({
     return q.status;
   };
 
-  // handleTeamSizeChange removed (Legacy unused)
-
-  // Re-declare isLeader
-
   const acceptedCount = quest.accepted_member_ids.length;
   const needsMore = acceptedCount < quest.team_size;
 
@@ -326,27 +324,20 @@ export default function QuestDetailPage({
     });
   };
 
-  const getMatchColor = (score: number) => {
-    if (score >= 80) return "text-amber-500";
-    if (score >= 60) return "text-emerald-500";
-    if (score >= 40) return "text-orange-500";
-    return "text-red-500";
-  };
-
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/20 px-3 py-4 md:p-8 transition-colors">
+      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-3 py-4 md:p-8 transition-colors font-[family-name:var(--font-line-seed)]">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => router.push(`/quests?view=${returnView}`)}
-            className="mb-4 flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+            className="mb-4 flex items-center gap-1 text-[var(--muted)] hover:text-[var(--foreground)] transition opacity-80 hover:opacity-100"
           >
             <ChevronLeft size={18} /> กลับไปบอร์ด
           </button>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+          <div className="bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden shadow-sm backdrop-blur-sm">
             {/* Header */}
-            <div className="p-6 md:p-8 bg-white dark:bg-slate-800 relative border-b border-slate-100 dark:border-slate-700">
+            <div className="p-6 md:p-8 bg-black/5 dark:bg-white/5 relative border-b border-black/5 dark:border-white/5">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -363,24 +354,24 @@ export default function QuestDetailPage({
                         </span>
                       );
                     })()}
-                    <span className="text-slate-400 dark:text-slate-500 text-xs font-medium flex items-center gap-1">
+                    <span className="text-[var(--muted)] text-xs font-medium flex items-center gap-1 opacity-70">
                       <Calendar size={14} /> Created{" "}
                       {new Date(quest.created_at).toLocaleDateString("th-TH")}
                     </span>
                   </div>
 
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2 leading-tight">
+                  <h1 className="text-2xl md:text-3xl font-black text-[var(--foreground)] mb-2 leading-tight">
                     {quest.title}
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-slate-500 dark:text-slate-400 text-sm">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[var(--muted)] text-sm opacity-80">
                     <span className="flex items-center gap-1.5">
-                      <Calendar size={16} className="text-slate-400" />
+                      <Calendar size={16} />
                       {formatDate(quest.start_date)} -{" "}
                       {formatDate(quest.deadline)}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Users size={16} className="text-slate-400" />
+                      <Users size={16} />
                       {acceptedCount} / {quest.team_size} Members
                     </span>
                   </div>
@@ -391,30 +382,30 @@ export default function QuestDetailPage({
             {/* Content */}
             <div className="p-6 md:p-8">
               <div className="mb-6">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2">
+                <h3 className="text-sm font-bold text-[var(--foreground)] mb-2">
                   รายละเอียด
                 </h3>
-                <p className="text-slate-600 dark:text-slate-300">
+                <p className="text-[var(--foreground)] opacity-80">
                   {quest.description}
                 </p>
               </div>
 
               {/* Leader */}
-              <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2">
+              <div className="mb-6 p-4 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5">
+                <h3 className="text-sm font-bold text-[var(--foreground)] mb-2">
                   👑 Quest Leader
                 </h3>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 p-0.5">
-                    <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-600 flex items-center justify-center shadow text-slate-600 dark:text-white">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--highlight)] to-[var(--highlight)]/70 p-0.5">
+                    <div className="w-full h-full rounded-full bg-[var(--background)] flex items-center justify-center shadow text-[var(--foreground)]">
                       {CLASS_ICONS[quest.leader_class] || <Star size={20} />}
                     </div>
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800 dark:text-white">
+                    <p className="font-bold text-[var(--foreground)]">
                       {quest.leader_name}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--muted)]">
                       {quest.leader_class}
                     </p>
                   </div>
@@ -423,8 +414,8 @@ export default function QuestDetailPage({
 
               {/* Team Members */}
               {quest.accepted_members && quest.accepted_members.length > 0 && (
-                <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                <div className="mb-6 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                  <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 flex items-center gap-2">
                     <Users className="text-emerald-500" size={16} />
                     สมาชิกทีม ({quest.accepted_members.length}/{quest.team_size}
                     )
@@ -433,25 +424,25 @@ export default function QuestDetailPage({
                     {quest.accepted_members.map((member: AcceptedMember) => (
                       <div
                         key={member.id}
-                        className="bg-white dark:bg-slate-700 rounded-lg p-2"
+                        className="bg-black/5 dark:bg-white/5 rounded-lg p-2"
                       >
                         <div className="flex items-center gap-2 justify-between">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-800 dark:text-emerald-200">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                               {CLASS_ICONS[member.character_class] || (
                                 <Star size={14} />
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-slate-800 dark:text-white">
+                              <p className="text-sm font-medium text-[var(--foreground)]">
                                 {member.name}
                               </p>
-                              <p className="text-[10px] text-slate-500">
+                              <p className="text-[10px] text-[var(--muted)] opacity-80">
                                 {member.character_class}
                                 {member.department &&
                                   member.department !== "Unknown" && (
                                     <span
-                                      className="mx-1 text-slate-400"
+                                      className="mx-1 opacity-60"
                                       title={member.department}
                                     >
                                       •{" "}
@@ -471,7 +462,7 @@ export default function QuestDetailPage({
                               quest.status === "filled") && (
                               <button
                                 onClick={() => handleKick(member.id)}
-                                className="w-6 h-6 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 flex items-center justify-center transition"
+                                className="w-6 h-6 rounded-full hover:bg-red-500/10 text-[var(--muted)] hover:text-red-500 flex items-center justify-center transition"
                                 title="นำออกจากทีม"
                               >
                                 <X size={14} />
@@ -489,8 +480,8 @@ export default function QuestDetailPage({
                                     key={i}
                                     className={`text-[9px] px-1.5 py-0.5 rounded ${
                                       skill.type === "required"
-                                        ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                                        : "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                                        ? "bg-indigo-500/10 text-indigo-500"
+                                        : "bg-teal-500/10 text-teal-500"
                                     }`}
                                   >
                                     {skill.name}
@@ -507,17 +498,17 @@ export default function QuestDetailPage({
 
               {/* Team Analysis - Show when team has members */}
               {teamAnalysis?.has_team && (
-                <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                <div className="mb-6 p-4 bg-indigo-500/5 rounded-xl border border-indigo-500/10">
+                  <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 flex items-center gap-2">
                     <Sparkles className="text-indigo-500" size={16} />
                     Team Analysis
                   </h3>
 
                   {/* Team Summary - Harmony & Skill Coverage */}
-                  <div className="flex items-center gap-4 mb-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-4 mb-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl shadow-sm">
                     {/* Left: Team Harmony */}
                     <div className="flex-1 text-center">
-                      <p className="text-xs text-slate-400 mb-1">
+                      <p className="text-xs text-[var(--muted)] mb-1 opacity-70">
                         ความเข้ากันได้
                       </p>
                       <div className="flex items-center justify-center gap-2">
@@ -528,16 +519,16 @@ export default function QuestDetailPage({
                               ? "text-rose-500 fill-rose-500"
                               : teamAnalysis.harmony_score >= 60
                               ? "text-orange-500 fill-orange-500"
-                              : "text-slate-400"
+                              : "text-[var(--muted)]"
                           }`}
                         />
                         <span
                           className={`text-2xl font-black ${
                             teamAnalysis.harmony_score >= 80
-                              ? "text-rose-600 dark:text-rose-400"
+                              ? "text-rose-500"
                               : teamAnalysis.harmony_score >= 60
-                              ? "text-orange-600 dark:text-orange-400"
-                              : "text-slate-600 dark:text-slate-300"
+                              ? "text-orange-500"
+                              : "text-[var(--foreground)]"
                           }`}
                         >
                           {Math.round(teamAnalysis.harmony_score)}%
@@ -555,7 +546,7 @@ export default function QuestDetailPage({
                 (quest.status === "open" ||
                   quest.status === "filled" ||
                   quest.status === "in_progress") && (
-                  <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
+                  <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={handleComplete}
                       className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-sm"
@@ -564,7 +555,7 @@ export default function QuestDetailPage({
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="flex-1 py-3 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                      className="flex-1 py-3 bg-black/5 dark:bg-white/5 hover:bg-red-500/10 text-[var(--foreground)] hover:text-red-600 rounded-xl font-bold flex items-center justify-center gap-2 transition"
                     >
                       <X size={20} /> ยุบทีม (Disband)
                     </button>
@@ -573,15 +564,15 @@ export default function QuestDetailPage({
 
               {/* Status Messages */}
               {quest.status === "completed" && (
-                <div className="p-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-center">
-                  <p className="text-emerald-700 dark:text-emerald-300 font-bold">
+                <div className="p-4 bg-emerald-500/10 rounded-xl text-center">
+                  <p className="text-emerald-600 dark:text-emerald-400 font-bold">
                     🎉 เควสสำเร็จแล้ว!
                   </p>
                 </div>
               )}
               {quest.status === "cancelled" && (
-                <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-xl text-center">
-                  <p className="text-red-700 dark:text-red-300 font-bold">
+                <div className="p-4 bg-red-500/10 rounded-xl text-center">
+                  <p className="text-red-600 dark:text-red-400 font-bold">
                     ❌ เควสถูกยกเลิก
                   </p>
                 </div>
@@ -589,8 +580,8 @@ export default function QuestDetailPage({
 
               {/* Non-leader view */}
               {!isLeader && (
-                <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-xl text-center">
-                  <p className="text-slate-600 dark:text-slate-300">
+                <div className="p-4 bg-black/5 dark:bg-white/5 rounded-xl text-center">
+                  <p className="text-[var(--foreground)] opacity-80">
                     {quest.accepted_member_ids.includes(user?.id || 0)
                       ? "✓ คุณได้รับเลือกเข้าทีมแล้ว!"
                       : "รอ Quest Leader เลือกสมาชิก"}

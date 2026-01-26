@@ -93,17 +93,18 @@ export default function RootLayout({
               toastOptions={{
                 // ใช้ ! นำหน้าเพื่อบังคับทับ style เดิมของ library
                 className:
-                  "!bg-white dark:!bg-slate-800 " +
-                  "!text-slate-900 dark:!text-slate-100 " +
-                  "!border !border-slate-100 dark:!border-slate-700 " +
-                  "!shadow-xl dark:!shadow-slate-900/50 " +
-                  "!rounded-xl",
+                  "!bg-[var(--background)]/95 " +
+                  "!text-[var(--foreground)] " +
+                  "!border !border-black/5 dark:!border-white/5 " +
+                  "!shadow-2xl " +
+                  "!rounded-xl " +
+                  "backdrop-blur-xl",
 
                 duration: 4000,
 
                 success: {
                   iconTheme: {
-                    primary: "#10b981",
+                    primary: "var(--highlight)",
                     secondary: "white",
                   },
                 },

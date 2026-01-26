@@ -37,7 +37,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   // Show loader while authentication state is being determined
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
         <ElementalLoader />
       </div>
     );
@@ -50,7 +50,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   // Fallback while redirecting
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
       <ElementalLoader />
     </div>
   );

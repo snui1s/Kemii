@@ -87,7 +87,7 @@ export default function ResultPage() {
   // 1. Loading State (Auth or Data or Check)
   if (authLoading || isLoading || !isAuthorized) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 transition-colors">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--background)] transition-colors">
         <ElementalLoader />
       </div>
     );
@@ -96,7 +96,7 @@ export default function ResultPage() {
   // 2. กำลัง fetch ข้อมูล
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 transition-colors">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--background)] transition-colors">
         <ElementalLoader />
       </div>
     );
