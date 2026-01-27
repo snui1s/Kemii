@@ -1,29 +1,39 @@
 "use client";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import UserCard from "@/components/UserCard";
+import SynergyModal from "@/components/SynergyModal";
+import toast from "react-hot-toast";
+import {
+  Users,
+  Wand,
+  Shield,
+  Sword,
+  Heart,
+  Skull,
+  User as UserIcon,
+  AlertTriangle,
+} from "lucide-react";
+import { Analytics } from "@vercel/analytics/next";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import ElementalLoader from "@/components/ElementalLoader";
 
+interface User {
+  id: string;
+  name: string;
+  character_class: string;
+  level: number;
+  ocean_openness?: number;
+  ocean_conscientiousness?: number;
+  ocean_extraversion?: number;
+  ocean_agreeableness?: number;
+  ocean_neuroticism?: number;
+  ocean_scores?: { [key: string]: number };
+}
+
+import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { Analytics } from "@vercel/analytics/next";
-import {
-  AlertTriangle,
-  Heart,
-  Shield,
-  Skull,
-  Sword,
-  Users,
-  User as UserIcon,
-  Wand,
-} from "lucide-react";
-import toast from "react-hot-toast";
-
-import ElementalLoader from "@/components/ElementalLoader";
-import SynergyModal from "@/components/SynergyModal";
-import UserCard from "@/components/UserCard";
-import { useAuth } from "@/context/AuthContext";
-import api from "@/lib/api";
-import { User } from "@/types";
 
 function HomeContent() {
   const { user: currentUser } = useAuth();
@@ -83,7 +93,7 @@ function HomeContent() {
     // Find the partner to check if they are a Novice
     const partner = users.find((u) => u.id === partnerId);
     if (partner?.character_class === "Novice") {
-      toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้น้าา", {
+      toast.error("คนนี้ยังไม่ได้ปลุกพลังเลย เทียบไม่ได้นะจ้ะน้อง", {
         icon: "✨",
         style: {
           borderRadius: "12px",
@@ -204,7 +214,7 @@ function HomeContent() {
         <>
           <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {users.map((user: User) => {
-              const aggregatedScores = {
+              const aggregatedScores = user.ocean_scores || {
                 Openness: user.ocean_openness || 0,
                 Conscientiousness: user.ocean_conscientiousness || 0,
                 Extraversion: user.ocean_extraversion || 0,
