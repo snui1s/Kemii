@@ -184,7 +184,7 @@ function HomeContent() {
                <p className="text-lg text-[var(--muted)] font-medium">
                 พื้นที่สำหรับการทำงานร่วมกันอย่างลงตัว
                 <br className="hidden sm:block" />
-                ค้นหาเพื่อนร่วมทีมที่ใช่ด้วย <span className="font-medium text-[var(--highlight)]">AI Analysis</span>
+                ค้นหาเพื่อนร่วมทีมที่ใช่ด้วย <span className="font-medium text-[var(--highlight)]">Kemii Golden Formula</span>
               </p>
               <div className="flex justify-center gap-4">
                  <Link href="/login" className="px-8 py-2.5 rounded-full bg-[var(--highlight)] text-white hover:opacity-90 hover:shadow-[0_0_15px_rgba(250,129,18,0.4)] transition-all text-sm font-medium">

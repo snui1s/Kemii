@@ -11,6 +11,7 @@ import json
 
 router = APIRouter()
 
+
 @router.get("/quests", response_model=QuestListResponse)
 def get_quests(status: str = None, session: Session = Depends(get_session)):
     """Get all quests, optionally filtered by status."""
@@ -39,15 +40,16 @@ def get_quests(status: str = None, session: Session = Depends(get_session)):
             "start_date": q.start_date.isoformat() if q.start_date else None,
             "deadline": q.deadline.isoformat() if q.deadline else None,
             "created_at": q.created_at.isoformat(),
-            "harmony_score": 0
+            "harmony_score": 0,
         }
 
         accepted_ids = json.loads(q.accepted_members) if q.accepted_members else []
         if accepted_ids and leader:
             team_users = [leader]
             for uid in accepted_ids:
-                 u = session.get(User, uid)
-                 if u: team_users.append(u)
+                u = session.get(User, uid)
+                if u:
+                    team_users.append(u)
 
             if len(team_users) >= 2:
                 eval_result = evaluate_team(team_users)
@@ -56,6 +58,7 @@ def get_quests(status: str = None, session: Session = Depends(get_session)):
         result.append(quest_dict)
 
     return {"quests": result}
+
 
 @router.get("/quests/{quest_id}", response_model=QuestResponse)
 def get_quest_detail(quest_id: str, session: Session = Depends(get_session)):
@@ -74,18 +77,20 @@ def get_quest_detail(quest_id: str, session: Session = Depends(get_session)):
         user = session.get(User, uid)
         if user:
             user_skills = json.loads(user.skills) if user.skills else []
-            user_skill_map = {s['name']: s['level'] for s in user_skills}
+            user_skill_map = {s["name"]: s["level"] for s in user_skills}
 
             matching = []
             for req in req_skills:
-                if req['name'] in user_skill_map:
-                    matching.append({
-                        "name": req['name'],
-                        "level": user_skill_map[req['name']],
-                        "type": "required"
-                    })
+                if req["name"] in user_skill_map:
+                    matching.append(
+                        {
+                            "name": req["name"],
+                            "level": user_skill_map[req["name"]],
+                            "type": "required",
+                        }
+                    )
 
-            matching.sort(key=lambda x: x['level'], reverse=True)
+            matching.sort(key=lambda x: x["level"], reverse=True)
 
             department = "Unknown"
             dept_names = [d["name"] for d in DEPARTMENTS]
@@ -93,15 +98,17 @@ def get_quest_detail(quest_id: str, session: Session = Depends(get_session)):
                 if s["name"] in dept_names:
                     department = s["name"]
                     break
-        
-            accepted_members.append({
-                "id": user.id,
-                "name": user.name,
-                "character_class": user.character_class,
-                "department": department,
-                "level": user.level,
-                "matching_skills": matching
-            })
+
+            accepted_members.append(
+                {
+                    "id": user.id,
+                    "name": user.name,
+                    "character_class": user.character_class,
+                    "department": department,
+                    "level": user.level,
+                    "matching_skills": matching,
+                }
+            )
 
     return {
         "id": quest.id,
@@ -121,46 +128,47 @@ def get_quest_detail(quest_id: str, session: Session = Depends(get_session)):
         "accepted_member_ids": accepted_ids,
         "start_date": quest.start_date.isoformat() if quest.start_date else None,
         "deadline": quest.deadline.isoformat() if quest.deadline else None,
-        "created_at": quest.created_at.isoformat()
+        "created_at": quest.created_at.isoformat(),
     }
 
 
-@router.patch("/quests/{quest_id}/team-size")
-def update_quest_team_size(quest_id: str, team_size: int, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
-    """Update quest team size (leader only)."""
-    quest = session.get(Quest, quest_id)
-    if not quest:
-        raise HTTPException(status_code=404, detail="Quest not found")
-
-    if quest.leader_id != user_id_from_token:
-        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่แก้ไขได้")
-
-    if quest.status not in ["open", "filled"]:
-        raise HTTPException(status_code=400, detail="Cannot change team size for started/completed quests")
-
-    accepted_count = len(json.loads(quest.accepted_members)) if quest.accepted_members else 0
-    if team_size < accepted_count:
-        raise HTTPException(status_code=400, detail=f"Cannot reduce below {accepted_count} accepted members")
-
-    if team_size < 1 or team_size > 10:
-        raise HTTPException(status_code=400, detail="Team size must be between 1 and 10")
-
-    quest.team_size = team_size
-
-    if accepted_count >= team_size:
-        quest.status = "filled"
-    else:
-        quest.status = "open"
-
-    session.add(quest)
-    session.commit()
-    session.refresh(quest)
-
-    return {
-        "message": f"Team size updated to {team_size}",
-        "team_size": quest.team_size,
-        "status": quest.status
-    }
+# Unused Endpoint
+# @router.patch("/quests/{quest_id}/team-size")
+# def update_quest_team_size(quest_id: str, team_size: int, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+#     """Update quest team size (leader only)."""
+#     quest = session.get(Quest, quest_id)
+#     if not quest:
+#         raise HTTPException(status_code=404, detail="Quest not found")
+#
+#     if quest.leader_id != user_id_from_token:
+#         raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่แก้ไขได้")
+#
+#     if quest.status not in ["open", "filled"]:
+#         raise HTTPException(status_code=400, detail="Cannot change team size for started/completed quests")
+#
+#     accepted_count = len(json.loads(quest.accepted_members)) if quest.accepted_members else 0
+#     if team_size < accepted_count:
+#         raise HTTPException(status_code=400, detail=f"Cannot reduce below {accepted_count} accepted members")
+#
+#     if team_size < 1 or team_size > 10:
+#         raise HTTPException(status_code=400, detail="Team size must be between 1 and 10")
+#
+#     quest.team_size = team_size
+#
+#     if accepted_count >= team_size:
+#         quest.status = "filled"
+#     else:
+#         quest.status = "open"
+#
+#     session.add(quest)
+#     session.commit()
+#     session.refresh(quest)
+#
+#     return {
+#         "message": f"Team size updated to {team_size}",
+#         "team_size": quest.team_size,
+#         "status": quest.status
+#     }
 
 
 @router.get("/quests/{quest_id}/team-analysis")
@@ -174,7 +182,11 @@ def get_team_analysis(quest_id: str, session: Session = Depends(get_session)):
     if not accepted_ids:
         return {"has_team": False}
 
-    required_skills = json.loads(quest.required_skills) if isinstance(quest.required_skills, str) else quest.required_skills
+    required_skills = (
+        json.loads(quest.required_skills)
+        if isinstance(quest.required_skills, str)
+        else quest.required_skills
+    )
 
     team_skills = {}
     team_ocean = {"O": [], "C": [], "E": [], "A": [], "N": []}
@@ -186,7 +198,10 @@ def get_team_analysis(quest_id: str, session: Session = Depends(get_session)):
             for s in user_skills:
                 skill_name = s.get("name", "")
                 skill_level = s.get("level", 0)
-                if skill_name not in team_skills or skill_level > team_skills[skill_name]:
+                if (
+                    skill_name not in team_skills
+                    or skill_level > team_skills[skill_name]
+                ):
                     team_skills[skill_name] = skill_level
 
             team_ocean["O"].append(user.ocean_openness or 25)
@@ -205,9 +220,13 @@ def get_team_analysis(quest_id: str, session: Session = Depends(get_session)):
         team_level = team_skills.get(skill_name, 0)
 
         if team_level >= required_level:
-            covered_skills.append({"name": skill_name, "required": required_level, "has": team_level})
+            covered_skills.append(
+                {"name": skill_name, "required": required_level, "has": team_level}
+            )
         elif team_level > 0:
-            partial_skills.append({"name": skill_name, "required": required_level, "has": team_level})
+            partial_skills.append(
+                {"name": skill_name, "required": required_level, "has": team_level}
+            )
         else:
             missing_skills.append({"name": skill_name, "required": required_level})
 
@@ -221,8 +240,9 @@ def get_team_analysis(quest_id: str, session: Session = Depends(get_session)):
 
     for uid in accepted_ids:
         u = session.get(User, uid)
-        if u: team_users.append(u)
-    
+        if u:
+            team_users.append(u)
+
     harmony_score = 0
     if len(team_users) >= 2:
         eval_result = evaluate_team(team_users)
@@ -236,51 +256,78 @@ def get_team_analysis(quest_id: str, session: Session = Depends(get_session)):
             "partial": partial_skills,
             "missing": missing_skills,
             "coverage_percent": coverage_percent,
-            "all_covered": len(missing_skills) == 0 and len(partial_skills) == 0
+            "all_covered": len(missing_skills) == 0 and len(partial_skills) == 0,
         },
         "harmony_score": harmony_score,
         "team_ocean": {
-            "O": int(sum(team_ocean["O"]) / len(team_ocean["O"])) if team_ocean["O"] else 0,
-            "C": int(sum(team_ocean["C"]) / len(team_ocean["C"])) if team_ocean["C"] else 0,
-            "E": int(sum(team_ocean["E"]) / len(team_ocean["E"])) if team_ocean["E"] else 0,
-            "A": int(sum(team_ocean["A"]) / len(team_ocean["A"])) if team_ocean["A"] else 0,
-            "N": int(sum(team_ocean["N"]) / len(team_ocean["N"])) if team_ocean["N"] else 0
-        }
+            "O": (
+                int(sum(team_ocean["O"]) / len(team_ocean["O"]))
+                if team_ocean["O"]
+                else 0
+            ),
+            "C": (
+                int(sum(team_ocean["C"]) / len(team_ocean["C"]))
+                if team_ocean["C"]
+                else 0
+            ),
+            "E": (
+                int(sum(team_ocean["E"]) / len(team_ocean["E"]))
+                if team_ocean["E"]
+                else 0
+            ),
+            "A": (
+                int(sum(team_ocean["A"]) / len(team_ocean["A"]))
+                if team_ocean["A"]
+                else 0
+            ),
+            "N": (
+                int(sum(team_ocean["N"]) / len(team_ocean["N"]))
+                if team_ocean["N"]
+                else 0
+            ),
+        },
     }
 
-@router.get("/quests/{quest_id}/match/{user_id}")
-def get_quest_match_score(
-    quest_id: str, 
-    user_id: str, 
-    session: Session = Depends(get_session),
-    user_id_token: str = Depends(verify_token)
-):
-    """Calculate match score (Self only)."""
-    if user_id != user_id_token:
-        raise HTTPException(status_code=403, detail="Permission denied")
 
-    quest = session.get(Quest, quest_id)
-    if not quest:
-        raise HTTPException(status_code=404, detail="Quest not found")
-
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    user_skills = json.loads(user.skills) if user.skills else []
-    user_ocean = {
-        "ocean_openness": user.ocean_openness,
-        "ocean_conscientiousness": user.ocean_conscientiousness,
-        "ocean_extraversion": user.ocean_extraversion,
-        "ocean_agreeableness": user.ocean_agreeableness,
-        "ocean_neuroticism": user.ocean_neuroticism
-    }
-
-    return calculate_match_score(user_skills, user_ocean, quest)
+# Unused Endpoint
+# @router.get("/quests/{quest_id}/match/{user_id}")
+# def get_quest_match_score(
+#     quest_id: str,
+#     user_id: str,
+#     session: Session = Depends(get_session),
+#     user_id_token: str = Depends(verify_token)
+# ):
+#     """Calculate match score (Self only)."""
+#     if user_id != user_id_token:
+#         raise HTTPException(status_code=403, detail="Permission denied")
+#
+#     quest = session.get(Quest, quest_id)
+#     if not quest:
+#         raise HTTPException(status_code=404, detail="Quest not found")
+#
+#     user = session.get(User, user_id)
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#
+#     user_skills = json.loads(user.skills) if user.skills else []
+#     user_ocean = {
+#         "ocean_openness": user.ocean_openness,
+#         "ocean_conscientiousness": user.ocean_conscientiousness,
+#         "ocean_extraversion": user.ocean_extraversion,
+#         "ocean_agreeableness": user.ocean_agreeableness,
+#         "ocean_neuroticism": user.ocean_neuroticism
+#     }
+#
+#     return calculate_match_score(user_skills, user_ocean, quest)
 
 
 @router.post("/quests/{quest_id}/kick/{user_id}")
-def kick_member(quest_id: str, user_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+def kick_member(
+    quest_id: str,
+    user_id: str,
+    user_id_from_token: str = Depends(verify_token),
+    session: Session = Depends(get_session),
+):
     """Remove a member (leader only)."""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -290,7 +337,9 @@ def kick_member(quest_id: str, user_id: str, user_id_from_token: str = Depends(v
         raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่ปลดสมาชิกได้")
 
     if quest.status not in ["open", "filled"]:
-        raise HTTPException(status_code=400, detail="Cannot kick members from started/completed quests")
+        raise HTTPException(
+            status_code=400, detail="Cannot kick members from started/completed quests"
+        )
 
     accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
 
@@ -316,7 +365,12 @@ def kick_member(quest_id: str, user_id: str, user_id_from_token: str = Depends(v
 
 
 @router.post("/quests/{quest_id}/status")
-def update_quest_status(quest_id: str, req: UpdateStatusRequest, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+def update_quest_status(
+    quest_id: str,
+    req: UpdateStatusRequest,
+    user_id_from_token: str = Depends(verify_token),
+    session: Session = Depends(get_session),
+):
     """Update quest status (leader only)."""
     quest = session.get(Quest, quest_id)
     if not quest:
@@ -331,7 +385,9 @@ def update_quest_status(quest_id: str, req: UpdateStatusRequest, user_id_from_to
     quest.status = req.status
 
     if req.status in ["completed", "failed"]:
-        accepted_ids = json.loads(quest.accepted_members) if quest.accepted_members else []
+        accepted_ids = (
+            json.loads(quest.accepted_members) if quest.accepted_members else []
+        )
         for uid in accepted_ids:
             user = session.get(User, uid)
             if user:
@@ -348,44 +404,49 @@ def update_quest_status(quest_id: str, req: UpdateStatusRequest, user_id_from_to
     return {"message": "Status updated", "status": quest.status}
 
 
-@router.post("/quests/{quest_id}/accept/{user_id}")
-def accept_applicant(quest_id: str, user_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
-    """Accept an applicant (leader only)."""
-    quest = session.get(Quest, quest_id)
-    if not quest:
-        raise HTTPException(status_code=404, detail="Quest not found")
-    
-    if quest.leader_id != user_id_from_token:
-        raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่รับสมัครได้")
-
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    accepted = json.loads(quest.accepted_members) if quest.accepted_members else []
-    if user_id not in accepted:
-        accepted.append(user_id)
-        quest.accepted_members = json.dumps(accepted)
-
-    if len(accepted) >= quest.team_size:
-        quest.status = "filled"
-
-    user.is_available = False
-
-    session.add(quest)
-    session.add(user)
-    session.commit()
-
-    return {"message": "Applicant accepted", "accepted_count": len(accepted)}
+# Unused Endpoint
+# @router.post("/quests/{quest_id}/accept/{user_id}")
+# def accept_applicant(quest_id: str, user_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+#     """Accept an applicant (leader only)."""
+#     quest = session.get(Quest, quest_id)
+#     if not quest:
+#         raise HTTPException(status_code=404, detail="Quest not found")
+#
+#     if quest.leader_id != user_id_from_token:
+#         raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่รับสมัครได้")
+#
+#     user = session.get(User, user_id)
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#
+#     accepted = json.loads(quest.accepted_members) if quest.accepted_members else []
+#     if user_id not in accepted:
+#         accepted.append(user_id)
+#         quest.accepted_members = json.dumps(accepted)
+#
+#     if len(accepted) >= quest.team_size:
+#         quest.status = "filled"
+#
+#     user.is_available = False
+#
+#     session.add(quest)
+#     session.add(user)
+#     session.commit()
+#
+#     return {"message": "Applicant accepted", "accepted_count": len(accepted)}
 
 
 @router.post("/quests/{quest_id}/complete")
-def complete_quest(quest_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+def complete_quest(
+    quest_id: str,
+    user_id_from_token: str = Depends(verify_token),
+    session: Session = Depends(get_session),
+):
     """Mark quest as completed (leader only)."""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
-    
+
     if quest.leader_id != user_id_from_token:
         raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่แจ้งจบภารกิจได้")
 
@@ -411,12 +472,16 @@ def complete_quest(quest_id: str, user_id_from_token: str = Depends(verify_token
 
 
 @router.post("/quests/{quest_id}/cancel")
-def cancel_quest(quest_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+def cancel_quest(
+    quest_id: str,
+    user_id_from_token: str = Depends(verify_token),
+    session: Session = Depends(get_session),
+):
     """Cancel a quest (leader only)."""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
-    
+
     if quest.leader_id != user_id_from_token:
         raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่ยกเลิกภารกิจได้")
 
@@ -442,12 +507,16 @@ def cancel_quest(quest_id: str, user_id_from_token: str = Depends(verify_token),
 
 
 @router.post("/quests/{quest_id}/start")
-def start_quest(quest_id: str, user_id_from_token: str = Depends(verify_token), session: Session = Depends(get_session)):
+def start_quest(
+    quest_id: str,
+    user_id_from_token: str = Depends(verify_token),
+    session: Session = Depends(get_session),
+):
     """Start a quest (leader only)."""
     quest = session.get(Quest, quest_id)
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
-        
+
     if quest.leader_id != user_id_from_token:
         raise HTTPException(status_code=403, detail="เฉพาะหัวหน้าทีมเท่านั้นที่เริ่มภารกิจได้")
 

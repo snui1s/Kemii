@@ -23,12 +23,11 @@ async def analyze_user_profile(user):
         - **General Rule**: Find their "Superpower" (Highest Stat) and "Kryptonite" (Lowest Stat).
 
         **OUTPUT RULES (Strictly Thai):**
-        1. **class_title**: Cool Thai RPG Title (e.g., "เนโครแมนเซอร์จอมโปรเจกต์").
-        2. **prophecy**: 3-4 sentences describing their work style as if reading a legend.
-           - "คุณเปรียบเสมือนจอมเวทย์ผู้..." (Blend RPG metaphor with real work habits).
-        3. **strengths**: 3 Key Professional Skills.
-        4. **weaknesses**: 2 Areas for Growth (Constructive).
-        5. **best_partner**: A Class that covers their blind spots.
+        1. **class_title**: Cool Thai RPG Title (e.g., "เนโครแมนเซอร์จอมโปรเจกต์"). **DO NOT** include English translation or brackets.
+        2. **prophecy**: 2-3 sentences describing work style metaphorically.
+        3. **strengths**: 3 Key Skills with very brief explanation (Start explanation with "คุณ...").
+        4. **weaknesses**: 2 Growth Areas with very brief suggestion (Start suggestion with "คุณ...").
+        5. **best_partner**: Choose one from [Warrior, Mage, Cleric, Paladin, Rogue] using Thai name only (e.g. "นักรบ", "นักเวทย์") + (Don't repeat class name) 1-sentence reason.
 
         **JSON FORMAT ONLY:**
         {{
@@ -92,9 +91,9 @@ async def analyze_match_synergy(u1, u2, s1, s2, final_score):
         - **Speak like a Guild Master consulting on team formation.**
 
         **OUTPUT RULES (Strictly Thai):**
-        1. **synergy_name**: Creative Duo Title (e.g., "คู่หูหยินหยาง", "กำแพงเหล็กและหอกสายฟ้า").
-        2. **analysis**: 2-3 sentences blending RPG roles with work styles.
-        3. **pro_tip**: One solid advice for them to work better together.
+        1. **synergy_name**: Short Creative Duo Title (max 4 words).
+        2. **analysis**: Briefly describe their chemistry in 1-2 sentences.
+        3. **pro_tip**: One brief and practical advice.
 
         **JSON FORMAT ONLY:**
         {{
@@ -163,10 +162,9 @@ async def generate_team_overview(team_stats: dict) -> str:
         3. **Stability (Neuroticism)**: Low = "Rock-solid Morale", High = "High Alert / Sensitive".
         
         **INSTRUCTIONS:**
-        - Summarize the team's "Vibe" in 2-3 sentences.
-        - Highlight the Strongest trait as the team's "Superpower".
-        - Mention one potential blind spot (e.g., "Great at ideas but might miss deadlines" if C is low).
-        - Use "Team" or "Party" interchangeably.
+        - Summarize the team's "Vibe", "Superpower", and "Blind Spot" in **ONE cohesive paragraph**.
+        - **MAXIMUM 3 SENTENCES.**
+        - Be concise and direct.
         - **Speak like a tactician analyzing a battle formation, but for office work.**
         """
     )
