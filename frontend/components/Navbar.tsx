@@ -124,7 +124,6 @@ export default function Navbar() {
       toast.error("🔒 กรุณาทำพิธีปลุกพลังก่อนใช้งานครับ", {
         className: "!bg-[var(--background)]/90 !backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-2xl text-[var(--foreground)]",
         style: {
-          background: "transparent",
           color: "inherit",
           boxShadow: "none",
         },
@@ -232,7 +231,7 @@ export default function Navbar() {
                 <div className="pl-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger className="outline-none">
-                      <div className="flex items-center gap-2 bg-[var(--background)] px-3 py-1.5 rounded-full border border dark:border-white/20 shadow-sm min-w-[120px] hover:border-[var(--highlight)] transition cursor-pointer">
+                      <div className="flex items-center gap-2 bg-[var(--background)] px-3 py-1.5 rounded-full border dark:border-white/5 shadow-sm min-w-[120px] hover:border-[var(--highlight)] transition cursor-pointer">
                         {/* Icon Class */}
                         <div className="p-1 bg-black/5 dark:bg-white/5 rounded-full">
                           {getClassIcon(user.character_class)}

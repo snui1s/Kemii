@@ -24,24 +24,19 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Security(sec
 
 @router.post("/register", response_model=AuthResponse)
 def register(req: RegisterRequest, session: Session = Depends(get_session)):
-    # 1. Check if email exists
     existing_user = session.exec(select(User).where(User.email == req.email)).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="อีเมลนี้ถูกลงทะเบียนแล้ว")
     
-    # 2. Prepare Skills from Departments
-    # Structure: [{"name": "Department Name", "level": 1}]
     skills_data = [{"name": dept, "level": 1} for dept in req.departments]
     
-    # 3. Create User
     new_user = User(
         name=req.name,
         email=req.email,
         hashed_password=get_password_hash(req.password),
         skills=json.dumps(skills_data),
-        character_class="Novice", # Default
+        character_class="Novice",
         level=1,
-        # Default stats
         ocean_openness=0,
         ocean_conscientiousness=0,
         ocean_extraversion=0,
@@ -53,7 +48,6 @@ def register(req: RegisterRequest, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(new_user)
     
-    # Auto-login? Or just return success. Let's return token to be nice.
     access_token = create_access_token(user_id=new_user.id)
     return {"access_token": access_token, "token_type": "bearer", "user": new_user}
 

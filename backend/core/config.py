@@ -6,6 +6,7 @@ load_dotenv()
 
 _llm_instance = None
 
+
 def get_llm():
     global _llm_instance
     if _llm_instance is None:
@@ -20,7 +21,9 @@ def get_llm():
         # However, ChatGoogleGenerativeAI might validate immediately.
         # Let's try to initialize it.
         try:
-            _llm_instance = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.5)
+            _llm_instance = ChatGoogleGenerativeAI(
+                model="gemini-2.5-flash", temperature=0.5
+            )
         except Exception as e:
             print(f"Failed to initialize LLM: {e}")
             raise

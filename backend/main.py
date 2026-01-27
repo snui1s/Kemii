@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from core.database import create_db_and_tables
-# Updated imports for new structure
 from api import users, quests, admin, team, auth
 from dotenv import load_dotenv
 import os

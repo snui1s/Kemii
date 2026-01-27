@@ -66,10 +66,6 @@ const CLASS_ICONS: Record<string, React.ReactNode> = {
 
 import ElementalLoader from "@/components/ElementalLoader";
 
-// ...existing imports...
-// Note: imports above are preserved, just adding ElementalLoader if missing, but since I am replacing the whole function, I will rewrite imports slightly or assume they are there.
-// Actually I need to make sure I don't break imports. I will verify if I can just replace the component.
-
 const STATUS_LABELS: Record<
   string,
   { label: string; color: string; icon: any }
@@ -272,7 +268,7 @@ function QuestBoardContent() {
                   value={filterStatus}
                   onValueChange={(val) => setFilterStatus(val)}
                 >
-                  <SelectTrigger className="h-full border-0 !bg-transparent hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] shadow-none focus:ring-0 focus:ring-offset-0 text-[var(--foreground)] font-bold min-w-[130px] px-3 transition-colors">
+                  <SelectTrigger className="h-full border-0 bg-transparent hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] shadow-none focus:ring-0 focus:ring-offset-0 text-[var(--foreground)] font-bold min-w-[130px] px-3 transition-colors">
                     <SelectValue placeholder="สถานะ" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
@@ -299,7 +295,7 @@ function QuestBoardContent() {
                     setSortOrder(val as "newest" | "oldest")
                   }
                 >
-                  <SelectTrigger className="h-full border-0 !bg-transparent hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] shadow-none focus:ring-0 focus:ring-offset-0 text-[var(--foreground)] font-bold min-w-[130px] px-3 transition-colors">
+                  <SelectTrigger className="h-full border-0 bg-transparent hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] shadow-none focus:ring-0 focus:ring-offset-0 text-[var(--foreground)] font-bold min-w-[130px] px-3 transition-colors">
                     <SelectValue placeholder="เรียงลำดับ" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
@@ -322,7 +318,7 @@ function QuestBoardContent() {
                   placeholder="ค้นหาเควส..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-[var(--foreground)] text-sm placeholder-[var(--muted)]/50 focus:outline-none focus:border-[var(--highlight)]/50 transition-all shadow-sm backdrop-blur-sm"
+                  className="w-full h-11 pl-10 pr-4 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-[var(--foreground)] text-sm placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--highlight)]/50 transition-all shadow-sm backdrop-blur-sm"
                 />
               </div>
 

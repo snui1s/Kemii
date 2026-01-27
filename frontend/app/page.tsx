@@ -1,42 +1,29 @@
 "use client";
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
-import UserCard from "@/components/UserCard";
-import SynergyModal from "@/components/SynergyModal";
-import toast from "react-hot-toast";
-import {
-  Users,
-  Wand,
-  Shield,
-  Sword,
-  Heart,
-  Skull,
-  User as UserIcon,
-  AlertTriangle,
-} from "lucide-react";
-import { Analytics } from "@vercel/analytics/next";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import ElementalLoader from "@/components/ElementalLoader";
 
-// ✅ 1. อัปเดต Interface ให้ตรงกับ Database จริง (รับค่าแบบแยกฟิลด์)
-interface User {
-  id: string;
-  name: string;
-  character_class: string;
-  level: number;
-  // รับค่าแบบ Flat (ตามที่ Backend ส่งมา)
-  ocean_openness?: number;
-  ocean_conscientiousness?: number;
-  ocean_extraversion?: number;
-  ocean_agreeableness?: number;
-  ocean_neuroticism?: number;
-  // เผื่อไว้กรณี Backend บางตัวส่งมาเป็น Object
-  ocean_scores?: { [key: string]: number };
-}
-
-import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Analytics } from "@vercel/analytics/next";
+import {
+  AlertTriangle,
+  Heart,
+  Shield,
+  Skull,
+  Sword,
+  Users,
+  User as UserIcon,
+  Wand,
+} from "lucide-react";
+import toast from "react-hot-toast";
+
+import ElementalLoader from "@/components/ElementalLoader";
+import SynergyModal from "@/components/SynergyModal";
+import UserCard from "@/components/UserCard";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { User } from "@/types";
 
 function HomeContent() {
   const { user: currentUser } = useAuth();
@@ -89,7 +76,7 @@ function HomeContent() {
       return;
     }
     if (partnerId === currentUser.id) {
-      toast("นี่มันตัวคุณเองนี่นา! 🤔", { icon: "🪞" });
+      toast("นี่มันตัวคุณเองนี่นา! 🤔");
       return;
     }
 
@@ -144,7 +131,7 @@ function HomeContent() {
         <div className="space-y-6">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight text-[var(--foreground)]">
             Kemii{" "}
-            <span style={{ color: "var(--highlight)" }} className="font-semibold">
+            <span className="font-semibold text-[var(--highlight)]">
               Guild
             </span>
           </h1>
@@ -217,7 +204,7 @@ function HomeContent() {
         <>
           <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {users.map((user: User) => {
-              const aggregatedScores = user.ocean_scores || {
+              const aggregatedScores = {
                 Openness: user.ocean_openness || 0,
                 Conscientiousness: user.ocean_conscientiousness || 0,
                 Extraversion: user.ocean_extraversion || 0,

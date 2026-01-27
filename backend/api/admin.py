@@ -16,11 +16,6 @@ def update_user_role(user_id: str, role_data: RoleUpdate, admin: User = Depends(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Prevent removing own admin status (safety check) - optional but good practice
-        if user.id == admin.id and role_data.role != "admin":
-             # Allow but maybe warn? For now let's allow it but UI should handle care.
-             pass
-
         user.role = role_data.role
         session.add(user)
         session.commit()
@@ -79,19 +74,12 @@ from jose import jwt, JWTError
 
 @router.post("/seed")
 def seed_production_data(authorization: str = Header(None)):
-    """
-    Seed initial users.
-    - If DB is EMPTY: No Auth required (Genesis Mode).
-    - If DB has users: Requires Admin Token.
-    """
+    """Seed initial users. Requires admin if DB is not empty."""
     with Session(engine) as session:
-        # Check current user count
         all_users = session.exec(select(User)).all()
         existing_count = len(all_users)
         
-        # === SECURITY CHECK ===
         if existing_count > 0:
-            # Not empty? Must be Admin.
             if not authorization:
                 raise HTTPException(status_code=401, detail="Auth required (DB not empty)")
             
@@ -100,7 +88,6 @@ def seed_production_data(authorization: str = Header(None)):
                 if scheme.lower() != 'bearer':
                     raise HTTPException(status_code=401, detail="Invalid auth scheme")
                 
-                # Manual Verification
                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
                 user_id = payload.get("sub")
                 if not user_id:
@@ -113,14 +100,12 @@ def seed_production_data(authorization: str = Header(None)):
             except (ValueError, JWTError):
                  raise HTTPException(status_code=401, detail="Invalid token")
 
-        # === SEEDING LOGIC ===
         created_count = 0
         
         for dept in DEPARTMENTS:
             dept_id = dept["id"]
             dept_name = dept["name"]
             
-            # Create 5 users with different character classes
             for i, profile in enumerate(CLASS_PROFILES):
                 o = get_random_in_range(profile["o"])
                 c = get_random_in_range(profile["c"])
@@ -149,18 +134,14 @@ def seed_production_data(authorization: str = Header(None)):
                     ocean_extraversion=e,
                     ocean_agreeableness=a,
                     ocean_neuroticism=n,
-                    role="user", # Default to user
+                    role="user",
                     skills=json.dumps(skills_json, ensure_ascii=False),
                     is_available=True
                 )
                 session.add(user)
                 created_count += 1
                 
-        # Also ensure we create an Admin if it's the very first run?
-        # The script created 'admin@kemii.com' specifically.
-        # Let's add that back for Genesis Mode!
         if existing_count == 0:
-            # Create King Arthur
             admin1 = User(
                 name="King Arthur",
                 email="admin@kemii.com",
@@ -172,7 +153,6 @@ def seed_production_data(authorization: str = Header(None)):
                 skills=json.dumps([{"name": "Admin", "level": 99}], ensure_ascii=False),
                 is_available=True
             )
-            # Create Merlin
             admin2 = User(
                 name="Merlin",
                 email="merlin@kemii.com",
@@ -188,7 +168,6 @@ def seed_production_data(authorization: str = Header(None)):
             session.add(admin1)
             session.add(admin2)
             created_count += 2
-            print("👑 Genesis: Created King Arthur & Merlin (Super Admins)")
 
         session.commit()
     

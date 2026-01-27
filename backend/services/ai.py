@@ -56,10 +56,8 @@ async def analyze_user_profile(user):
             }
         )
 
-        # Clean & Parse JSON
         clean_json = raw_res.replace("```json", "").replace("```", "").strip()
-        ai_data = json.loads(clean_json)
-        return ai_data
+        return json.loads(clean_json)
 
     except Exception as e:
         print(f"AI Error: {e}")

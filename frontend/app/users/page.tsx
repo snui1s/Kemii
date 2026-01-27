@@ -146,8 +146,7 @@ function UsersListContent() {
       {
         duration: 3000,
         className:
-          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
-        style: { color: "var(--foreground)" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl !text-[var(--foreground)]",
       }
     );
   };
@@ -199,8 +198,7 @@ function UsersListContent() {
       {
         duration: 3000,
         className:
-          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
-        style: { color: "var(--foreground)" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl !text-[var(--foreground)]",
       }
     );
   };
@@ -222,9 +220,6 @@ function UsersListContent() {
 
     return matchesSearch && matchesDept;
   });
-
-// ...existing imports...
-// Note: imports are maintained, just styles are replaced below
 
   if (loading) {
     return (

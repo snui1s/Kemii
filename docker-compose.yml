@@ -4,8 +4,8 @@ services:
     container_name: kemii-backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app # Mount for hot reloading
+    # Removed volume mount for production stability. 
+    # Use docker-compose.dev.yml for hot-reloading.
     env_file:
       - .env
     environment:
@@ -13,17 +13,19 @@ services:
     restart: always
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Pass env var to build time for Next.js (required for static generation)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     container_name: kemii-frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    # Removed volume mount: Use the built standalone image
     env_file:
       - .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     depends_on:
       - backend
     restart: always

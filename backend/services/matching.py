@@ -1,18 +1,9 @@
 from typing import List, Optional, Dict
-# Session, select, math, statistics removed (Unused)
 
 # =========================
 # Constants (Golden Formula)
 # =========================
-DISCLAIMER = """
-Kemii Golden Formula for Team Composition:
-Cost = 1.5 * Var(C) + 1.5 * Var(A) + 1.0 * Var(E) + 1.0 * Var(O) + 1.0 * Mean(N) + 2.0 * max(0, 0.625 - Mean(A))
-
-Key Components:
-1. Variance (Diversity): We balance Conscientiousness (C) and Agreeableness (A) with higher weights (1.5).
-2. Stress Factor: Mean Neuroticism (N) adds directly to cost (Lower is better).
-3. Toxic Penalty: If average Agreeableness (A) drops below 0.625 (normalized), a steep penalty (2.0x) is applied.
-"""
+# Cost = 1.5 * Var(C) + 1.5 * Var(A) + 1.0 * Var(E) + 1.0 * Var(O) + 1.0 * Mean(N) + 2.0 * max(0, 0.625 - Mean(A))
 
 TAU = 0.625
 LAMBDA = 2.0
@@ -21,14 +12,10 @@ MAX_SCORE = 50
 SCORE_RANGE = 40
 VAR_MAX = 400
 
-# Theoretical Upper Bound (Absolute worst case: Max Variance + Max Penalty)
-# = 1.5(1) + 1.5(1) + 1.0(1) + 1.0(1) + 1.0(1) + LAMBDA * TAU
-# = 6.0 + 1.25 = 7.25
+# Theoretical Upper Bound: 7.25
 THEORETICAL_MAX_COST = 6 + LAMBDA * TAU 
 
-# Empirical Upper Bound (For realistic grading calibration)
-# Real-world teams rarely exceed variance of 0.5 or receive full penalty simultaneously.
-# We map 0 - > 4.0 cost to 100 -> 0 score to utilize the full 0-100 scale effectively.
+# Empirical Upper Bound: 4.0
 SCALING_MAX_COST = 4.0
 
 # =========================
@@ -42,7 +29,6 @@ def mean(values):
     return sum(values) / len(values)
 
 def get_stats(u):
-    """Legacy helper for teams.py"""
     return {
         "O": u.ocean_openness or 0,
         "C": u.ocean_conscientiousness or 0,
@@ -50,8 +36,6 @@ def get_stats(u):
         "A": u.ocean_agreeableness or 0,
         "N": u.ocean_neuroticism or 0
     }
-
-
 
 def variance(values):
     if len(values) <= 1:
@@ -69,18 +53,13 @@ def xbar_star(values):
 # Core Logic
 # =========================
 def calculate_team_cost(users) -> float:
-    """
-    Calculate the Kemii Golden Formula Cost.
-    Returns float('inf') if data is invalid or missing.
-    users: List of objects having ocean_* attributes.
-    """
+    """Calculate the Kemii Golden Formula Cost."""
     if not users or len(users) < 2:
         return 0.0
 
     traits = {"O": [], "C": [], "E": [], "A": [], "N": []}
 
     for u in users:
-        # Strict validation: Reject if any OCEAN trait is missing
         if None in (
             u.ocean_openness,
             u.ocean_conscientiousness,
@@ -108,7 +87,6 @@ def calculate_team_cost(users) -> float:
     return cost
 
 def cost_to_score(cost: float) -> float:
-    # Use SCALING_MAX_COST to calibrate score distribution
     score = 100 * (1 - cost / SCALING_MAX_COST)
     return round(clamp01(score / 100) * 100, 1)
 
@@ -125,9 +103,6 @@ def get_team_rating(s):
         return "Not Recommended"
 
 def evaluate_team(users):
-    """
-    Wrapper for full team evaluation (Cost + Score + Rating)
-    """
     cost = calculate_team_cost(users)
     
     if cost == float('inf'):
@@ -146,11 +121,8 @@ def evaluate_team(users):
         "rating": rating
     }
 
-# Legacy Adapter
 def calculate_academic_cost(team_stats_list):
-    # Map dictionary inputs to objects for compatibility if needed, 
-    # but strictly we should move callers to pass user objects.
-    # For now, let's just warn or adapt.
+    """Adapter for legacy dict inputs."""
     class MockUser:
         def __init__(self, s):
             self.ocean_openness = s.get("O")
@@ -162,33 +134,23 @@ def calculate_academic_cost(team_stats_list):
     users = [MockUser(s) for s in team_stats_list]
     return calculate_team_cost(users)
 
-# Removed unused aliases, using cost_to_score directly.
-
-
 import json
 
 def calculate_match_score(user_skills: list, user_ocean: dict, quest) -> dict:
-    """
-    Calculate how well a user matches a quest
-    Uses Kemii's Golden Formula logic for OCEAN scoring component
-    """
+    """Calculate how well a user matches a quest (Skill + OCEAN)."""
     # Parse Quest Requirements
     if isinstance(quest, dict):
         rq_field = quest.get("required_skills", "[]")
         qs_prefs = quest.get("ocean_preference", "{}")
     else:
-        # SQLModel object
         rq_field = quest.required_skills
         qs_prefs = quest.ocean_preference
 
     required_skills = json.loads(rq_field) if isinstance(rq_field, str) else rq_field
     
-    # Build user skill lookup
     user_skill_map = {s["name"]: s["level"] for s in user_skills}
     
-    # ========================================
-    # SKILL SCORE (0-60 คะแนน)
-    # ========================================
+    # 1. SKILL SCORE (0-60)
     skill_points = 0
     max_skill_points = 0
     missing_skills = []
@@ -213,50 +175,37 @@ def calculate_match_score(user_skills: list, user_ocean: dict, quest) -> dict:
         else:
             missing_skills.append(name)
     
-    # Optional skills bonus removed (deprecated)
-    
     skill_score = (skill_points / max(max_skill_points, 1)) * 60
     skill_score = min(int(skill_score), 70)
     skill_score = min(int(skill_score), 70)
     
-    # ========================================
-    # OCEAN SCORE - Kemii's Logic (0-30 คะแนน)
-    # ========================================
+    # 2. OCEAN SCORE (0-30)
     o = user_ocean.get("ocean_openness", 25)
     c = user_ocean.get("ocean_conscientiousness", 25)
     e = user_ocean.get("ocean_extraversion", 25)
     a = user_ocean.get("ocean_agreeableness", 25)
     n = user_ocean.get("ocean_neuroticism", 25)
     
-    # Internal Normalize (0-1) for scoring components
     def normalize(val):
         return (val - 10) / 40.0
 
-    # 1. Core traits: High C, High A is better
     core_score = 1.5 * (1 - normalize(c)) + 1.5 * (1 - normalize(a))
     
-    # 2. Style: E, O - Balanced is better (deviation from 0.5 is bad)
     e_deviation = abs(normalize(e) - 0.5) * 2
     o_deviation = abs(normalize(o) - 0.5) * 2
     style_score = 1.0 * e_deviation + 1.0 * o_deviation
     
-    # 3. Stress: High N is bad
     stress_score = 1.0 * normalize(n)
     
-    # 4. Toxic Penalty: Low A
     tau = 0.6
     toxic_penalty = 2.0 * max(0, tau - normalize(a))
     
-    # Total "Badness" (Lower is better)
     kemii_total = core_score + style_score + stress_score + toxic_penalty
     
-    # Convert to 0-30 score (Higher is better)
     ocean_score = max(0, int(30 - (kemii_total * 4)))
     ocean_score = min(ocean_score, 30)
     
-    # ========================================
-    # TOTAL SCORE
-    # ========================================
+    # 3. TOTAL SCORE
     total_score = skill_score + ocean_score
     
     if total_score >= 80:
@@ -278,14 +227,10 @@ def calculate_match_score(user_skills: list, user_ocean: dict, quest) -> dict:
     }
 
 def find_best_candidates(quest, users: list, count: int, current_members: list = None) -> list:
-    """
-    Find the best matching candidates using Dynamic Gap Scoring.
-    """
+    """Find the best matching candidates using Dynamic Gap Scoring."""
     if current_members is None:
         current_members = []
     
-    # Parsing
-    # Parsing
     if isinstance(quest, dict):
         rq_field = quest.get("required_skills", "[]")
         qs_prefs = quest.get("ocean_preference", "{}")
@@ -350,13 +295,9 @@ def find_best_candidates(quest, users: list, count: int, current_members: list =
         skill_score = int((gap_fill_points / max_gap_points) * 70)
         skill_score = min(skill_score, 70)
         
-        # Display matching skills
         for skill in user_skills:
             if skill["name"] in required_skill_names:
                 matching_skills.append({"name": skill["name"], "level": skill["level"], "type": "required"})
-        
-        # Optional Bonus removed
-
         
         # OCEAN Score (Simple Preference Match)
         user_ocean = {
@@ -404,6 +345,5 @@ def find_best_candidates(quest, users: list, count: int, current_members: list =
             "fills_gaps": len(skills_that_fill_gaps)
         })
         
-    # Sort
     candidates.sort(key=lambda x: (x["fills_gaps"], x["match_score"]), reverse=True)
     return candidates[:count]

@@ -63,13 +63,6 @@ interface QuestDetail {
 
 // ...existing imports...
 import ElementalLoader from "@/components/ElementalLoader";
-// Note: Imports preserved automatically by ...existing imports... or manual restoration below if needed.
-// Ideally I should keep the imports.
-
-// ...existing imports...
-// Note: imports above should be maintained.
-
-// ...existing interfaces...
 
 const CLASS_ICONS: Record<string, React.ReactNode> = {
   Mage: <Wand size={20} />,
@@ -193,8 +186,7 @@ export default function QuestDetailPage({
       {
         duration: 4000,
         className:
-          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
-        style: { color: "var(--foreground)" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl !text-[var(--foreground)]",
       }
     );
   };
@@ -261,8 +253,7 @@ export default function QuestDetailPage({
       {
         duration: 4000,
         className:
-          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl",
-        style: { color: "var(--foreground)" },
+          "!bg-[var(--background)] !border !border-black/5 dark:!border-white/5 !shadow-xl !backdrop-blur-xl !text-[var(--foreground)]",
       }
     );
   };

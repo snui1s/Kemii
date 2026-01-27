@@ -30,6 +30,10 @@ class UserProfile(BaseModel):
     
     access_token: Optional[str] = None
 
+class SkillItem(BaseModel):
+    name: str
+    level: int
+
 class UserPublic(BaseModel):
     id: str
     name: str
@@ -43,7 +47,7 @@ class UserPublic(BaseModel):
     ocean_agreeableness: int
     ocean_neuroticism: int
     is_available: bool
-    skills: Optional[str] = None
+    skills: List[SkillItem] = []
     active_project_end_date: Optional[datetime] = None
 
 class UserCandidate(BaseModel):
@@ -52,8 +56,12 @@ class UserCandidate(BaseModel):
     character_class: str
     level: int
     is_available: bool
-    skills: Optional[str] = None
+    skills: List[SkillItem] = []
     # No sensitive OCEAN scores or email
+
+class UserListResponse(BaseModel):
+    users: List[UserPublic]
+    total: int
 
 class AuthResponse(BaseModel):
     access_token: str
@@ -64,7 +72,7 @@ class UserNameUpdate(BaseModel):
     name: str
 
 class RoleUpdate(BaseModel):
-    role: str # "user" or "admin"
+    role: str
 
 class MatchRequest(BaseModel):
     user1_id: str
@@ -80,7 +88,6 @@ class ConfirmTeamRequest(BaseModel):
     member_ids: Optional[List[str]] = None 
     start_date: datetime 
     end_date: datetime
-    # leader_id will be derived from token or verified
 
 class TeamRecommendation(BaseModel):
     strategy: str
@@ -95,17 +102,12 @@ class ReviveRequest(BaseModel):
     start_date: datetime
     end_date: datetime
 
-class SkillItem(BaseModel):
-    name: str
-    level: int  # 1-5
-
 class UpdateSkillsRequest(BaseModel):
     skills: List[SkillItem]
 
-# Quest schemas
 class CreateQuestRequest(BaseModel):
-    prompt: str  # Natural language description
-    deadline_days: int = 7  # Number of days for the quest
+    prompt: str
+    deadline_days: int = 7
     leader_id: str
     start_date: datetime
     deadline: datetime
@@ -113,6 +115,15 @@ class CreateQuestRequest(BaseModel):
 class QuestSkill(BaseModel):
     name: str
     level: int
+
+# Accepted Member Structure for Quest Response
+class QuestMember(BaseModel):
+    id: str
+    name: str
+    character_class: str
+    department: str
+    level: int
+    matching_skills: List[Dict[str, Any]] = []
 
 class QuestResponse(BaseModel):
     id: str
@@ -127,19 +138,23 @@ class QuestResponse(BaseModel):
     leader_class: Optional[str] = None
     status: str
     applicant_count: int = 0
+    accepted_members: List[QuestMember] = []
+    accepted_member_ids: List[str] = []
     start_date: Optional[datetime] = None
     deadline: Optional[datetime] = None
     created_at: datetime
+    harmony_score: Optional[int] = 0
 
-
+class QuestListResponse(BaseModel):
+    quests: List[QuestResponse]
 
 class MatchScoreResponse(BaseModel):
-    skill_score: int  # 0-100
-    ocean_score: int  # 0-100
-    total_score: int  # 0-100
-    match_level: str  # "perfect", "good", "moderate", "risky"
+    skill_score: int
+    ocean_score: int
+    total_score: int
+    match_level: str
     missing_skills: List[str]
-    skill_gaps: List[Dict[str, Any]]  # {"name": "Python", "required": 4, "has": 2}
+    skill_gaps: List[Dict[str, Any]]
 
 class UpdateStatusRequest(BaseModel):
     status: str

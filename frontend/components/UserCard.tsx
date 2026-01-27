@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-// Dynamically import the radar chart component to reduce initial bundle size
+// Dynamic import for radar chart
 const UserStatsRadar = dynamic(() => import("./UserStatsRadar"), {
   loading: () => (
     <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">

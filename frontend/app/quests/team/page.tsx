@@ -40,10 +40,8 @@ import {
 } from "@/components/ui/select";
 import ElementalLoader from "@/components/ElementalLoader";
 
-// API_URL removed (using centralized api instance)
-
 interface RequirementRow {
-  id: string; // unique id for row key
+  id: string;
   deptId: string;
   count: number;
 }
@@ -98,61 +96,49 @@ export default function SmartQuestPage() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
 
-  // --- State: Data ---
-  // Using useQuery for consistent caching
   const { data: allUsers = [], isLoading: loadingConfig } = useQuery<
     SmartQuestUser[]
   >({
     queryKey: ["users", "roster"],
     queryFn: async () => {
-      // Use Safe Roster Endpoint (No sensitive OCEAN scores)
       const res = await api.get("/users/roster");
-      // The backend now returns List[UserCandidate] directly, not {users: []}
       return res.data;
     },
   });
 
   const [analyzing, setAnalyzing] = useState(false);
 
-  // --- State: Left Panel (Inputs) ---
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [deadline, setDeadline] = useState("");
-  // Start with one empty row
   const [requirements, setRequirements] = useState<RequirementRow[]>([
     { id: "1", deptId: "", count: 1 },
   ]);
 
-  // --- State: Right Panel (Selection) ---
   const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(
     new Set()
   );
   const [generatedTeam, setGeneratedTeam] = useState<GeneratedTeam | null>(
     null
-  ); // For results
+  );
   const [isAnalyzingText, setIsAnalyzingText] = useState(false);
   const [teamAnalysisText, setTeamAnalysisText] = useState<string | null>(null);
 
-  // --- Derived State: Candidates based on Dept Selection ---
   const candidates = useMemo(() => {
-    // 1. Collect all target department IDs
     const targetDeptIds = new Set(
       requirements.filter((r) => r.deptId).map((r) => r.deptId)
     );
 
     if (targetDeptIds.size === 0) return [];
 
-    // 2. Filter users who match ANY of these departments
     return allUsers
       .filter((user) => {
-        // Parse skills if string
         const skills =
           typeof user.skills === "string"
             ? JSON.parse(user.skills)
             : user.skills || [];
 
-        // Check if user belongs to any selected department
         return Array.from(targetDeptIds).some((deptId) => {
           const deptDef = DEPARTMENTS.find((d) => d.id === deptId);
           if (!deptDef) return false;
@@ -160,13 +146,11 @@ export default function SmartQuestPage() {
         });
       })
       .sort((a, b) => {
-        // Sort by Availability (Available first)
         if (a.is_available === b.is_available) return 0;
         return a.is_available ? -1 : 1;
       });
   }, [allUsers, requirements]);
 
-  // --- Auto-select new candidates when they appear in the list ---
   useEffect(() => {
     setSelectedPoolIds((prev) => {
       const next = new Set(prev);
@@ -177,7 +161,6 @@ export default function SmartQuestPage() {
     });
   }, [candidates.length]);
 
-  // --- Derived State: Availability Count per Department ---
   const deptAvailabilityMap = useMemo(() => {
     const map: Record<string, number> = {};
     DEPARTMENTS.forEach((dept) => {
@@ -191,7 +174,6 @@ export default function SmartQuestPage() {
     return map;
   }, [allUsers]);
 
-  // --- Handlers: Left Panel ---
   const addRow = () => {
     setRequirements([
       ...requirements,
@@ -209,7 +191,6 @@ export default function SmartQuestPage() {
     );
   };
 
-  // --- Handlers: Right Panel ---
   const toggleUser = (userId: string) => {
     const user = allUsers.find((u) => u.id === userId);
     if (user && !user.is_available) {
@@ -219,7 +200,6 @@ export default function SmartQuestPage() {
 
     const next = new Set(selectedPoolIds);
     if (next.has(userId)) {
-      // Check minimum requirement constraint
       const totalRequired = requirements.reduce(
         (sum, r) => sum + (r.deptId ? r.count : 0),
         0
@@ -239,7 +219,7 @@ export default function SmartQuestPage() {
     if (
       selectedPoolIds.size >= candidates.filter((u) => u.is_available).length
     ) {
-      setSelectedPoolIds(new Set()); // Uncheck all
+      setSelectedPoolIds(new Set());
     } else {
       const allAvailableIds = new Set(
         candidates.filter((u) => u.is_available).map((u) => u.id)
@@ -254,13 +234,11 @@ export default function SmartQuestPage() {
         ? JSON.parse(user.skills)
         : user.skills || [];
 
-    // Find ALL matching departments
     return DEPARTMENTS.filter((d) =>
       skills.some((s: any) => matchesDepartment(s.name, d))
     );
   };
 
-  // --- Verify & Generate ---
   const handleGenerate = async () => {
     if (!projectName || !startDate || !deadline) {
       toast.error("กรุณากรอกชื่อโปรเจค วันเริ่ม และวันส่งมอบงาน");
@@ -492,7 +470,7 @@ export default function SmartQuestPage() {
                       placeholder="ชื่อภารกิจ"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
-                      className="peer w-full px-0 py-2 bg-transparent border-b border-black/10 dark:border-white/10 text-[var(--foreground)] focus:border-[var(--highlight)] outline-none transition-all placeholder-[var(--muted)]/40 font-medium text-lg"
+                      className="peer w-full px-0 py-2 bg-transparent border-b border-black/10 dark:border-white/10 text-[var(--foreground)] focus:border-[var(--highlight)] outline-none transition-all placeholder:text-[var(--muted)]/40 font-medium text-lg"
                     />
                     <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--highlight)] transition-all peer-focus:w-full" />
                   </div>
@@ -505,7 +483,7 @@ export default function SmartQuestPage() {
                       placeholder="ระบุขอบเขตงาน, เป้าหมาย หรือสิ่งที่ต้องทำ..."
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}
-                      className="peer w-full px-0 py-2 bg-transparent border-b border-black/10 dark:border-white/10 text-[var(--foreground)] focus:border-[var(--highlight)] outline-none transition-all placeholder-[var(--muted)]/40 text-sm resize-none h-20"
+                      className="peer w-full px-0 py-2 bg-transparent border-b border-black/10 dark:border-white/10 text-[var(--foreground)] focus:border-[var(--highlight)] outline-none transition-all placeholder:text-[var(--muted)]/40 text-sm resize-none h-20"
                     />
                     <div className="absolute bottom-1.5 left-0 w-0 h-0.5 bg-[var(--highlight)] transition-all peer-focus:w-full" />
                   </div>

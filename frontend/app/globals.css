@@ -14,6 +14,7 @@
 
   --muted: #8c8c8c;
   --highlight: var(--zen-orange);
+  --highlight-alpha: rgba(250, 129, 18, 0.2);
 
   --font-sans: var(--font-line-seed);
 }
@@ -22,6 +23,7 @@
   --breakpoint-se: 375px;
 
   --animate-shimmer: shimmer 1.5s infinite linear;
+  --animate-ping-slow: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 
   @keyframes shimmer {
     0% {

@@ -292,7 +292,6 @@ function AssessmentContent() {
     setAnswers((prev) => ({ ...prev, [questionId]: score }));
   };
 
-  // --- DEBUG TOOL ---
   const handleDebugFill = (
     targetType: number | "random",
     namePrefix: string
@@ -436,7 +435,6 @@ function AssessmentContent() {
           <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[var(--highlight)]/10 rounded-full blur-[100px]" />
         </div>
 
-        {/* --- Tutorial Modal --- */}
         {showGuide && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--background)]/80 backdrop-blur-md">
             <div className="bg-[var(--background)]/90 backdrop-blur-xl w-full max-w-lg rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden flex flex-col max-h-[75vh] shadow-2xl">

@@ -277,17 +277,8 @@ function ProfileContent() {
     { subject: "N", A: profileUser.ocean_neuroticism, fullMark: 50 },
   ];
 
-  /* Unused const oceanScores = {
-    O: profileUser.ocean_openness,
-    C: profileUser.ocean_conscientiousness,
-    E: profileUser.ocean_extraversion,
-    A: profileUser.ocean_agreeableness,
-    N: profileUser.ocean_neuroticism,
-  }; */
-
   const totalSkills = skills.length;
-  const maxLevel = 1; // Default
-  /* const avgLevel = 1; // Default */
+  const maxLevel = 1;
 
   return (
     <ProtectedRoute>
