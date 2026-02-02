@@ -317,7 +317,7 @@ export default function QuestDetailPage({
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-3 py-4 md:p-8 transition-colors font-[family-name:var(--font-line-seed)]">
+      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-3 py-4 md:p-8 transition-colors font-[family-name:var(--font-line-seed)] pb-24 md:pb-8">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => router.push(`/quests?view=${returnView}`)}
@@ -532,12 +532,12 @@ export default function QuestDetailPage({
                 </div>
               )}
 
-              {/* Leader Actions */}
+              {/* Leader Actions (Desktop) */}
               {isLeader &&
                 (quest.status === "open" ||
                   quest.status === "filled" ||
                   quest.status === "in_progress") && (
-                  <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row gap-3">
+                  <div className="hidden md:flex mt-8 pt-6 border-t border-black/5 dark:border-white/5 flex-col sm:flex-row gap-3">
                     <button
                       onClick={handleComplete}
                       className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-sm"
@@ -570,12 +570,10 @@ export default function QuestDetailPage({
               )}
 
               {/* Non-leader view */}
-              {!isLeader && (
-                <div className="p-4 bg-black/5 dark:bg-white/5 rounded-xl text-center">
-                  <p className="text-[var(--foreground)] opacity-80">
-                    {quest.accepted_member_ids.includes(user?.id || 0)
-                      ? "✓ คุณได้รับเลือกเข้าทีมแล้ว!"
-                      : "รอ Quest Leader เลือกสมาชิก"}
+              {!isLeader && quest.accepted_member_ids.includes(user?.id || 0) && (
+                <div className="p-4 bg-emerald-500/10 rounded-xl text-center border border-emerald-500/20">
+                  <p className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center gap-2">
+                    <Check size={18} /> คุณเป็นสมาชิกทีมนี้แล้ว
                   </p>
                 </div>
               )}
@@ -583,6 +581,27 @@ export default function QuestDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Leader Actions (Mobile Sticky) */}
+      {isLeader &&
+        (quest.status === "open" ||
+          quest.status === "filled" ||
+          quest.status === "in_progress") && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-[var(--background)]/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 z-50 flex gap-3 safe-area-bottom pb-6 animate-in slide-in-from-bottom-2">
+            <button
+              onClick={handleComplete}
+              className="flex-1 h-12 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <Check size={18} /> สำเร็จ
+            </button>
+            <button
+              onClick={handleCancel}
+              className="flex-1 h-12 bg-black/5 dark:bg-white/5 text-[var(--foreground)] hover:text-red-600 hover:bg-red-500/10 rounded-xl font-bold active:scale-95 transition-all border border-black/5 dark:border-white/5 flex items-center justify-center gap-2"
+            >
+              <X size={18} /> ยุบทีม
+            </button>
+          </div>
+        )}
     </ProtectedRoute>
   );
 }

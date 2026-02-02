@@ -125,9 +125,8 @@ function HomeContent() {
   };
 
   return (
-    <div className="relative h-full w-full max-w-5xl mx-auto mb-12 mt-5 px-4 sm:px-0">
-      {/* Header Section (Hero Banner) ... lines 102-256 ... */}
-      <div className="relative mb-12 py-10 text-center animate-fade-in-up">
+    <div className="relative h-full w-full max-w-5xl mx-auto mb-8 sm:mb-12 mt-4 sm:mt-5 px-4 sm:px-6">
+      <div className="relative mb-8 sm:mb-12 py-6 sm:py-10 text-center animate-fade-in-up">
         {hasMissingDept && (
           <div
             className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium cursor-pointer hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] hover:border-[var(--highlight)]/20 transition-colors border border-red-100 dark:border-red-900/50"
@@ -138,8 +137,8 @@ function HomeContent() {
           </div>
         )}
 
-        <div className="space-y-6">
-          <h1 className="text-4xl md:text-5xl font-light tracking-tight text-[var(--foreground)]">
+        <div className="space-y-4 sm:space-y-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[var(--foreground)]">
             Kemii{" "}
             <span className="font-semibold text-[var(--highlight)]">
               Guild
@@ -148,8 +147,8 @@ function HomeContent() {
 
           {currentUser?.id ? (
             <div className="max-w-xl mx-auto space-y-4">
-              <p className="text-lg text-[var(--muted)] font-medium leading-relaxed">
-                ยินดีต้อนรับ, <span className="font-medium">{currentUser.name}</span>
+              <p className="text-base sm:text-lg text-[var(--muted)] font-medium leading-relaxed px-2">
+                ยินดีต้อนรับ, <span className="font-medium text-[var(--foreground)]">{currentUser.name}</span>
                 <br />
                 หาเคมีที่ลงตัวด้วยความ <span className="font-semibold text-[var(--highlight)]">"</span><span className="font-semibold decoration">Minimal</span><span className="font-semibold text-[var(--highlight)]">"</span>
               </p>
@@ -180,17 +179,17 @@ function HomeContent() {
               </div>
             </div>
           ) : (
-            <div className="max-w-xl mx-auto space-y-6">
-               <p className="text-lg text-[var(--muted)] font-medium">
+            <div className="max-w-xl mx-auto space-y-6 sm:space-y-8">
+               <p className="text-base sm:text-lg text-[var(--muted)] font-medium px-4">
                 พื้นที่สำหรับการทำงานร่วมกันอย่างลงตัว
                 <br className="hidden sm:block" />
                 ค้นหาเพื่อนร่วมทีมที่ใช่ด้วย <span className="font-medium text-[var(--highlight)]">Kemii Golden Formula</span>
               </p>
-              <div className="flex justify-center gap-4">
-                 <Link href="/login" className="px-8 py-2.5 rounded-full bg-[var(--highlight)] text-white hover:opacity-90 hover:shadow-[0_0_15px_rgba(250,129,18,0.4)] transition-all text-sm font-medium">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-8 sm:px-0">
+                 <Link href="/login" className="w-full sm:w-auto px-8 py-3 rounded-full bg-[var(--highlight)] text-white hover:opacity-90 hover:shadow-[0_0_15px_rgba(250,129,18,0.4)] transition-all text-sm font-semibold text-center">
                    เข้าสู่ระบบ
                  </Link>
-                 <Link href="/register" className="px-8 py-2.5 rounded-full border border-[var(--highlight)] text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white hover:shadow-[0_0_15px_rgba(250,129,18,0.2)] transition-all text-sm font-medium">
+                 <Link href="/register" className="w-full sm:w-auto px-8 py-3 rounded-full border border-[var(--highlight)]/30 text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white hover:shadow-[0_0_15px_rgba(250,129,18,0.2)] transition-all text-sm font-semibold text-center">
                    สมัครสมาชิก
                  </Link>
               </div>

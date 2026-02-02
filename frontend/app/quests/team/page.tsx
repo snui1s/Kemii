@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -107,11 +107,13 @@ export default function SmartQuestPage() {
   });
 
   const [analyzing, setAnalyzing] = useState(false);
+  const [isInputsCollapsed, setIsInputsCollapsed] = useState(false);
 
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [deadline, setDeadline] = useState("");
+  const resultsHeaderRef = useRef<HTMLDivElement>(null);
   const [requirements, setRequirements] = useState<RequirementRow[]>([
     { id: "1", deptId: "", count: 1 },
   ]);
@@ -276,6 +278,11 @@ export default function SmartQuestPage() {
       }
 
       setGeneratedTeam(res.data);
+      // Scroll to results header on mobile/desktop
+      setIsInputsCollapsed(true); // Auto collapse inputs on mobile
+      setTimeout(() => {
+        resultsHeaderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
 
       // Calculate Averages for AI Analysis
       const members = res.data.members;
@@ -436,7 +443,7 @@ export default function SmartQuestPage() {
         {/* Main Split Layout */}
         <div className="flex-1 flex flex-col md:flex-row min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] md:overflow-hidden">
           {/* === LEFT PANEL: INPUTS (40%) === */}
-          <div className="w-full md:w-[400px] lg:w-[450px] p-8 bg-[var(--background)] border-r border-black/5 dark:border-white/5 md:overflow-y-auto z-20 shadow-xl md:shadow-none flex flex-col">
+          <div className="w-full md:w-[400px] lg:w-[450px] p-8 bg-[var(--background)] border-r border-black/5 dark:border-white/5 md:overflow-y-auto z-20 md:shadow-none flex flex-col">
             <div className="flex-1 space-y-10">
               {/* Header */}
               <div className="space-y-2">
@@ -457,8 +464,25 @@ export default function SmartQuestPage() {
                 </p>
               </div>
 
-              {/* Project Info */}
-              <div className="space-y-5 animate-in slide-in-from-left-2 duration-500 delay-100">
+              {/* Mobile Collapse Toggle */}
+              <button
+                onClick={() => setIsInputsCollapsed(!isInputsCollapsed)}
+                className="md:hidden w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors border-b border-black/5 dark:border-white/5 mb-4"
+              >
+                {isInputsCollapsed ? (
+                  <>
+                    <Plus size={16} /> แสดงข้อมูลภารกิจ & ทีม
+                  </>
+                ) : (
+                  <>
+                    <Minus size={16} /> ซ่อนข้อมูลภารกิจ & ทีม
+                  </>
+                )}
+              </button>
+
+              <div className={`${isInputsCollapsed ? 'hidden md:block' : 'block'} space-y-10`}>
+                {/* Project Info */}
+                <div className="space-y-5 animate-in slide-in-from-left-2 duration-500 delay-100">
                 <h2 className="text-xs uppercase tracking-widest font-semibold text-[var(--muted)] flex items-center gap-2 opacity-70">
                   <Scroll size={14} className="text-[var(--highlight)]" /> ข้อมูลภารกิจ
                   (Quest Info)
@@ -564,7 +588,7 @@ export default function SmartQuestPage() {
                             }
                           >
                             <SelectTrigger className="w-full bg-transparent dark:bg-transparent border-none p-0 h-auto text-sm font-semibold text-[var(--foreground)] focus:ring-0 shadow-none">
-                              <SelectValue placeholder="เลือกแผนก (Department)" />
+                              <SelectValue placeholder="เลือกแผนก" />
                             </SelectTrigger>
                             <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)] shadow-xl">
                               {availableOptions.map((d) => (
@@ -627,7 +651,7 @@ export default function SmartQuestPage() {
                         {requirements.length > 1 && (
                           <button
                             onClick={() => removeRow(row.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all ml-1"
+                            className="p-1.5 text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all ml-1"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -637,10 +661,11 @@ export default function SmartQuestPage() {
                   })}
                 </div>
               </div>
+              </div>
             </div>
 
-            {/* Action Area (Sticky Bottom on Desktop) */}
-            <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5">
+            {/* Action Area (Sticky Bottom on Desktop, Hidden on Mobile) */}
+            <div className="hidden md:block mt-8 pt-6 border-t border-black/5 dark:border-white/5">
               {!generatedTeam ? (
                 <button
                   onClick={handleGenerate}
@@ -706,13 +731,13 @@ export default function SmartQuestPage() {
             ) : (
               <>
                 {/* Minimal Header */}
-                <div className="h-20 px-8 flex items-center justify-between sticky top-0 bg-[var(--background)]/80 backdrop-blur-md z-10 border-b border-black/5 dark:border-white/5">
+                <div ref={resultsHeaderRef} className="h-20 px-8 flex items-center justify-between sticky top-0 bg-[var(--background)]/80 backdrop-blur-md z-10 border-b border-black/5 dark:border-white/5 scroll-mt-20">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                    <h3 className="text-lg font-bold text-[var(--foreground)] flex items-center gap-3">
                       {generatedTeam
                         ? "ปาร์ตี้ที่แนะนำ (Recommended Party)"
                         : "นักผจญภัย (Adventurers)"}
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-[var(--foreground)]">
                         {generatedTeam
                           ? generatedTeam.members.length
                           : candidates.length}
@@ -730,11 +755,21 @@ export default function SmartQuestPage() {
                   </div>
 
                   {!generatedTeam && (
-                    <div className="text-xs font-semibold text-slate-400 flex flex-shrink-0 items-center gap-1 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800 ml-2">
-                      <span className="hidden xs:inline">เลือกแล้ว</span>
-                      <span className="text-indigo-600 dark:text-indigo-400">
-                        {selectedPoolIds.size}
-                      </span>
+                    <div className="flex items-center gap-2 ml-2">
+                       <button
+                        onClick={toggleAll}
+                        className="md:hidden text-xs font-bold text-[var(--highlight)] bg-[var(--highlight)]/10 px-3 py-1.5 rounded-lg hover:bg-[var(--highlight)]/20 transition-colors"
+                      >
+                        {selectedPoolIds.size === candidates.filter(u => u.is_available).length && candidates.length > 0
+                          ? "ยกเลิกทั้งหมด"
+                          : "เลือกทั้งหมด"}
+                      </button>
+                      <div className="text-xs font-semibold text-[var(--muted)] flex flex-shrink-0 items-center gap-1 bg-[var(--background)] px-3 py-1.5 rounded-lg shadow-sm border border-black/5 dark:border-white/5">
+                        <span className="hidden xs:inline">เลือกแล้ว</span>
+                        <span className="text-[var(--highlight)]">
+                          {selectedPoolIds.size}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -778,8 +813,8 @@ export default function SmartQuestPage() {
                                 <h4
                                   className={`font-bold text-sm ${
                                     isSelected
-                                      ? "text-indigo-700 dark:text-indigo-300"
-                                      : "text-slate-800 dark:text-slate-200"
+                                      ? "text-[var(--highlight)]"
+                                      : "text-[var(--foreground)]"
                                   }`}
                                 >
                                   {user.name}
@@ -787,17 +822,16 @@ export default function SmartQuestPage() {
                                 {/* Selection Checkbox (Mobile) */}
                                 {!generatedTeam && (
                                   <div
-                                    className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                                    className={`transition ${
                                       isSelected
-                                        ? "bg-indigo-600 border-indigo-600"
-                                        : "border-slate-300 dark:border-slate-600"
+                                        ? "text-[var(--highlight)] scale-110"
+                                        : "text-[var(--muted)]"
                                     }`}
                                   >
-                                    {isSelected && (
-                                      <CheckSquare
-                                        size={14}
-                                        className="text-white"
-                                      />
+                                    {isSelected ? (
+                                      <CheckSquare size={20} />
+                                    ) : (
+                                      <Square size={20} />
                                     )}
                                   </div>
                                 )}
@@ -806,6 +840,41 @@ export default function SmartQuestPage() {
                               <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                                 Lv.{user.level} • {user.character_class}
                               </p>
+
+                              {/* Mobile OCEAN Scores */}
+                              <div className="flex items-center gap-1 mt-2">
+                                {["O", "C", "E", "A", "N"].map((trait) => {
+                                  const val = generatedTeam
+                                    ? user.ocean_scores?.[trait]
+                                    : user[
+                                        `ocean_${
+                                          {
+                                            O: "openness",
+                                            C: "conscientiousness",
+                                            E: "extraversion",
+                                            A: "agreeableness",
+                                            N: "neuroticism",
+                                          }[trait] as string
+                                        }`
+                                      ] || 0;
+                                  
+                                  const intensity = val >= 70 ? "high" : val >= 40 ? "mid" : "low";
+                                  
+                                  return (
+                                    <div key={trait} className="relative group/mobile-ocean">
+                                      <div className={`w-3.5 h-3.5 rounded-[3px] text-[7px] font-black flex items-center justify-center border ${
+                                         intensity === "high"
+                                         ? "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800"
+                                         : intensity === "mid"
+                                         ? "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700"
+                                         : "bg-transparent text-slate-300 border-transparent dark:text-slate-600"
+                                      }`}>
+                                        {trait}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
 
                               {/* Tags */}
                               <div className="flex flex-wrap gap-1 mt-2">
@@ -1064,9 +1133,9 @@ export default function SmartQuestPage() {
               </>
             )}
 
-            {/* Results Footer (Floating) if generated */}
+            {/* Results Footer (Floating) if generated - Hidden on Mobile */}
             {generatedTeam && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-[var(--background)]/80 p-1.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 flex items-center gap-4 pr-6 animate-in slide-in-from-bottom-6 zoom-in-95 duration-500">
+              <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-[var(--background)]/80 p-1.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 items-center gap-4 pr-6 animate-in slide-in-from-bottom-6 zoom-in-95 duration-500">
                 <div className="w-12 h-12 rounded-full bg-[var(--foreground)] flex items-center justify-center">
                   <span className="text-[var(--background)] font-black text-sm">
                     {generatedTeam.harmony_score}
@@ -1109,8 +1178,43 @@ export default function SmartQuestPage() {
                 </button>
               </div>
             )}
-          </div>
+        {/* === Mobile Sticky Bottom Bar (Moved inside Right Panel) === */}
+        <div className="md:hidden mt-auto sticky bottom-0 left-0 right-0 p-4 bg-[var(--background)]/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 z-40 flex gap-3 safe-area-bottom pb-6 transition-all">
+          {!generatedTeam ? (
+            <button
+              onClick={handleGenerate}
+              disabled={analyzing}
+              className="w-full h-12 bg-[var(--highlight)] text-white rounded-xl font-bold shadow-lg shadow-[var(--highlight)]/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {analyzing ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} /> วิเคราะห์...
+                </>
+              ) : (
+                <>
+                  สร้างทีม (Generate) <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleTryAgain}
+                className="flex-1 h-12 bg-black/5 dark:bg-white/5 text-[var(--foreground)] rounded-xl font-bold active:scale-95 transition-all border border-black/5 dark:border-white/5"
+              >
+                เริ่มใหม่
+              </button>
+              <button
+                onClick={handleConfirmTeam}
+                className="flex-[2] h-12 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <CheckSquare size={18} /> ยืนยัน ({Math.round(generatedTeam.harmony_score)}%)
+              </button>
+            </>
+          )}
         </div>
+      </div>
+    </div>
       </div>
     </ProtectedRoute>
   );

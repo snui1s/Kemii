@@ -231,26 +231,26 @@ function UsersListContent() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-4 py-6 md:px-8 font-[family-name:var(--font-line-seed)] transition-colors">
+      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-4 sm:px-6 md:px-8 py-6 sm:py-8 font-[family-name:var(--font-line-seed)] transition-colors">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-black text-[var(--foreground)] flex items-center gap-2">
-              <div className="p-2 bg-[var(--highlight)]/10 rounded-lg text-[var(--highlight)]">
-                <Users size={24} />
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-black text-[var(--foreground)] flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 bg-[var(--highlight)]/10 rounded-xl text-[var(--highlight)]">
+                <Users size={24} className="sm:w-8 sm:h-8" />
               </div>
-              รายชื่อพนักงาน
+              <span className="leading-tight">รายชื่อพนักงาน</span>
             </h1>
-            <p className="text-[var(--muted)] text-sm mt-1 opacity-80 pl-12">
+            <p className="text-[var(--muted)] text-sm sm:text-base mt-2 opacity-80 pl-[calc(40px+0.75rem)] sm:pl-[calc(48px+0.75rem)]">
               ดูข้อมูล Skills และ OCEAN ของทุกคน
             </p>
           </div>
 
           {/* Filters */}
-          <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <div className="mb-6 sm:mb-8 flex flex-col md:flex-row gap-3 sm:gap-4">
             {/* Search */}
             <div className="relative flex-1">
-             <div className="absolute left-3 top-[13px] z-10 text-[var(--muted)] pointer-events-none">
+             <div className="absolute left-3 top-[11px] z-10 text-[var(--muted)] pointer-events-none">
                   <Search size={18} />
                 </div>
               <input
@@ -258,16 +258,16 @@ function UsersListContent() {
                 placeholder="ค้นหาชื่อ..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--highlight)]/50 placeholder:text-[var(--muted)]/50 transition-colors backdrop-blur-sm"
+                className="w-full h-10 sm:h-11 pl-10 pr-4 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--highlight)]/50 placeholder:text-[var(--muted)]/50 transition-colors backdrop-blur-sm"
               />
             </div>
 
             {/* Department Dropdown */}
             <Select value={deptFilter} onValueChange={setDeptFilter}>
-              <SelectTrigger className="w-[180px] bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 text-[var(--foreground)] h-11 rounded-xl backdrop-blur-sm">
+              <SelectTrigger className="w-full md:w-[200px] bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 text-[var(--foreground)] h-10 sm:h-11 rounded-xl backdrop-blur-sm">
                 <SelectValue placeholder="เลือกแผนก" />
               </SelectTrigger>
-              <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
+              <SelectContent className="max-h-[250px] bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)]">
                 <SelectItem value="all">ทั้งหมด</SelectItem>
                 {DEPARTMENTS.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>

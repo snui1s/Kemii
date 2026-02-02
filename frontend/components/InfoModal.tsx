@@ -9,7 +9,7 @@ import {
   Target,
   Scale,
   Zap,
-  BookOpen, // ✅ เพิ่มไอคอนสมุดวิจัย
+  BookOpen,
 } from "lucide-react";
 
 interface InfoModalProps {
@@ -29,41 +29,41 @@ export default function InfoModal({ onClose }: InfoModalProps) {
       ),
       content: (
         <div className="space-y-4 text-[var(--muted)]">
-          <p>
+          <p className="text-sm sm:text-base">
             เราใช้โมเดลทางจิตวิทยา <b>Big Five (OCEAN)</b>{" "}
             ซึ่งเป็นมาตรฐานสากลที่ได้รับความเชื่อถือสูงสุดในการวิเคราะห์บุคลิกภาพ
             5 ด้าน:
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div className="bg-purple-50 dark:bg-purple-900/20 p-2 rounded border border-purple-100 dark:border-purple-800/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
+            <div className="bg-purple-50 dark:bg-purple-900/10 p-2 sm:p-3 rounded-xl border border-purple-100/50 dark:border-purple-800/30">
               <span className="font-bold text-purple-600 dark:text-purple-400">
                 🎨 Openness:
               </span>{" "}
               จินตนาการ, ความคิดสร้างสรรค์
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-100 dark:border-blue-800/50">
+            <div className="bg-blue-50 dark:bg-blue-900/10 p-2 sm:p-3 rounded-xl border border-blue-100/50 dark:border-blue-800/30">
               <span className="font-bold text-blue-600 dark:text-blue-400">
                 📏 Conscientiousness:
               </span>{" "}
               ระเบียบวินัย, ความรับผิดชอบ
             </div>
-            <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-100 dark:border-orange-800/50">
+            <div className="bg-orange-50 dark:bg-orange-900/10 p-2 sm:p-3 rounded-xl border border-orange-100/50 dark:border-orange-800/30">
               <span className="font-bold text-orange-600 dark:text-orange-400">
                 🗣️ Extraversion:
               </span>{" "}
               การเข้าสังคม, พลังงาน
             </div>
-            <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-100 dark:border-green-800/50">
+            <div className="bg-green-50 dark:bg-green-900/10 p-2 sm:p-3 rounded-xl border border-green-100/50 dark:border-green-800/30">
               <span className="font-bold text-green-600 dark:text-green-400">
                 🤝 Agreeableness:
               </span>{" "}
               ความเป็นมิตร, การประนีประนอม
             </div>
-            <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-800/50 sm:col-span-2">
+            <div className="bg-red-50 dark:bg-red-900/10 p-2 sm:p-3 rounded-xl border border-red-100/50 dark:border-red-800/30 sm:col-span-2">
               <span className="font-bold text-red-600 dark:text-red-400">
                 🌪️ Neuroticism:
               </span>{" "}
-              ความอ่อนไหวทางอารมณ์, ความกังวล
+              การตระหนักถึงความเสี่ยง, ความอ่อนไหวทางอารมณ์
             </div>
           </div>
         </div>
@@ -74,11 +74,11 @@ export default function InfoModal({ onClose }: InfoModalProps) {
       icon: <Target size={32} />,
       content: (
         <div className="space-y-4 text-[var(--muted)]">
-          <p>
+          <p className="text-sm sm:text-base">
             คะแนนถูกคำนวณจากชุดคำถามมาตรฐานสากล (IPIP)
             เพื่อหาค่าพลังของคุณในแต่ละด้าน:
           </p>
-          <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10 font-mono text-xs md:text-sm">
+          <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10 font-mono text-[10px] min-[375px]:text-xs sm:text-sm">
             <div className="flex justify-between mb-2">
               <span>📈 High Score (&gt;60%)</span>
               <span className="text-green-600 dark:text-green-400 font-bold">
@@ -92,7 +92,7 @@ export default function InfoModal({ onClose }: InfoModalProps) {
               </span>
             </div>
           </div>
-          <p className="text-sm text-[var(--muted)] italic opacity-80">
+          <p className="text-xs sm:text-sm text-[var(--muted)] italic opacity-80">
             *ไม่มีนิสัยที่ &quot;ดี&quot; หรือ &quot;แย่&quot;
             ทุกอย่างคือจุดเด่นที่คุณมี
           </p>
@@ -108,21 +108,41 @@ export default function InfoModal({ onClose }: InfoModalProps) {
             เราแปลงค่าพลัง OCEAN ให้เป็น <b>Class อาชีพ</b>{" "}
             เพื่อให้เห็นภาพการทำงานร่วมกัน:
           </p>
-          <ul className="grid grid-cols-2 gap-2 text-xs md:text-sm ml-2 font-medium">
-            <li className="flex items-center gap-1">
-              🧙‍♂️ Mage: สายครีเอทีฟ (สูง O)
+          <ul className="space-y-3 text-xs min-[375px]:text-sm ml-2 font-medium">
+            <li className="flex items-center gap-3">
+              <span className="text-2xl w-8 text-center bg-black/5 dark:bg-white/5 rounded-lg py-1">🧙‍♂️</span>
+              <div>
+                <b className="text-[var(--foreground)] block">Mage (Openness)</b>
+                <span className="opacity-70">นักสร้างสรรค์ไอเดีย รักการเรียนรู้สิ่งใหม่</span>
+              </div>
             </li>
-            <li className="flex items-center gap-1">
-              🛡️ Paladin: สายเป๊ะ (สูง C)
+            <li className="flex items-center gap-3">
+              <span className="text-2xl w-8 text-center bg-black/5 dark:bg-white/5 rounded-lg py-1">🛡️</span>
+              <div>
+                <b className="text-[var(--foreground)] block">Paladin (Conscientiousness)</b>
+                <span className="opacity-70">ผู้คุมกฎจอมเป๊ะ มีระเบียบวินัยสูง</span>
+              </div>
             </li>
-            <li className="flex items-center gap-1">
-              ⚔️ Warrior: สายลุย (สูง E)
+            <li className="flex items-center gap-3">
+              <span className="text-2xl w-8 text-center bg-black/5 dark:bg-white/5 rounded-lg py-1">⚔️</span>
+              <div>
+                <b className="text-[var(--foreground)] block">Warrior (Extraversion)</b>
+                <span className="opacity-70">ขาลุยใจกล้า ชอบเข้าสังคมและนำทีม</span>
+              </div>
             </li>
-            <li className="flex items-center gap-1">
-              🌿 Cleric: สายซัพ (สูง A)
+            <li className="flex items-center gap-3">
+              <span className="text-2xl w-8 text-center bg-black/5 dark:bg-white/5 rounded-lg py-1">🌿</span>
+              <div>
+                <b className="text-[var(--foreground)] block">Cleric (Agreeableness)</b>
+                <span className="opacity-70">สายซัพพอร์ต เน้นความประนีประนอม</span>
+              </div>
             </li>
-            <li className="flex items-center gap-1">
-              🗡️ Rogue: สายรอบคอบ (สูง N)
+            <li className="flex items-center gap-3">
+              <span className="text-2xl w-8 text-center bg-black/5 dark:bg-white/5 rounded-lg py-1">🗡️</span>
+              <div>
+                <b className="text-[var(--foreground)] block">Rogue (Neuroticism)</b>
+                <span className="opacity-70">จอมวางแผน ระแวดระวังและรอบคอบ</span>
+              </div>
             </li>
           </ul>
         </div>
@@ -167,59 +187,54 @@ export default function InfoModal({ onClose }: InfoModalProps) {
         <BookOpen size={32} />
       ),
       content: (
-        <div className="space-y-3 overflow-y-auto max-h-[40vh] pr-2 custom-scrollbar">
-          <p className="text-xs font-bold text-[var(--muted)] uppercase opacity-70">
+        <div className="space-y-4 overflow-y-auto max-h-[50vh] pr-2 custom-scrollbar">
+          <p className="text-xs font-bold text-[var(--muted)] uppercase opacity-70 tracking-wider">
             Scientific Foundation
           </p>
 
-          <div className="space-y-4 text-xs">
-            <div className="border-l-2 border-indigo-400/50 pl-3">
-              <p className="font-bold text-[var(--foreground)]">
+          <div className="grid gap-4">
+            <div className="relative pl-4 border-l-2 border-indigo-500/50">
+              <h4 className="font-bold text-[var(--foreground)] text-sm sm:text-base">
                 Barrick & Mount (1991)
-              </p>
-              <p className="text-[var(--muted)]">
-                พิสูจน์ว่า <b>Conscientiousness</b>{" "}
-                คือตัวทำนายความสำเร็จในการทำงานที่แม่นยำที่สุดในทุกอาชีพ
+              </h4>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-1 leading-relaxed">
+                พิสูจน์ว่า <span className="text-indigo-600 dark:text-indigo-400 font-medium">Conscientiousness (วินัย)</span> คือตัวทำนายความสำเร็จในการทำงานที่แม่นยำที่สุดในทุกอาชีพ
               </p>
             </div>
 
-            <div className="border-l-2 border-blue-400/50 pl-3">
-              <p className="font-bold text-[var(--foreground)]">
+            <div className="relative pl-4 border-l-2 border-blue-500/50">
+              <h4 className="font-bold text-[var(--foreground)] text-sm sm:text-base">
                 Tett et al. (1991)
-              </p>
-              <p className="text-[var(--muted)]">
-                ยืนยันว่าการล็อคเป้าหมายนิสัยให้ตรงกับงาน (Confirmatory)
-                แม่นยำกว่าการสุ่มตรวจทั่วไป
+              </h4>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-1 leading-relaxed">
+                การเลือกคนที่นิสัยตรงกับงาน (Trait-Activation) แม่นยำและยั่งยืนกว่าการสุ่มรับคนทั่วไป
               </p>
             </div>
 
-            <div className="border-l-2 border-green-400/50 pl-3">
-              <p className="font-bold text-[var(--foreground)]">
+            <div className="relative pl-4 border-l-2 border-green-500/50">
+              <h4 className="font-bold text-[var(--foreground)] text-sm sm:text-base">
                 Peeters et al. (2006)
-              </p>
-              <p className="text-[var(--muted)]">
-                พบว่าทีมที่ <b>Agreeableness</b> และ <b>Conscientiousness</b>{" "}
-                สูงและคล้ายกัน จะทำงานได้ดีที่สุด
-              </p>
-            </div>
-
-            <div className="border-l-2 border-rose-400/50 pl-3">
-              <p className="font-bold text-[var(--foreground)]">
-                Peeters (Satisfaction Study)
-              </p>
-              <p className="text-[var(--muted)]">
-                คน <b>Introvert</b>{" "}
-                จะพึงพอใจน้อยลงมากหากต้องอยู่ในทีมที่มีระดับการเข้าสังคมต่างจากตนมากไป
+              </h4>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-1 leading-relaxed">
+                ทีมที่ <span className="text-green-600 dark:text-green-400 font-medium">Agreeableness (ความเข้ากันได้)</span> สูงและมีวินัยใกล้เคียงกัน จะทำงานได้ไหลลื่นที่สุด
               </p>
             </div>
 
-            <div className="border-l-2 border-purple-400/50 pl-3 pb-2">
-              <p className="font-bold text-[var(--foreground)]">
+            <div className="relative pl-4 border-l-2 border-rose-500/50">
+              <h4 className="font-bold text-[var(--foreground)] text-sm sm:text-base">
+                Satisfaction Study
+              </h4>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-1 leading-relaxed">
+                คน Introvert จะมีความสุขน้อยลง หากต้องอยู่ในทีมที่ระดับพลังงาน (Extraversion) ต่างจากตนมากเกินไป
+              </p>
+            </div>
+
+            <div className="relative pl-4 border-l-2 border-purple-500/50">
+              <h4 className="font-bold text-[var(--foreground)] text-sm sm:text-base">
                 Curşeu et al. (2019)
-              </p>
-              <p className="text-[var(--muted)]">
-                เตือนเรื่อง <b>TMGT Effect</b>: นิสัยดีๆ
-                หากมีสูงสุดโต่งเกินไปอาจส่งผลลบต่อการทำงานเป็นทีม
+              </h4>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-1 leading-relaxed">
+                <span className="text-purple-600 dark:text-purple-400 font-medium">Too-Much-Of-A-Good-Thing:</span> นิสัยที่ดีหากมีมากเกินไป อาจส่งผลเสียต่อทีมได้ (เช่น มั่นใจเกินไปจนไม่ฟังใคร)
               </p>
             </div>
           </div>
@@ -232,26 +247,26 @@ export default function InfoModal({ onClose }: InfoModalProps) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
       <div className="bg-[var(--background)] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-black/5 dark:border-white/5 transition-colors">
         {/* Header */}
-        <div className="p-4 border-b border-black/5 dark:border-white/5 flex justify-between items-center bg-black/5 dark:bg-white/5">
-          <div className="flex items-center gap-2 text-[var(--foreground)] font-bold">
-            <Info size={20} className="text-[var(--highlight)]" />
+        <div className="px-5 py-4 border-b border-black/5 dark:border-white/5 flex justify-between items-center bg-black/5 dark:bg-white/5">
+          <div className="flex items-center gap-2 text-[var(--foreground)] font-bold text-sm sm:text-base">
+            <Info size={18} className="text-[var(--highlight)]" />
             <span>ระบบวิเคราะห์บุคลิกภาพ Kemii</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition text-[var(--muted)] hover:text-[var(--foreground)]"
+            className="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition text-[var(--muted)] hover:text-[var(--foreground)]"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-          <div className="flex flex-col items-center text-center mb-6">
+        <div className="p-5 min-[375px]:p-6 sm:p-8 flex-1 overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
             <div className="p-4 bg-black/5 dark:bg-white/5 rounded-full mb-4 animate-bounce-slow text-[var(--highlight)]">
               {slides[step].icon}
             </div>
-            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2 leading-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-[var(--foreground)] mb-2 leading-tight px-2">
               {slides[step].title}
             </h2>
           </div>

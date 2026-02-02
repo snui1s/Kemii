@@ -3,14 +3,14 @@ import { Scale } from "lucide-react";
 
 export default function Terms() {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 font-[family-name:var(--font-line-seed)]">
-      <div className="bg-[var(--background)]/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-black/5 dark:border-white/5">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-[var(--highlight)]/10 rounded-full text-[var(--highlight)]">
+    <div className="max-w-3xl mx-auto py-8 sm:py-12 px-4 sm:px-6 font-[family-name:var(--font-line-seed)]">
+      <div className="bg-[var(--background)]/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-black/5 dark:border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+          <div className="w-fit p-3 bg-[var(--highlight)]/10 rounded-2xl text-[var(--highlight)]">
             <Scale size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-[var(--foreground)]">
-            ข้อตกลงการใช้งาน (Terms of Service)
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight">
+            ข้อตกลงการใช้งาน
           </h1>
         </div>
 

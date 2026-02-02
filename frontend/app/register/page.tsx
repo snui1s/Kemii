@@ -67,10 +67,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex top items-center justify-center p-4">
-      <div className="bg-[var(--background)]/50 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex justify-center">
-        <div className="w-full p-8 md:p-12">
-          <h2 className="text-2xl font-medium opacity-80 text-[var(--foreground)] mb-6 text-center">
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+      <div className="bg-[var(--background)]/50 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex justify-center">
+        <div className="w-full p-6 sm:p-10 md:p-12">
+          <h2 className="text-2xl sm:text-3xl font-medium opacity-80 text-[var(--foreground)] mb-6 text-center leading-tight">
             สร้างบัญชีใหม่
           </h2>
 
@@ -147,7 +147,7 @@ export default function RegisterPage() {
                 สังกัด (เลือกได้มากกว่า 1){" "}
                 <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-black/5 dark:border-white/5 rounded-xl bg-black/5 dark:bg-white/5 custom-scrollbar">
+              <div className="grid grid-cols-1 min-[300px]:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-black/5 dark:border-white/5 rounded-xl bg-black/5 dark:bg-white/5 custom-scrollbar">
                 {DEPARTMENTS.map((dept) => {
                   const isSelected = selectedDepts.includes(dept.name);
                   return (
@@ -155,14 +155,14 @@ export default function RegisterPage() {
                       key={dept.id}
                       type="button"
                       onClick={() => toggleDept(dept.name)}
-                      className={`text-xs p-2 rounded-lg border text-left flex items-center justify-between transition-all ${
+                      className={`text-[10px] sm:text-xs p-2 rounded-lg border text-left flex items-center justify-between transition-all ${
                         isSelected
                           ? "bg-[var(--highlight)] border-[var(--highlight)] text-white"
                           : "bg-[var(--background)] text-[var(--muted)] border-transparent hover:border-[var(--highlight)] hover:text-[var(--highlight)]"
                       }`}
                     >
-                      <span className="truncate">{dept.name}</span>
-                      {isSelected && <CheckCircle size={12} />}
+                      <span className="truncate pr-1">{dept.name}</span>
+                      {isSelected && <CheckCircle size={12} className="shrink-0" />}
                     </button>
                   );
                 })}
