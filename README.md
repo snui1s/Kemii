@@ -17,30 +17,48 @@ _Powered by the Kemii Golden Formula and Google Gemini AI_
 
 ## Project Overview
 
-**Kemii** (Chemistry) is a sophisticated AI-driven Guild Support System designed to gamify and optimize team dynamics in professional environments. By integrating the **OCEAN Personality Model (Big 5)** with RPG archetypes, Kemii transforms abstract psychological data into actionable "Guild Classes" (Mage, Warrior, Paladin, etc.), making team management engaging and data-driven.
+**Kemii** (Chemistry) is a **Hybrid Statistical-AI** Guild Support System designed to gamify and optimize team dynamics in professional environments. By integrating the **OCEAN Personality Model (Big 5)** with RPG archetypes, Kemii transforms abstract psychological data into actionable Guild Classes (Mage, Warrior, Paladin, etc.), making team management engaging and data-driven.
 
-At its core lies the **Kemii Golden Formula**, a proprietary algorithm that minimizes interpersonal friction while maximizing skill coverage, ensuring every "Party" (Team) is balanced for success.
+## Purpose & Methodology
+
+The primary goal of Kemii is to **organize teams based on departmental requirements and personality compatibility** to achieve the highest possible synergy under specific conditions.
+
+It is important to note that the core matching engine is **NOT purely AI-driven**. Instead, it relies on the **Kemii Golden Formula**, a robust statistical model and cost-function algorithm. This ensures that team formation is grounded in consistent, mathematical logic prioritizing:
+
+1. **Skill Coverage**: Meeting all technical requirements.
+2. **Personality Balance**: Calculating the optimal mix of OCEAN traits to minimize friction.
+
+AI (Google Gemini) is primarily utilized for the **narrative layer**—generating insightful role descriptions, localized advice, and Guild Master style commentary—while the heavy lifting of team composition is handled by deterministic statistics.
+
+At its core lies the **Kemii Golden Formula**, a proprietary algorithm that minimizes interpersonal friction while maximizing skill coverage, ensuring every Party (Team) is balanced for success.
 
 ## Key Features
 
 ### Advanced AI & Psychology
 
-- **Generative AI Personas**: Features a distinct "Guild Strategist" AI that acts as a Career Coach and Team Tactician, providing localized (Thai) insights with a consistent RPG-Professional tone.
+- **Generative AI Personas**: Features a distinct Guild Strategist AI that acts as a Career Coach and Team Tactician, providing localized (Thai) insights with a consistent RPG-Professional tone.
 - **OCEAN Psychometric Assessment**: A 50-question interactive ritual to determine a user's Big 5 stats.
 - **Dynamic Class Mapping**: AUTOMATICALLY assigns RPG classes based on personality traits (e.g., High Openness -> Mage, High Conscientiousness -> Paladin).
 
 ### Intelligent Party Builder (Matching Engine)
 
 - **The Kemii Golden Formula**: A cost-function algorithm that optimizes for:
-  - **Skill Coverage**: Fills "Skill Gaps" dynamically.
+  - **Skill Coverage**: Fills Skill Gaps dynamically.
   - **Personality Harmony**: Minimizes variance in key traits (C, A) to ensure work-style compatibility.
   - **Neuroticism Penalty**: penalizes high team stress levels.
-- **Dynamic Gap Scoring**: The system recalculates the "best next candidate" in real-time based on who is already in the team, evolving its recommendations as the party grows.
+
+  $$
+  \text{Cost} = 1.5 \cdot \text{Var}(C) + 1.5 \cdot \text{Var}(A) + 1.0 \cdot \text{Var}(E) + 1.0 \cdot \text{Var}(O) + 1.0 \cdot \overline{N} + \lambda \cdot \max(0, \tau - \overline{A})
+  $$
+
+  _Where $\tau=0.625$ (Agreeableness Threshold) and $\lambda=2.0$ (Toxic Penalty Weight)_
+
+- **Dynamic Gap Scoring**: The system recalculates the best next candidate in real-time based on who is already in the team, evolving its recommendations as the party grows.
 
 ### Zen Minimal UI / UX
 
-- **Glassmorphism Design System**: A premium, "Zen Minimal" aesthetic using Tailwind CSS, featuring extensive `backdrop-blur`, subtle gradients, and a soothing color palette.
-- **Interactive Animations**: Custom CSS animations including "Meteor Showers" (Mage), "Holy Beams" (Paladin), and floating particles for a living, breathing interface.
+- **Glassmorphism Design System**: A premium, Zen Minimal aesthetic using Tailwind CSS, featuring extensive `backdrop-blur`, subtle gradients, and a soothing color palette.
+- **Interactive Animations**: Custom CSS animations including Meteor Showers (Mage), Holy Beams (Paladin), and floating particles for a living, breathing interface.
 - **Mobile-First Experience**: Fully responsive layout optimized for touch devices (375px+).
 
 ### Security & Architecture

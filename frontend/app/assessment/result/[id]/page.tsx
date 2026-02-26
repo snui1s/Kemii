@@ -81,10 +81,6 @@ export default function ResultPage() {
     }
   }, [error, router]);
 
-  // --- LOADING STATES ---
-
-  // 1. กำลังเช็คสิทธิ์
-  // 1. Loading State (Auth or Data or Check)
   if (authLoading || isLoading || !isAuthorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--background)] transition-colors">

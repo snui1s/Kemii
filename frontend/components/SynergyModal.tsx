@@ -47,7 +47,6 @@ interface SynergyData {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ...existing imports...
-// Note: Imports preserved
 
 // ...existing interfaces...
 
@@ -79,7 +78,6 @@ export default function SynergyModal({
     }
   }, [error]);
 
-  // ปิด Modal เมื่อกด ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -127,7 +125,6 @@ export default function SynergyModal({
         </button>
 
         {loading ? (
-          // --- Loading ---
           <div className="h-[300px] sm:h-[350px] flex flex-col items-center justify-center relative overflow-hidden bg-[var(--background)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--highlight-alpha)_0%,_transparent_70%)] opacity-20" />
 

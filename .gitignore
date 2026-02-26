@@ -6,7 +6,10 @@ venv/
 .venv
 *.db
 
-# Next.js
+.agents
+.agent
+skills-lock.json
+#.Next.js
 node_modules/
 .next/
 out/

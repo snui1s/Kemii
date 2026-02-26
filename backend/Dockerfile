@@ -28,4 +28,5 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 # Run uvicorn server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Note: --reload is removed for production. For dev, override CMD in docker-compose.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

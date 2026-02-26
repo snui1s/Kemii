@@ -40,13 +40,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
-      <div className="bg-[var(--background)]/50 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="p-8 text-center border-b border-black/5 dark:border-white/5">
-          <h1 className="text-3xl font-medium opacity-80 mb-2 text-[var(--foreground)]">เข้าสู่ระบบ</h1>
-          <p className="text-[var(--muted)] opacity-80">ยินดีต้อนรับกลับสู่ Kemii Guild</p>
+      <div className="bg-[var(--background)]/50 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="p-6 sm:p-8 text-center border-b border-black/5 dark:border-white/5">
+          <h1 className="text-2xl sm:text-3xl font-medium opacity-80 mb-2 text-[var(--foreground)]">เข้าสู่ระบบ</h1>
+          <p className="text-sm sm:text-base text-[var(--muted)] opacity-80">ยินดีต้อนรับกลับสู่ Kemii Guild</p>
         </div>
 
-        <div className="p-8">
+        <div className="p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
@@ -123,11 +123,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5 text-center">
-            <p className="text-[var(--muted)] mb-4">ยังไม่มีบัญชีใช่ไหม?</p>
+          <div className="mt-6 sm:mt-8 pt-6 border-t border-black/5 dark:border-white/5 text-center">
+            <p className="text-sm text-[var(--muted)] mb-4">ยังไม่มีบัญชีใช่ไหม?</p>
             <Link
               href="/register"
-              className="block w-full border border-[var(--highlight)] text-[var(--highlight)] font-bold py-2.5 rounded-xl hover:bg-[var(--highlight)] hover:text-white transition"
+              className="block w-full border border-[var(--highlight)] text-[var(--highlight)] font-bold py-2.5 rounded-xl hover:bg-[var(--highlight)] hover:text-white transition text-sm sm:text-base"
             >
               สมัครสมาชิกใหม่
             </Link>

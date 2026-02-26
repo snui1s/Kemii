@@ -42,7 +42,7 @@ export default function NotFound() {
         <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm mb-8">
           <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
             ดูเหมือนท่านจะเดินหลงทางเข้ามาใน{" "}
-            <span className="font-bold text-indigo-500">The Void</span>{" "}
+            <span className="font-bold text-[var(--highlight)]">The Void</span>{" "}
             พื้นที่นี้ยังไม่ได้ถูกเขียนลงในแผนที่โลก หรือบางที...
             มันอาจจะถูกลบหายไปโดยเวทมนตร์โบราณ
           </p>
@@ -56,8 +56,8 @@ export default function NotFound() {
         {/* 4. Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/" className="group relative">
-            <div className="absolute inset-0 bg-indigo-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
-            <button className="relative w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">
+            <div className="absolute inset-0 bg-[var(--highlight)] rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+            <button className="relative w-full sm:w-auto bg-[var(--highlight)] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">
               <Home size={18} />
               Warp to Guild (Home)
             </button>

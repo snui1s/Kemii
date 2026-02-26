@@ -57,7 +57,6 @@ interface ResultClientProps {
   analysis: AnalysisData;
 }
 
-// --- Theme Config ---
 const CLASS_THEMES = {
   Mage: {
     icon: <Wand size={64} />,
@@ -110,7 +109,6 @@ type ClassName = keyof typeof CLASS_THEMES;
 
 // --- Helper Functions ---
 function getTheme(characterClass: string | undefined | null) {
-  // แปลงชื่อไทย -> อังกฤษ
   let key = (characterClass || "Warrior").trim();
   if (key.includes("เวทย์") || key.includes("Mage")) key = "Mage";
   else if (key.includes("อัศวิน") || key.includes("Paladin")) key = "Paladin";
@@ -235,7 +233,7 @@ export default function ResultClient({ user, analysis }: ResultClientProps) {
               </div>
 
               {/* Legend */}
-              <div className="mt-6 grid grid-cols-1 gap-1 text-[12px] text-[var(--muted)] text-left w-full px-4 py-3 bg-black/5 dark:bg-white/5 rounded-xl border border-transparent">
+              <div className="mt-6 grid grid-cols-1 gap-1 text-xs text-[var(--muted)] text-left w-full px-4 py-3 bg-black/5 dark:bg-white/5 rounded-xl border border-transparent">
                 <div className="flex justify-between">
                   <span>
                     <b>O</b>penness
