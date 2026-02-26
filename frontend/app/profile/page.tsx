@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import ElementalLoader from "@/components/ElementalLoader";
+import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
 import {
   User as UserIcon,
   Shield,
@@ -253,13 +254,11 @@ function ProfileContent() {
     }
   };
 
-  if (authLoading || dataLoading || !profileUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
-        <ElementalLoader />
-      </div>
-    );
+  if (authLoading || dataLoading || (!profileUser && targetId)) {
+    return <ProfileSkeleton />;
   }
+
+  if (!profileUser) return null;
 
   const themeColor =
     CLASS_COLORS[profileUser.character_class] || CLASS_COLORS.Warrior;

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
+import UserCardSkeleton from "@/components/skeletons/UserCardSkeleton";
 
 interface Skill {
   name: string;
@@ -221,14 +222,7 @@ function UsersListContent() {
     return matchesSearch && matchesDept;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] transition-colors">
-        <ElementalLoader />
-      </div>
-    );
-  }
-
+  // Removed early loading return
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] px-4 sm:px-6 md:px-8 py-6 sm:py-8 font-[family-name:var(--font-line-seed)] transition-colors">
@@ -285,44 +279,56 @@ function UsersListContent() {
 
           {/* User Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredUsers.map((user: User) => {
-              const calculatedDepartments = DEPARTMENTS.filter((d) =>
-                user.skills.some((s: Skill) => matchesDepartment(s.name, d))
-              ).map((d) => d.label || d.name);
+            {loading ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
+                  <UserCardSkeleton />
+                </div>
+              ))
+            ) : (
+              filteredUsers.map((user: User, i: number) => {
+                const calculatedDepartments = DEPARTMENTS.filter((d) =>
+                  user.skills.some((s: Skill) => matchesDepartment(s.name, d))
+                ).map((d) => d.label || d.name);
 
               return (
-                <UserCard
+                <div
                   key={user.id}
-                  id={user.id}
-                  name={user.name}
-                  characterClass={user.character_class}
-                  type={`Lv.${user.level}`}
-                  scores={{
-                    Openness: user.ocean_openness,
-                    Conscientiousness: user.ocean_conscientiousness,
-                    Extraversion: user.ocean_extraversion,
-                    Agreeableness: user.ocean_agreeableness,
-                    Neuroticism: user.ocean_neuroticism,
-                  }}
-                  departments={calculatedDepartments}
-                  isOwnCard={user.id === currentUser?.id}
-                  allowFlip={false}
-                  showFullStats={true}
-                  currentUserRole={currentUser?.role as "admin" | "user"}
-                  userRole={user.role as "admin" | "user"}
-                  onPromote={
-                    actionLoadingId === user.id
-                      ? undefined
-                      : () => handlePromote(user.id, user.role || "user")
-                  }
-                  onDelete={
-                    actionLoadingId === user.id
-                      ? undefined
-                      : () => handleDelete(user.id)
-                  }
-                />
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${i % 12 * 50}ms` }}
+                >
+                  <UserCard
+                    id={user.id}
+                    name={user.name}
+                    characterClass={user.character_class}
+                    type={`Lv.${user.level}`}
+                    scores={{
+                      Openness: user.ocean_openness,
+                      Conscientiousness: user.ocean_conscientiousness,
+                      Extraversion: user.ocean_extraversion,
+                      Agreeableness: user.ocean_agreeableness,
+                      Neuroticism: user.ocean_neuroticism,
+                    }}
+                    departments={calculatedDepartments}
+                    isOwnCard={user.id === currentUser?.id}
+                    allowFlip={false}
+                    showFullStats={true}
+                    currentUserRole={currentUser?.role as "admin" | "user"}
+                    userRole={user.role as "admin" | "user"}
+                    onPromote={
+                      actionLoadingId === user.id
+                        ? undefined
+                        : () => handlePromote(user.id, user.role || "user")
+                    }
+                    onDelete={
+                      actionLoadingId === user.id
+                        ? undefined
+                        : () => handleDelete(user.id)
+                    }
+                  />
+                </div>
               );
-            })}
+            }))}
           </div>
 
           {hasNextPage && (
@@ -350,7 +356,7 @@ function UsersListContent() {
             </div>
           )}
 
-          {filteredUsers.length === 0 && (
+          {!loading && filteredUsers.length === 0 && (
             <div className="text-center py-12 text-[var(--muted)] opacity-50">
               <Users className="mx-auto mb-2" size={40} />
               <p>ไม่พบข้อมูล</p>

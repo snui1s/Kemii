@@ -3,7 +3,8 @@ from typing import List, Optional, Dict
 # =========================
 # Constants (Golden Formula)
 # =========================
-# Cost = 1.5 * Var(C) + 1.5 * Var(A) + 1.0 * Var(E) + 1.0 * Var(O) + 1.0 * Mean(N) + 2.0 * max(0, 0.625 - Mean(A))
+# Cost = 1.5 * Var(C) + 1.5 * Var(A) + 1.0 * Var(E) + 1.0 * Var(O) +
+# 1.0 * Mean(N) + 2.0 * max(0, 0.625 - Mean(A))
 
 TAU = 0.625
 LAMBDA = 2.0

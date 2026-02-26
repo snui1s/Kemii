@@ -17,6 +17,7 @@ import {
 import { Analytics } from "@vercel/analytics/next";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import ElementalLoader from "@/components/ElementalLoader";
+import UserCardSkeleton from "@/components/skeletons/UserCardSkeleton";
 
 interface User {
   id: string;
@@ -67,16 +68,9 @@ function HomeContent() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(
     null
   );
-  const [hasMissingDept, setHasMissingDept] = useState(false);
-
-  // Check for missing departments
-  useEffect(() => {
-    if (currentUser?.skills?.length === 0) {
-      setHasMissingDept(true); // Simplified check
-    } else {
-      setHasMissingDept(false);
-    }
-  }, [currentUser]);
+  
+  // Derived state to avoid unnecessary useEffect renders (Next/React Best Practice)
+  const hasMissingDept = currentUser?.skills?.length === 0;
 
   const handleCardClick = (partnerId: string) => {
     if (!currentUser) {
@@ -125,94 +119,103 @@ function HomeContent() {
   };
 
   return (
-    <div className="relative h-full w-full max-w-5xl mx-auto mb-8 sm:mb-12 mt-4 sm:mt-5 px-4 sm:px-6">
-      <div className="relative mb-8 sm:mb-12 py-6 sm:py-10 text-center animate-fade-in-up">
+    <div className="relative h-full w-full max-w-5xl mx-auto mb-8 sm:mb-12 pt-6 sm:pt-10 px-4 sm:px-6">
+      <div className="relative mb-12 sm:mb-20 pt-8 sm:pt-16 pb-8 animate-fade-in-up">
         {hasMissingDept && (
           <div
-            className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium cursor-pointer hover:bg-[var(--highlight)]/10 hover:text-[var(--highlight)] hover:border-[var(--highlight)]/20 transition-colors border border-red-100 dark:border-red-900/50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 mb-8 rounded-full bg-red-50/80 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/40 hover:-translate-y-0.5 transition-transform border border-red-200 dark:border-red-900/50 backdrop-blur-md"
             onClick={() => router.push("/profile")}
           >
-            <AlertTriangle size={14} />
-            <span>กรุณาเลือกสังกัด (Department) ที่หน้าโปรไฟล์</span>
+            <AlertTriangle size={16} />
+            <span>กรุณาเลือกสังกัด (Department) ที่หน้าโปรไฟล์ของท่าน</span>
           </div>
         )}
 
-        <div className="space-y-4 sm:space-y-6">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[var(--foreground)]">
-            Kemii{" "}
-            <span className="font-semibold text-[var(--highlight)]">
-              Guild
-            </span>
-          </h1>
+        {/* Editorial Asymmetric Layout */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 lg:gap-16 w-full">
+          {/* Left Side: Typography & Copy */}
+          <div className="space-y-6 text-left max-w-2xl">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light tracking-[-0.02em] text-[var(--foreground)] opacity-90 leading-none">
+              Kemii<span className="text-[var(--highlight)]">.</span>
+            </h1>
 
-          {currentUser?.id ? (
-            <div className="max-w-xl mx-auto space-y-4">
-              <p className="text-base sm:text-lg text-[var(--muted)] font-medium leading-relaxed px-2">
-                ยินดีต้อนรับ, <span className="font-medium text-[var(--foreground)]">{currentUser.name}</span>
-                <br />
-                หาเคมีที่ลงตัวด้วยความ <span className="font-semibold text-[var(--highlight)]">"</span><span className="font-semibold decoration">Minimal</span><span className="font-semibold text-[var(--highlight)]">"</span>
+            {currentUser?.id ? (
+              <p className="text-lg sm:text-xl text-[var(--muted)] font-medium leading-relaxed max-w-lg">
+                ยินดีต้อนรับ, <span className="font-semibold text-[var(--foreground)]">{currentUser.name}</span>
+                <br className="hidden sm:block" />
+                หาเคมีที่ลงตัวด้วยความ <span className="font-semibold text-[var(--highlight)] italic">"</span><span className="font-semibold decoration text-[var(--foreground)]">Minimal</span><span className="font-semibold text-[var(--highlight)] italic">"</span>
               </p>
-              
-              <div className="flex justify-center pt-4">
+            ) : (
+               <p className="text-lg sm:text-xl text-[var(--muted)] font-medium leading-relaxed max-w-lg">
+                พื้นที่สำหรับการทำงานร่วมกันอย่างลงตัว
+                <br />
+                ค้นหาเพื่อนร่วมทีมที่ใช่ด้วย <span className="font-semibold text-[var(--foreground)]">Kemii Golden Formula</span>
+              </p>
+            )}
+            
+            <div className="pt-2">
+              <span className="text-sm font-mono text-[var(--muted)] flex items-center gap-2 opacity-80 border-b border-black/5 dark:border-white/5 pb-2 inline-flex">
+                <Users size={14} />
+                Guild Members: <span className="text-[var(--foreground)] font-semibold">{totalInDb}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Right Side: Actions & Profile Indicator */}
+          <div className="shrink-0 flex flex-col items-start lg:items-end space-y-4 pt-4 lg:pt-0">
+            {currentUser?.id ? (
+              <>
                 {currentUser.character_class === "Novice" ? (
                   <button
                      onClick={() => router.push("/assessment")}
-                     className="px-8 py-2.5 rounded-full border border-[var(--highlight)] text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white transition-all text-sm tracking-wide font-medium"
+                     className="px-8 py-3.5 rounded-full border-2 border-[var(--highlight)] text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white transition-all text-sm tracking-widest font-bold uppercase hover:shadow-lg hover:shadow-[var(--highlight)]/20"
                   >
                     เริ่มค้นหาตัวตน
                   </button>
                 ) : (
-                  <div className="flex flex-col items-center gap-2">
-                     <span className="text-xs text-[var(--muted)] uppercase tracking-widest">Character Class</span>
-                     <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 backdrop-blur-sm">
-                       {getClassIcon(currentUser.character_class)}
-                       <div className="text-left">
-                          <div className="text-sm font-semibold">{currentUser.character_class}</div>
-                          <div className="text-xs text-[var(--muted)]">Lv.{currentUser.level}</div>
+                  <div className="flex flex-col items-start lg:items-end gap-3">
+                     <span className="text-[10px] text-[var(--muted)] uppercase tracking-[0.2em] font-bold">Your Status</span>
+                     <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-xl shadow-black/5 dark:shadow-white/5 group relative overflow-hidden backdrop-blur-md transition-all hover:border-black/10 dark:hover:border-white/20">
+                       <div className="relative z-10 p-2 bg-black/5 dark:bg-white/5 rounded-xl">
+                         {getClassIcon(currentUser.character_class)}
+                       </div>
+                       <div className="text-left relative z-10 w-24">
+                          <div className="text-base font-bold text-[var(--foreground)] tracking-tight">{currentUser.character_class}</div>
+                          <div className="text-xs font-mono text-[var(--muted)] font-medium">Lvl {currentUser.level}</div>
                        </div>
                      </div>
-                     <Link href={`/assessment/result/${currentUser.id}`} className="text-xs text-[var(--muted)] hover:text-[var(--highlight)] transition-colors mt-2">
-                       ดูสเตตัสของคุณ
+                     <Link href={`/assessment/result/${currentUser.id}`} className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--foreground)] transition-colors underline-offset-4 hover:underline mt-1">
+                       ดูสเตตัสของคุณ →
                      </Link>
                   </div>
                 )}
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-xl mx-auto space-y-6 sm:space-y-8">
-               <p className="text-base sm:text-lg text-[var(--muted)] font-medium px-4">
-                พื้นที่สำหรับการทำงานร่วมกันอย่างลงตัว
-                <br className="hidden sm:block" />
-                ค้นหาเพื่อนร่วมทีมที่ใช่ด้วย <span className="font-medium text-[var(--highlight)]">Kemii Golden Formula</span>
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-8 sm:px-0">
-                 <Link href="/login" className="w-full sm:w-auto px-8 py-3 rounded-full bg-[var(--highlight)] text-white hover:opacity-90 hover:shadow-[0_0_15px_rgba(250,129,18,0.4)] transition-all text-sm font-semibold text-center">
+              </>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                 <Link href="/login" className="w-full sm:w-auto px-10 py-3.5 rounded-full bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 transition-all text-sm font-bold uppercase tracking-wider text-center shadow-lg">
                    เข้าสู่ระบบ
                  </Link>
-                 <Link href="/register" className="w-full sm:w-auto px-8 py-3 rounded-full border border-[var(--highlight)]/30 text-[var(--highlight)] hover:bg-[var(--highlight)] hover:text-white hover:shadow-[0_0_15px_rgba(250,129,18,0.2)] transition-all text-sm font-semibold text-center">
+                 <Link href="/register" className="w-full sm:w-auto px-10 py-3.5 rounded-full border border-black/10 dark:border-white/10 text-[var(--foreground)] hover:bg-black/5 dark:hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-wider text-center">
                    สมัครสมาชิก
                  </Link>
               </div>
-            </div>
-          )}
-          
-          <div className="pt-8">
-            <span className="text-sm font-mono text-[var(--muted)] flex items-center justify-center gap-2 opacity-80">
-              <Users size={12} />
-              Guild Members: {totalInDb}
-            </span>
+            )}
           </div>
         </div>
       </div>
 
       {isLoading && users.length === 0 ? (
-        <div className="flex justify-center p-10">
-          <ElementalLoader />
+        <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
+              <UserCardSkeleton />
+            </div>
+          ))}
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {users.map((user: User) => {
+            {users.map((user: User, i: number) => {
               const aggregatedScores = user.ocean_scores || {
                 Openness: user.ocean_openness || 0,
                 Conscientiousness: user.ocean_conscientiousness || 0,
@@ -222,17 +225,22 @@ function HomeContent() {
               };
 
               return (
-                <UserCard
+                <div
                   key={user.id}
-                  id={user.id}
-                  name={user.name}
-                  characterClass={user.character_class}
-                  type={`Lv.${user.level}`}
-                  scores={aggregatedScores}
-                  compactMode={true}
-                  isOwnCard={user.id === currentUser?.id}
-                  onInspect={() => handleCardClick(user.id)}
-                />
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${i % 12 * 50}ms` }}
+                >
+                  <UserCard
+                    id={user.id}
+                    name={user.name}
+                    characterClass={user.character_class}
+                    type={`Lv.${user.level}`}
+                    scores={aggregatedScores}
+                    compactMode={true}
+                    isOwnCard={user.id === currentUser?.id}
+                    onInspect={() => handleCardClick(user.id)}
+                  />
+                </div>
               );
             })}
           </div>

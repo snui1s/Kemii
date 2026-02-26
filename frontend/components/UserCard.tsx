@@ -389,62 +389,84 @@ export default function UserCard({
     <div
       onClick={handleClick}
       className={`
-        group relative w-full cursor-pointer transition-all duration-300
-        border rounded-xl overflow-hidden
+        group relative w-full h-full cursor-pointer transition-all duration-500 ease-out
+        border rounded-2xl overflow-hidden backdrop-blur-sm
         ${isOwnCard 
-          ? "bg-[var(--background)] border-[var(--highlight)] shadow-[0_0_15px_rgba(250,129,18,0.15)]" 
-          : "bg-white/50 dark:bg-white/5 border-black/10 dark:border-white/10 hover:border-[var(--highlight)] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(250,129,18,0.1)]"
+          ? "bg-[var(--background)]/80 border-[var(--highlight)] shadow-[0_4px_20px_rgba(250,129,18,0.15)] ring-1 ring-[var(--highlight)]/20" 
+          : "bg-white/50 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 hover:-translate-y-1 hover:shadow-xl"
         }
       `}
     >
-      <div className="p-5 flex items-start gap-4">
+      <div className="p-5 flex flex-col sm:flex-row items-start gap-4 h-full">
         {/* Icon Box */}
         <div 
-          className="shrink-0 p-3 rounded-lg flex items-center justify-center transition-colors"
+          className="shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center transition-colors relative overflow-hidden"
           style={{ 
-            backgroundColor: isOwnCard ? 'var(--highlight)' : 'rgba(0,0,0,0.03)',
-            color: isOwnCard ? '#fff' : config.color 
+            backgroundColor: isOwnCard ? 'var(--highlight)' : 'rgba(0,0,0,0.02)',
+            color: isOwnCard ? '#fff' : config.color,
+            border: isOwnCard ? 'none' : '1px solid rgba(0,0,0,0.05)'
           }}
         >
-          <IconComponent size={24} />
+          <IconComponent size={24} className="relative z-10" />
+          {!isOwnCard && classKey !== 'Novice' && (
+            <div className="absolute inset-0 opacity-10 bg-current" />
+          )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            <h3 className="font-medium text-lg text-[var(--foreground)] truncate pr-2">
+        <div className="flex-1 min-w-0 w-full flex flex-col justify-between h-full">
+          {/* Header Row */}
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="font-bold text-lg md:text-xl text-[var(--foreground)] tracking-tight leading-none truncate pr-2 group-hover:text-[var(--highlight)] transition-colors">
               {name}
             </h3>
-            {userRole === 'admin' && <Crown size={12} className="text-yellow-500 mt-1 shrink-0" />}
+            {userRole === 'admin' && (
+              <div className="shrink-0 bg-yellow-500/10 p-1 rounded-md text-yellow-600 dark:text-yellow-500">
+                <Crown size={12} />
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-             <span className="text-xs font-mono text-[var(--muted)]">{type}</span>
-             <span className="text-xs font-mono px-1.5 py-0.5 rounded border border-black/5 dark:border-white/10 text-[var(--muted)]">
+          {/* Subheader Data */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+             <span className="text-[10px] md:text-xs font-bold tracking-wider text-[var(--muted)] opacity-80">{type}</span>
+             <span className="w-1 h-1 rounded-full bg-[var(--muted)] opacity-30"></span>
+             <span className="text-[10px] md:text-xs font-semibold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[var(--muted)]">
                {characterClass}
              </span>
           </div>
 
           {/* Departments */}
           {departments.length > 0 && (
-             <div className="mt-3 flex flex-wrap gap-1">
+             <div className="flex flex-wrap gap-1.5 mb-4">
                {departments.slice(0, 2).map((dept, i) => (
-                 <span key={i} className="text-[10px] px-2 py-0.5 bg-black/5 dark:bg-white/5 rounded text-[var(--foreground)] opacity-70 truncate max-w-[100px]">
+                 <span key={i} className="text-[9px] md:text-[10px] px-2 py-1 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-md text-[var(--foreground)] opacity-75 truncate max-w-[100px]">
                    {dept}
                  </span>
                ))}
                {departments.length > 2 && (
-                 <span className="text-[10px] px-1.5 py-0.5 text-[var(--muted)]">+{departments.length - 2}</span>
+                 <span className="text-[9px] md:text-[10px] px-2 py-1 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-md text-[var(--muted)]">+{departments.length - 2}</span>
                )}
              </div>
           )}
           
-          {/* Stats Preview (Minimal) */}
-          <div className="mt-4 flex gap-2">
+          {/* Minimalist Visual Stats Bar */}
+          <div className="flex flex-wrap gap-3 items-center">
              {topStats.slice(0, 2).map((stat, i) => (
-               <div key={i} className="flex items-center gap-1 text-xs font-bold text-[var(--foreground)] opacity-60">
-                 <TrendingUp size={10} />
-                 {stat.key}
+               <div key={i} className="flex flex-col gap-1 w-14">
+                 <div className="flex justify-between items-center text-[9px] font-bold text-[var(--muted)] uppercase tracking-widest">
+                   <span>{stat.key}</span>
+                   <TrendingUp size={8} className="opacity-50" />
+                 </div>
+                 <div className="h-[3px] w-full bg-black/5 dark:bg-white/10 rounded-full overflow-hidden">
+                   <div 
+                     className="h-full rounded-full transition-all duration-700 delay-300" 
+                     style={{ 
+                       width: '85%', // Simulated high stat width
+                       backgroundColor: classKey === 'Novice' ? 'var(--muted)' : config.color
+                     }} 
+                   />
+                 </div>
                </div>
              ))}
           </div>
