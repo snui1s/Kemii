@@ -2,15 +2,18 @@ from pydantic import BaseModel
 from typing import Optional, Dict, List, Any
 from datetime import datetime
 
+
 class LoginRequest(BaseModel):
     email: str
     password: str
+
 
 class RegisterRequest(BaseModel):
     name: str
     email: str
     password: str
     departments: List[str] = []
+
 
 class OceanSubmission(BaseModel):
     name: Optional[str] = None
@@ -20,19 +23,22 @@ class OceanSubmission(BaseModel):
     agreeableness: int
     neuroticism: int
 
+
 class UserProfile(BaseModel):
     id: str
     name: str
-    character_class: str  
+    character_class: str
     level: int
-    
-    ocean_scores: Dict[str, int]  
-    
+
+    ocean_scores: Dict[str, int]
+
     access_token: Optional[str] = None
+
 
 class SkillItem(BaseModel):
     name: str
     level: int
+
 
 class UserPublic(BaseModel):
     id: str
@@ -50,6 +56,7 @@ class UserPublic(BaseModel):
     skills: List[SkillItem] = []
     active_project_end_date: Optional[datetime] = None
 
+
 class UserCandidate(BaseModel):
     id: str
     name: str
@@ -59,35 +66,43 @@ class UserCandidate(BaseModel):
     skills: List[SkillItem] = []
     # No sensitive OCEAN scores or email
 
+
 class UserListResponse(BaseModel):
     users: List[UserPublic]
     total: int
+
 
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserPublic
 
+
 class UserNameUpdate(BaseModel):
     name: str
 
+
 class RoleUpdate(BaseModel):
     role: str
+
 
 class MatchRequest(BaseModel):
     user1_id: str
     user2_id: str
 
+
 class TeamBuilderRequest(BaseModel):
     leader_id: str
     member_count: int
-    strategy: str 
+    strategy: str
 
-class ConfirmTeamRequest(BaseModel): 
-    team_name: Optional[str] = None 
-    member_ids: Optional[List[str]] = None 
-    start_date: datetime 
+
+class ConfirmTeamRequest(BaseModel):
+    team_name: Optional[str] = None
+    member_ids: Optional[List[str]] = None
+    start_date: datetime
     end_date: datetime
+
 
 class TeamRecommendation(BaseModel):
     strategy: str
@@ -98,12 +113,15 @@ class TeamRecommendation(BaseModel):
     team_score: Optional[int] = None
     team_rating: Optional[str] = None
 
+
 class ReviveRequest(BaseModel):
     start_date: datetime
     end_date: datetime
 
+
 class UpdateSkillsRequest(BaseModel):
     skills: List[SkillItem]
+
 
 class CreateQuestRequest(BaseModel):
     prompt: str
@@ -112,9 +130,11 @@ class CreateQuestRequest(BaseModel):
     start_date: datetime
     deadline: datetime
 
+
 class QuestSkill(BaseModel):
     name: str
     level: int
+
 
 # Accepted Member Structure for Quest Response
 class QuestMember(BaseModel):
@@ -124,6 +144,7 @@ class QuestMember(BaseModel):
     department: str
     level: int
     matching_skills: List[Dict[str, Any]] = []
+
 
 class QuestResponse(BaseModel):
     id: str
@@ -145,8 +166,10 @@ class QuestResponse(BaseModel):
     created_at: datetime
     harmony_score: Optional[int] = 0
 
+
 class QuestListResponse(BaseModel):
     quests: List[QuestResponse]
+
 
 class MatchScoreResponse(BaseModel):
     skill_score: int
@@ -156,18 +179,34 @@ class MatchScoreResponse(BaseModel):
     missing_skills: List[str]
     skill_gaps: List[Dict[str, Any]]
 
+
 class UpdateStatusRequest(BaseModel):
     status: str
     user_id: str
+
 
 # Smart Quest (Quest 2) Schemas
 class SmartQuestRequirement(BaseModel):
     department_id: str
     count: int
 
+
 class PreviewSmartTeamRequest(BaseModel):
+    head_id: str
     requirements: List[SmartQuestRequirement]
     candidate_ids: List[str]
+
+
+class SmartTeamOption(BaseModel):
+    id: str
+    members: List[Dict[str, Any]]
+    harmony_score: float
+    raw_kemii_score: float
+
+
+class PreviewSmartTeamResponse(BaseModel):
+    options: List[SmartTeamOption]
+
 
 class ConfirmSmartTeamRequest(BaseModel):
     title: str
@@ -178,6 +217,7 @@ class ConfirmSmartTeamRequest(BaseModel):
     requirements: List[SmartQuestRequirement]
     member_ids: List[str]
     status: str
+
 
 class AnalyzeTeamRequest(BaseModel):
     score: int

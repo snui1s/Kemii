@@ -141,6 +141,11 @@ def user_matches_dept(user: User, dept_name: str, dept_skills: set) -> bool:
 def preview_smart_team(
     req: PreviewSmartTeamRequest, session: Session = Depends(get_session)
 ):
+    # Get head user
+    head_user = session.get(User, req.head_id)
+    if not head_user:
+        raise HTTPException(status_code=400, detail="ไม่พบข้อมูล Project Head (หัวหน้าทีม)")
+
     if req.candidate_ids:
         all_users = session.exec(
             select(User).where(
@@ -161,115 +166,80 @@ def preview_smart_team(
         dept_skills = set(dept_info["skills"])
 
         pool = [u for u in all_users if user_matches_dept(u, dept_name, dept_skills)]
+        # Head is already in the team, shouldn't be in the candidate pool for other slots
+        pool = [u for u in pool if u.id != req.head_id]
+
         if len(pool) < req_item.count:
-            raise HTTPException(
-                status_code=400, detail=f"ผู้สมัครไม่เพียงพอสำหรับ {dept_name}"
-            )
+            # We don't raise HTTPException here because we want to allow partial/failed generation to return empty options smoothly
+            print(f"Warning: Not enough candidates for {dept_name}")
+            return {"options": []}
 
         req_pools.append({"dept_id": dept_id, "count": req_item.count, "pool": pool})
 
-    best_team = None
-    best_cost = float("inf")
+    from services.matching import generate_top_teams_iterative
 
-    iterations = 1000
-    OPTIMAL_COST_THRESHOLD = 0.6
+    top_teams_data = generate_top_teams_iterative(head_user, req_pools, top_n=5)
 
-    for i in range(iterations):
-        if best_team and best_cost <= OPTIMAL_COST_THRESHOLD:
-            break
+    if not top_teams_data:
+        # Check if there are no requirements, in which case returning just the head is valid
+        if not req_pools:
+            cost = calculate_team_cost([head_user])
+            score = cost_to_score(cost) if cost != float("inf") else 0.0
+            top_teams_data = [
+                {
+                    "id": "opt-1-100",
+                    "team": [{"user": head_user, "role": "HEAD"}],
+                    "harmony_score": score,
+                    "raw_kemii_score": cost,
+                }
+            ]
+        else:
+            return {"options": []}
 
-        current_team = []
-        possible = True
+    formatted_options = []
 
-        # Biased Sampling (Elite Retention / Mutation)
-        if best_team and random.random() < 0.7:
-            current_team = list(best_team)
-            idx_to_change = random.randint(0, len(current_team) - 1)
-            role_needed = current_team[idx_to_change]["role"]
-            target_pool = next(
-                (p for p in req_pools if p["dept_id"] == role_needed), None
-            )
-
-            if target_pool:
-                current_ids = {m["user"].id for m in current_team}
-                available = [u for u in target_pool["pool"] if u.id not in current_ids]
-                if available:
-                    new_user = random.choice(available)
-                    current_team[idx_to_change] = {
-                        "user": new_user,
-                        "role": role_needed,
-                    }
-                else:
-                    current_team = []
-            else:
-                current_team = []
-
-        # Random Restart
-        if not current_team:
-            used_ids = set()
-            for item in req_pools:
-                pool = item["pool"]
-                count = item["count"]
-
-                available = [u for u in pool if u.id not in used_ids]
-
-                if len(available) < count:
-                    possible = False
-                    break
-
-                picked = random.sample(available, count)
-                for p in picked:
-                    current_team.append({"user": p, "role": item["dept_id"]})
-                    used_ids.add(p.id)
-
-        if possible and current_team:
-            team_users = [t["user"] for t in current_team]
-            cost = calculate_team_cost(team_users)
-
-            if cost < best_cost:
-                best_cost = cost
-                best_team = current_team
-
-    selected_team = best_team if best_team else []
-
-    if selected_team:
-        team_score = cost_to_score(best_cost)
-    else:
-        team_score = 0.0
-        best_cost = 0.0
-
-    result_members = []
-    for item in selected_team:
-        u = item["user"]
-        result_members.append(
-            {
-                "id": u.id,
-                "name": u.name,
-                "skills": u.skills,
-                "character_class": u.character_class,
-                "level": u.level,
-                "dept_id": item["role"],
-                "dept_name": next(
+    for team_data in top_teams_data:
+        result_members = []
+        for item in team_data["team"]:
+            u = item["user"]
+            dept_name = "หัวหน้าทีม (Head)"
+            if item["role"] != "HEAD":
+                dept_name = next(
                     (d["name"] for d in DEPARTMENTS if d["id"] == item["role"]),
                     item["role"],
-                ),
-                "match_score": 0,
-                "ocean_scores": {
-                    "O": u.ocean_openness,
-                    "C": u.ocean_conscientiousness,
-                    "E": u.ocean_extraversion,
-                    "A": u.ocean_agreeableness,
-                    "N": u.ocean_neuroticism,
-                },
-                "is_available": u.is_available,
+                )
+
+            result_members.append(
+                {
+                    "id": u.id,
+                    "name": u.name,
+                    "skills": u.skills,
+                    "character_class": u.character_class,
+                    "level": u.level,
+                    "dept_id": item["role"],
+                    "dept_name": dept_name,
+                    "match_score": 0,
+                    "ocean_scores": {
+                        "O": u.ocean_openness,
+                        "C": u.ocean_conscientiousness,
+                        "E": u.ocean_extraversion,
+                        "A": u.ocean_agreeableness,
+                        "N": u.ocean_neuroticism,
+                    },
+                    "is_available": u.is_available,
+                }
+            )
+
+        formatted_options.append(
+            {
+                "id": team_data["id"],
+                "members": result_members,
+                "harmony_score": team_data["harmony_score"],
+                "raw_kemii_score": team_data["raw_kemii_score"],
             }
         )
 
-    return {
-        "members": result_members,
-        "harmony_score": team_score,
-        "raw_kemii_score": best_cost,
-    }
+    return {"options": formatted_options}
 
 
 @router.post("/teams/confirm")
@@ -278,14 +248,9 @@ def confirm_smart_team(
     user_id_from_token: str = Depends(verify_token),
     session: Session = Depends(get_session),
 ):
-    # Security Check: Ensure the user creating the team is the one claiming to be leader
-    # (Or just override req.leader_id with token user)
-    if req.leader_id != user_id_from_token:
-        # Strict mode: Error out
-        raise HTTPException(
-            status_code=403, detail="You can only create a team for yourself as leader"
-        )
-
+    # Allow the creator to set anyone as the Project Head (leader_id)
+    # The creator's ID (user_id_from_token) is implicitly the one who requested it,
+    # but the actual leader can be the selected Project Head.
     # 1. Create Quest
 
     # Generate department requirements string for storage

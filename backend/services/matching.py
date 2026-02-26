@@ -233,6 +233,121 @@ def calculate_match_score(user_skills: list, user_ocean: dict, quest) -> dict:
     }
 
 
+def generate_top_teams_iterative(head_user, req_pools, top_n=5) -> list:
+    """
+    Generate multiple team combinations by iteratively adding members
+    that match the evolving team centroid, starting from a Head user.
+    """
+    import copy
+
+    # Total team size needed including the head
+    total_slots = sum(p["count"] for p in req_pools)
+
+    # Initialize with just the head
+    initial_team = [{"user": head_user, "role": "HEAD"}]
+
+    # We will maintain a list of partial teams (paths)
+    # Each path is a dict: {"members": list, "remaining_reqs": list_of_dicts}
+
+    # Flatten requirements into a list of single slots to fill
+    slots_to_fill = []
+    for p in req_pools:
+        for _ in range(p["count"]):
+            slots_to_fill.append({"dept_id": p["dept_id"], "pool": p["pool"]})
+
+    paths = [{"members": initial_team, "remaining": slots_to_fill}]
+
+    # Iteratively fill slots
+    # At each step, we expand all current paths by trying the best candidates for the next slot
+    BRANCH_FACTOR = (
+        4  # Number of candidates to consider per slot per path to create variations
+    )
+
+    while paths and paths[0]["remaining"]:
+        new_paths = []
+        for path in paths:
+            current_members = path["members"]
+            remaining = path["remaining"]
+
+            # The next slot to fill
+            next_slot = remaining[0]
+            role = next_slot["dept_id"]
+            pool = next_slot["pool"]
+
+            # Filter pool to remove users already in this path
+            used_ids = {m["user"].id for m in current_members}
+            available = [u for u in pool if u.id not in used_ids]
+
+            if not available:
+                continue  # Dead end, cannot fill this slot
+
+            # Score each available candidate against the current team
+            candidate_scores = []
+            for candidate in available:
+                # Calculate what the cost WOULD be if we added this candidate
+                test_users = [m["user"] for m in current_members] + [candidate]
+                cost = calculate_team_cost(test_users)
+                candidate_scores.append((cost, candidate))
+
+            # Sort candidates by cost (lower is better harmony)
+            candidate_scores.sort(key=lambda x: x[0])
+
+            # Take top BRANCH_FACTOR candidates to create new paths
+            top_candidates = candidate_scores[:BRANCH_FACTOR]
+
+            for cost, candidate in top_candidates:
+                new_members = list(current_members)
+                new_members.append({"user": candidate, "role": role})
+                new_remaining = remaining[1:]  # Consume the slot
+                new_paths.append(
+                    {
+                        "members": new_members,
+                        "remaining": new_remaining,
+                        "latest_cost": cost,
+                    }
+                )
+
+        # Keep only the top N * 2 paths at each step to prevent explosion
+        new_paths.sort(key=lambda x: x.get("latest_cost", float("inf")))
+        paths = new_paths[: top_n * 2]
+
+    # Finalize teams
+    final_teams = []
+    team_signatures = (
+        set()
+    )  # To prevent exact duplicates if reached via different ordering
+
+    for idx, path in enumerate(paths):
+        if path["remaining"]:
+            continue  # Incomplete team
+
+        team_members = path["members"]
+        users = [m["user"] for m in team_members]
+        cost = calculate_team_cost(users)
+
+        # Create a unique signature for this team (sorted IDs)
+        sig = tuple(sorted([u.id for u in users]))
+        if sig in team_signatures:
+            continue
+
+        team_signatures.add(sig)
+
+        score = cost_to_score(cost)
+
+        final_teams.append(
+            {
+                "id": f"opt-{idx+1}-{int(score)}",
+                "team": team_members,
+                "harmony_score": score,
+                "raw_kemii_score": cost,
+            }
+        )
+
+    # Sort final teams by score descending
+    final_teams.sort(key=lambda x: x["harmony_score"], reverse=True)
+    return final_teams[:top_n]
+
+
 # Unused function: Not currently connected to any frontend feature
 # def find_best_candidates(quest, users: list, count: int, current_members: list = None) -> list:
 #     """Find the best matching candidates using Dynamic Gap Scoring."""

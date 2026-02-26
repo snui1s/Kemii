@@ -17,15 +17,14 @@ import {
   Search,
   CheckSquare,
   Square,
-  AlertCircle,
-  Trophy,
-  Filter,
   Sword,
   Shield,
   Wand,
   Heart,
   Skull,
   Scroll,
+  Crown,
+  User,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { DEPARTMENTS, matchesDepartment } from "@/data/departments";
@@ -86,7 +85,8 @@ interface SmartQuestUser {
   [key: string]: any; // Allow index access for dynamic ocean_[trait]
 }
 
-interface GeneratedTeam {
+interface SmartTeamOption {
+  id: string;
   members: SmartQuestUser[];
   harmony_score: number;
   raw_kemii_score: number;
@@ -95,6 +95,15 @@ interface GeneratedTeam {
 export default function SmartQuestPage() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
+
+  const [headId, setHeadId] = useState<string>("");
+  
+  // Set default head to current user when loaded
+  useEffect(() => {
+    if (currentUser && !headId) {
+      setHeadId(currentUser.id);
+    }
+  }, [currentUser, headId]);
 
   const { data: allUsers = [], isLoading: loadingConfig } = useQuery<
     SmartQuestUser[]
@@ -121,9 +130,9 @@ export default function SmartQuestPage() {
   const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(
     new Set()
   );
-  const [generatedTeam, setGeneratedTeam] = useState<GeneratedTeam | null>(
-    null
-  );
+  
+  const [teamOptions, setTeamOptions] = useState<SmartTeamOption[] | null>(null);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnalyzingText, setIsAnalyzingText] = useState(false);
   const [teamAnalysisText, setTeamAnalysisText] = useState<string | null>(null);
 
@@ -136,6 +145,8 @@ export default function SmartQuestPage() {
 
     return allUsers
       .filter((user) => {
+        if (user.id === headId) return false; // Exclude head from candidate pool
+        
         const skills =
           typeof user.skills === "string"
             ? JSON.parse(user.skills)
@@ -151,7 +162,7 @@ export default function SmartQuestPage() {
         if (a.is_available === b.is_available) return 0;
         return a.is_available ? -1 : 1;
       });
-  }, [allUsers, requirements]);
+  }, [allUsers, requirements, headId]);
 
   useEffect(() => {
     setSelectedPoolIds((prev) => {
@@ -256,12 +267,19 @@ export default function SmartQuestPage() {
       return;
     }
 
+    if (!headId) {
+      toast.error("กรุณาเลือก Project Head");
+      return;
+    }
+
     setAnalyzing(true);
-    setGeneratedTeam(null);
+    setTeamOptions(null);
+    setSelectedOptionId(null);
     setTeamAnalysisText(null); // Clear previous analysis
 
     try {
       const payload = {
+        head_id: headId,
         requirements: validReqs.map((r) => ({
           department_id: r.deptId,
           count: r.count,
@@ -271,21 +289,24 @@ export default function SmartQuestPage() {
 
       const res = await api.post("/teams/preview", payload);
 
-      if (!res.data.members || res.data.members.length === 0) {
+      if (!res.data.options || res.data.options.length === 0) {
         toast.error("ไม่สามารถจัดทีมได้ตามเงื่อนไข (ลองเปลี่ยนคนหรือลดสเปคลง)");
-        setGeneratedTeam(null);
+        setTeamOptions(null);
         return;
       }
 
-      setGeneratedTeam(res.data);
+      setTeamOptions(res.data.options);
+      setSelectedOptionId(res.data.options[0].id); // Auto-select the first (best) option
+      
       // Scroll to results header on mobile/desktop
       setIsInputsCollapsed(true); // Auto collapse inputs on mobile
       setTimeout(() => {
         resultsHeaderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
 
-      // Calculate Averages for AI Analysis
-      const members = res.data.members;
+      // Calculate Averages for AI Analysis based on best option
+      const bestOption = res.data.options[0];
+      const members = bestOption.members;
       const avgO =
         members.reduce(
           (sum: number, m: any) => sum + (m.ocean_scores?.O || 0),
@@ -318,7 +339,7 @@ export default function SmartQuestPage() {
 
       api
         .post("/teams/analyze", {
-          score: Math.round(res.data.harmony_score),
+          score: Math.round(bestOption.harmony_score),
           avg_o: avgO,
           avg_c: avgC,
           avg_e: avgE,
@@ -358,23 +379,30 @@ export default function SmartQuestPage() {
   };
 
   const handleTryAgain = () => {
-    setGeneratedTeam(null);
+    setTeamOptions(null);
+    setSelectedOptionId(null);
     setTeamAnalysisText(null);
   };
 
   const handleConfirmTeam = async () => {
-    if (!generatedTeam) return;
+    if (!teamOptions || !selectedOptionId) return;
+    
+    const selectedTeam = teamOptions.find((opt) => opt.id === selectedOptionId);
+    if (!selectedTeam) return;
+    
     try {
       const payload = {
         title: projectName,
         description: projectDescription,
         deadline: new Date(deadline).toISOString(),
         start_date: new Date(startDate).toISOString(),
-        leader_id: currentUser?.id || "",
+        leader_id: headId,
         requirements: requirements
           .filter((r) => r.deptId)
           .map((r) => ({ department_id: r.deptId, count: r.count })),
-        member_ids: generatedTeam.members.map((m: any) => m.id),
+        member_ids: selectedTeam.members
+          .filter((m: any) => m.id !== headId) // Exclude the leader from member array
+          .map((m: any) => m.id),
         status: "filled",
       };
       await api.post("/teams/confirm", payload);
@@ -385,57 +413,8 @@ export default function SmartQuestPage() {
     }
   };
 
-  const handleRemoveFromPreview = (memberId: string) => {
-    if (!generatedTeam) return;
-
-    toast(
-      (t) => (
-        <div className="flex flex-col items-center gap-4 min-w-[260px] py-2">
-          <div className="text-center">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
-              เอาออกจากทีม? <span className="text-2xl">🦶</span>
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              ต้องการเอาสมาชิกคนนี้ออกจากผลการวิเคราะห์ใช่หรือไม่?
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg transition"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                setGeneratedTeam((prev) => {
-                  if (!prev) return null;
-                  return {
-                    ...prev,
-                    members: prev.members.filter((m) => m.id !== memberId),
-                  };
-                });
-                toast.success(
-                  "เอาออกแล้ว (กรุณากดวิเคราะห์ใหม่เพื่อให้ผลแม่นยำ)"
-                );
-              }}
-              className="px-4 py-2 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition transform active:scale-95"
-            >
-              เอาออกเลย
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        duration: 4000,
-        className:
-          "!bg-[var(--background)]/95 !backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-2xl text-[var(--foreground)]",
-        style: { color: "inherit" },
-      }
-    );
-  };
+  // Utility to get current selected option data
+  const activedTeamOption = teamOptions?.find(opt => opt.id === selectedOptionId);
 
   return (
     <ProtectedRoute>
@@ -544,6 +523,42 @@ export default function SmartQuestPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Head Selection */}
+              <div className="space-y-5 animate-in slide-in-from-left-2 duration-500 delay-150">
+                <h2 className="text-xs uppercase tracking-widest font-semibold text-[var(--muted)] flex items-center gap-2 opacity-70">
+                  <Crown size={14} className="text-yellow-500" /> ผู้นำโปรเจกต์ (Project Head)
+                </h2>
+                <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 p-4 relative group hover:border-[var(--highlight)]/30 transition-all">
+                  <label className="text-[10px] uppercase font-bold text-[var(--muted)] mb-2 block">
+                    เลือกหัวหน้างาน (1 ตำแหน่ง)
+                  </label>
+                  <Select
+                    value={headId}
+                    onValueChange={setHeadId}
+                  >
+                    <SelectTrigger className="w-full bg-[var(--background)] border-none h-12 text-sm font-semibold text-[var(--foreground)] focus:ring-0 shadow-sm rounded-lg">
+                      <SelectValue placeholder="เลือกหัวหน้างาน" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[var(--background)]/95 backdrop-blur-xl border-black/5 dark:border-white/5 text-[var(--foreground)] shadow-xl max-h-[300px]">
+                      {allUsers.filter(u => u.is_available || u.id === currentUser?.id).map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          <div className="flex items-center gap-2">
+                            <span className={CLASS_COLORS[u.character_class] || "text-[var(--muted)]"}>
+                              {CLASS_ICONS[u.character_class] || <User size={14} />}
+                            </span>
+                            <span>{u.name}</span>
+                            {u.id === currentUser?.id && <span className="text-[10px] bg-[var(--highlight)] text-white px-1.5 py-0.5 rounded ml-2">You</span>}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-[var(--muted)] mt-2 opacity-80 leading-relaxed">
+                    Head จะเป็นศูนย์กลางในการวิเคราะห์นิสัยของลูกทีมที่จะถูกสุ่มเข้ามา
+                  </p>
                 </div>
               </div>
 
@@ -666,7 +681,7 @@ export default function SmartQuestPage() {
 
             {/* Action Area (Sticky Bottom on Desktop, Hidden on Mobile) */}
             <div className="hidden md:block mt-8 pt-6 border-t border-black/5 dark:border-white/5">
-              {!generatedTeam ? (
+              {!teamOptions ? (
                 <button
                   onClick={handleGenerate}
                   disabled={analyzing}
@@ -734,27 +749,26 @@ export default function SmartQuestPage() {
                 <div ref={resultsHeaderRef} className="h-20 px-8 flex items-center justify-between sticky top-0 bg-[var(--background)]/80 backdrop-blur-md z-10 border-b border-black/5 dark:border-white/5 scroll-mt-20">
                   <div>
                     <h3 className="text-lg font-bold text-[var(--foreground)] flex items-center gap-3">
-                      {generatedTeam
-                        ? "ปาร์ตี้ที่แนะนำ (Recommended Party)"
+                      {teamOptions
+                        ? "เลือกรูปแบบปาร์ตี้ (Select Options)"
                         : "นักผจญภัย (Adventurers)"}
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-[var(--foreground)]">
-                        {generatedTeam
-                          ? generatedTeam.members.length
+                        {teamOptions
+                          ? teamOptions.length
                           : candidates.length}
                       </span>
                     </h3>
-                    {generatedTeam && (
+                    {teamOptions && activedTeamOption && (
                       <div className="flex items-center gap-2 mt-1">
                         <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                          ปรับปรุงทีมให้เหมาะสมกับ {requirements.length}{" "}
-                          ตำแหน่งแล้ว
+                          จัดทีมเข้ากับหัวหน้า ({teamOptions.length} รูปแบบ)
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {!generatedTeam && (
+                  {!teamOptions && (
                     <div className="flex items-center gap-2 ml-2">
                        <button
                         onClick={toggleAll}
@@ -774,9 +788,29 @@ export default function SmartQuestPage() {
                   )}
                 </div>
 
+                {/* === Desktop Team Options Selector === */}
+                {teamOptions && (
+                  <div className="hidden md:flex px-8 py-3 bg-[var(--background)] border-b border-black/5 dark:border-white/5 gap-2 overflow-x-auto">
+                    {teamOptions.map((opt, idx) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setSelectedOptionId(opt.id)}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                          selectedOptionId === opt.id
+                            ? "bg-[var(--foreground)] text-[var(--background)] shadow-md"
+                            : "bg-black/5 dark:bg-white/5 text-[var(--foreground)] hover:bg-black/10 dark:hover:bg-white/10"
+                        }`}
+                      >
+                        Option {idx + 1} ({Math.round(opt.harmony_score)}%)
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* === Mobile List View (Cards) - Visible < md === */}
                 <div className="block md:hidden p-4 space-y-3 pb-20">
-                  {(generatedTeam ? generatedTeam.members : candidates).map(
+                  {/* Mode: Selection (Candidates) OR Generated Team */}
+                  {(teamOptions && activedTeamOption ? activedTeamOption.members : candidates).map(
                     (user: any) => {
                       const isSelected = selectedPoolIds.has(user.id);
                       const matchedDepts = getUserDepartments(user);
@@ -793,7 +827,7 @@ export default function SmartQuestPage() {
                               ? "opacity-60 grayscale-[0.5]"
                               : ""
                           }`}
-                          onClick={() => !generatedTeam && toggleUser(user.id)}
+                          onClick={() => toggleUser(user.id)}
                         >
                           <div className="flex items-start gap-3">
                             {/* Avatar */}
@@ -820,7 +854,7 @@ export default function SmartQuestPage() {
                                   {user.name}
                                 </h4>
                                 {/* Selection Checkbox (Mobile) */}
-                                {!generatedTeam && (
+                                {(!teamOptions || !activedTeamOption) && (
                                   <div
                                     className={`transition ${
                                       isSelected
@@ -844,7 +878,7 @@ export default function SmartQuestPage() {
                               {/* Mobile OCEAN Scores */}
                               <div className="flex items-center gap-1 mt-2">
                                 {["O", "C", "E", "A", "N"].map((trait) => {
-                                  const val = generatedTeam
+                                  const val = (teamOptions && activedTeamOption)
                                     ? user.ocean_scores?.[trait]
                                     : user[
                                         `ocean_${
@@ -901,7 +935,7 @@ export default function SmartQuestPage() {
                     <table className="w-full text-left border-collapse">
                       <thead className="bg-black/5 dark:bg-white/5 text-[11px] uppercase tracking-wider font-bold text-[var(--muted)] sticky top-0 backdrop-blur-md z-10">
                         <tr>
-                          {!generatedTeam && (
+                          {!teamOptions && (
                             <th className="px-6 py-4 w-16 text-center border-b border-black/5 dark:border-white/5">
                               <button
                                 onClick={toggleAll}
@@ -932,8 +966,8 @@ export default function SmartQuestPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                        {(generatedTeam
-                          ? generatedTeam.members
+                        {(teamOptions && activedTeamOption
+                          ? activedTeamOption.members
                           : candidates
                         ).map((user: any, i: number) => {
                           const isSelected = selectedPoolIds.has(user.id);
@@ -945,7 +979,7 @@ export default function SmartQuestPage() {
                             <tr
                               key={user.id}
                               className={`group transition-all duration-200 ${
-                                generatedTeam
+                                teamOptions
                                   ? "hover:bg-black/5 dark:hover:bg-white/5"
                                   : isSelected
                                   ? "bg-black/5 dark:bg-white/5"
@@ -957,7 +991,7 @@ export default function SmartQuestPage() {
                               }`}
                               style={{ animationDelay: `${i * 50}ms` }}
                             >
-                              {!generatedTeam && (
+                              {!teamOptions && (
                                 <td className="px-6 py-4 text-center">
                                   <button
                                     onClick={() => toggleUser(user.id)}
@@ -980,7 +1014,7 @@ export default function SmartQuestPage() {
                                 <div className="flex items-center gap-3">
                                   <div
                                     className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ring-2 ring-[var(--background)] ${
-                                      generatedTeam
+                                      teamOptions
                                         ? "bg-black/5 dark:bg-white/5"
                                         : "bg-black/5 dark:bg-white/5"
                                     } ${
@@ -995,7 +1029,7 @@ export default function SmartQuestPage() {
                                   <div>
                                     <p
                                       className={`text-sm font-semibold ${
-                                        generatedTeam
+                                        teamOptions
                                           ? "text-[var(--foreground)]"
                                           : "text-[var(--foreground)]"
                                       } `}
@@ -1006,7 +1040,7 @@ export default function SmartQuestPage() {
                                     <div className="flex items-center gap-1.5 mt-1">
                                       {["O", "C", "E", "A", "N"].map(
                                         (trait) => {
-                                          const val = generatedTeam
+                                          const val = teamOptions && activedTeamOption
                                             ? user.ocean_scores?.[trait]
                                             : user[
                                                 `ocean_${
@@ -1108,7 +1142,7 @@ export default function SmartQuestPage() {
                     </table>
                   </div>
                   {/* AI Team Analysis Section */}
-                  {generatedTeam && (
+                  {teamOptions && activedTeamOption && (
                     <div className="mt-6 p-4 rounded-2xl bg-[var(--highlight)]/5 border border-[var(--highlight)]/10 animate-in fade-in zoom-in duration-500">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--highlight)] mb-2 flex items-center gap-2">
                         <Sparkles size={14} /> AI Team Analysis
@@ -1134,11 +1168,11 @@ export default function SmartQuestPage() {
             )}
 
             {/* Results Footer (Floating) if generated - Hidden on Mobile */}
-            {generatedTeam && (
+            {teamOptions && activedTeamOption && (
               <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 backdrop-blur-xl bg-[var(--background)]/80 p-1.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 items-center gap-4 pr-6 animate-in slide-in-from-bottom-6 zoom-in-95 duration-500">
                 <div className="w-12 h-12 rounded-full bg-[var(--foreground)] flex items-center justify-center">
                   <span className="text-[var(--background)] font-black text-sm">
-                    {generatedTeam.harmony_score}
+                    {Math.round(activedTeamOption.harmony_score)}
                   </span>
                 </div>
                 <div className="flex flex-col">
@@ -1147,7 +1181,7 @@ export default function SmartQuestPage() {
                   </span>
                   {/* Dynamic Label Logic */}
                   {(() => {
-                    const score = generatedTeam.harmony_score || 0;
+                    const score = activedTeamOption.harmony_score || 0;
                     let label = "เข้ากันได้ปานกลาง";
                     let colorClass = "text-yellow-600 dark:text-yellow-400";
 
@@ -1174,13 +1208,13 @@ export default function SmartQuestPage() {
                   onClick={handleConfirmTeam}
                   className="text-sm font-bold text-[var(--highlight)] hover:opacity-80 flex items-center gap-1"
                 >
-                  ยืนยัน <ArrowRight size={14} />
+                  ยืนยัน Opt {teamOptions.findIndex(o => o.id === activedTeamOption.id) + 1} <ArrowRight size={14} />
                 </button>
               </div>
             )}
         {/* === Mobile Sticky Bottom Bar (Moved inside Right Panel) === */}
         <div className="md:hidden mt-auto sticky bottom-0 left-0 right-0 p-4 bg-[var(--background)]/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 z-40 flex gap-3 safe-area-bottom pb-6 transition-all">
-          {!generatedTeam ? (
+          {!teamOptions ? (
             <button
               onClick={handleGenerate}
               disabled={analyzing}
@@ -1197,20 +1231,37 @@ export default function SmartQuestPage() {
               )}
             </button>
           ) : (
-            <>
-              <button
-                onClick={handleTryAgain}
-                className="flex-1 h-12 bg-black/5 dark:bg-white/5 text-[var(--foreground)] rounded-xl font-bold active:scale-95 transition-all border border-black/5 dark:border-white/5"
-              >
-                เริ่มใหม่
-              </button>
-              <button
-                onClick={handleConfirmTeam}
-                className="flex-[2] h-12 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <CheckSquare size={18} /> ยืนยัน ({Math.round(generatedTeam.harmony_score)}%)
-              </button>
-            </>
+             <div className="flex flex-col gap-3 w-full">
+               <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar -mx-4 px-4 snap-x">
+                 {teamOptions.map((opt, idx) => (
+                   <button
+                     key={opt.id}
+                     onClick={() => setSelectedOptionId(opt.id)}
+                     className={`flex-shrink-0 snap-center rounded-lg border px-3 py-2 transition-all text-xs font-bold ${
+                       selectedOptionId === opt.id
+                         ? "bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)]"
+                         : "bg-white/50 dark:bg-white/5 border-black/10 dark:border-white/10 text-[var(--foreground)]"
+                     }`}
+                   >
+                     Opt {idx + 1} ({Math.round(opt.harmony_score)}%)
+                   </button>
+                 ))}
+               </div>
+               <div className="flex gap-3 w-full">
+                 <button
+                   onClick={handleTryAgain}
+                   className="flex-1 h-12 bg-black/5 dark:bg-white/5 text-[var(--foreground)] rounded-xl font-bold active:scale-95 transition-all border border-black/5 dark:border-white/5 py-0 px-2 flex justify-center items-center"
+                 >
+                   เริ่มใหม่
+                 </button>
+                 <button
+                   onClick={handleConfirmTeam}
+                   className="flex-[2] h-12 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 py-0 px-2"
+                 >
+                   <CheckSquare size={18} /> ตกลง Opt {teamOptions.findIndex(o => o.id === selectedOptionId) + 1}
+                 </button>
+               </div>
+             </div>
           )}
         </div>
       </div>
